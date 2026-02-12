@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Development service
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: jussimatic-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev -- --host 0.0.0.0
+    stdin_open: true
+    tty: true
+
+  # Production service
+  frontend-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jussimatic-frontend-prod
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    profiles:
+      - production
