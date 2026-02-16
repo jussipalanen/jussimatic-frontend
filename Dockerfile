@@ -23,11 +23,15 @@ FROM nginx:alpine
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration (optional - uncomment if you create nginx.conf)
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx configuration as template
+COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
-# Expose port 80
-EXPOSE 80
+# Copy and make startup script executable
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Expose port 8080 (default for Google Cloud)
+EXPOSE 8080
+
+# Use custom entrypoint that handles PORT env variable
+ENTRYPOINT ["/docker-entrypoint.sh"]
