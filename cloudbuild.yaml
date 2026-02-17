@@ -1,0 +1,47 @@
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'europe-north1-docker.pkg.dev/client-jussimatic/jusstimatic-frontend/jusstimatic-frontend:$TAG_NAME'
+      - '-t'
+      - 'europe-north1-docker.pkg.dev/client-jussimatic/jusstimatic-frontend/jusstimatic-frontend:latest'
+      - '.'
+
+  # Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'europe-north1-docker.pkg.dev/client-jussimatic/jusstimatic-frontend/jusstimatic-frontend:$TAG_NAME'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'europe-north1-docker.pkg.dev/client-jussimatic/jusstimatic-frontend/jusstimatic-frontend:latest'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'jusstimatic-frontend'
+      - '--image'
+      - 'europe-north1-docker.pkg.dev/client-jussimatic/jusstimatic-frontend/jusstimatic-frontend:$TAG_NAME'
+      - '--region'
+      - 'europe-north1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'europe-north1-docker.pkg.dev/client-jussimatic/jusstimatic-frontend/jusstimatic-frontend:$TAG_NAME'
+  - 'europe-north1-docker.pkg.dev/client-jussimatic/jusstimatic-frontend/jusstimatic-frontend:latest'
+
+options:
+  machineType: E2_HIGHCPU_8
+  diskSizeGb: 50
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '600s'
