@@ -1,7 +1,8 @@
 # Multi-stage build for React + Vite application
+ARG NODE_VERSION=20
 
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:${NODE_VERSION}-alpine AS builder
 
 WORKDIR /app
 
