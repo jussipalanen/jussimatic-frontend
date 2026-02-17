@@ -4,7 +4,7 @@ steps:
     args:
       - 'build'
       - '--build-arg'
-      - 'VITE_API_BASE_URL=https://jussimatic-node-server-61766311353.europe-north1.run.app/'
+      - 'VITE_API_BASE_URL=$_VITE_API_BASE_URL'
       - '-t'
       - 'europe-north1-docker.pkg.dev/client-jussimatic/jussimatic-frontend/jussimatic-frontend:$TAG_NAME'
       - '-t'
@@ -40,6 +40,9 @@ steps:
 images:
   - 'europe-north1-docker.pkg.dev/client-jussimatic/jussimatic-frontend/jussimatic-frontend:$TAG_NAME'
   - 'europe-north1-docker.pkg.dev/client-jussimatic/jussimatic-frontend/jussimatic-frontend:latest'
+
+substitutions:
+  _VITE_API_BASE_URL: 'https://jussimatic-node-server-61766311353.europe-north1.run.app/'
 
 options:
   machineType: E2_HIGHCPU_8
