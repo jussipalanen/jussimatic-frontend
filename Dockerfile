@@ -4,6 +4,9 @@ ARG NODE_VERSION=20
 # Build stage
 FROM node:${NODE_VERSION}-alpine AS builder
 
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 WORKDIR /app
 
 # Copy package files

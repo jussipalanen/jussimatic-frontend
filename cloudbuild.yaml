@@ -3,6 +3,8 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
+      - '--build-arg'
+      - 'VITE_API_BASE_URL=https://jussimatic-node-server-61766311353.europe-north1.run.app/'
       - '-t'
       - 'europe-north1-docker.pkg.dev/client-jussimatic/jussimatic-frontend/jussimatic-frontend:$TAG_NAME'
       - '-t'
