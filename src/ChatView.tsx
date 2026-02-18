@@ -14,6 +14,7 @@ interface Message {
   text: string;
   isUser: boolean;
   createdAt?: number;
+  images?: { dataUri: string }[];
 }
 
 const MESSAGES_STORAGE_KEY = 'jussimatic-chat-messages';
@@ -84,15 +85,26 @@ function ChatView() {
       const response = await ask(language, userMessage);
       
       // Add API response to chat
+      let botText = t.chat.noResponse;
+      if (typeof response === 'object' && response !== null) {
+        if ('answer' in response && typeof response.answer === 'string') {
+          botText = response.answer;
+        } else if ('response' in response && typeof response.response === 'string') {
+          botText = response.response;
+        }
+      }
+
+      const botImages = Array.isArray(response?.images)
+        ? response.images.filter((img: { dataUri?: string }) => Boolean(img?.dataUri))
+        : undefined;
       const botMessage: Message = {
         id: Date.now() + 1,
-        text: typeof response === 'object' && response !== null && 'answer' in response
-          ? response.answer
-          : t.chat.noResponse,
+        text: botText,
         isUser: false,
         createdAt: Date.now(),
+        images: botImages,
       };
-      
+
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       // Handle error
@@ -171,13 +183,25 @@ function ChatView() {
             className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
           >
             <div
-                    className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                    className={`max-w-[60%] rounded-lg px-4 py-2 ${
                 msg.isUser
             ? 'bg-blue-600 text-white'
                         : 'bg-gray-700 text-gray-100 fade-in-message'
               }`}
             >
               <div>{msg.text}</div>
+              {!msg.isUser && Array.isArray(msg.images) && msg.images.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {msg.images.map((img) => (
+                    <img
+                      key={img.dataUri}
+                      src={img.dataUri}
+                      alt="AI generated"
+                      className="max-w-[320px] max-h-[200px] h-auto object-contain rounded-lg"
+                    />
+                  ))}
+                </div>
+              )}
               {msg.createdAt && (
                 <div className="mt-2 text-xs text-gray-400">
             {formatTimestamp(msg.createdAt)}
