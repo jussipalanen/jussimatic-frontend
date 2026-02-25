@@ -55,7 +55,7 @@ const joinOutputText = (value: unknown) => {
   if (!Array.isArray(value)) return null;
   const text = value
     .map((item) => (item && typeof (item as OutputPart).text === 'string' ? (item as OutputPart).text : ''))
-    .filter((chunk) => chunk.length > 0)
+    .filter((chunk): chunk is string => typeof chunk === 'string' && chunk.length > 0)
     .join('');
 
   return text.length > 0 ? text : null;
