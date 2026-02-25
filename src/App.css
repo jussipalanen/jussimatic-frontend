@@ -42,6 +42,52 @@
   animation: fade-in-message 220ms ease-out;
 }
 
+.bot-message > * {
+  margin-top: 0.65rem;
+}
+
+.bot-message > :first-child {
+  margin-top: 0;
+}
+
+.bot-message h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.bot-message h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.bot-message h3 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.bot-message h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.bot-message p {
+  line-height: 1.6;
+}
+
+.bot-message ul,
+.bot-message ol {
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+.bot-message ul {
+  list-style: disc;
+}
+
+.bot-message ol {
+  list-style: decimal;
+}
+
 @keyframes fade-in-message {
   from {
     opacity: 0;
