@@ -1,7 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_API_BASE_URL: string;
+  readonly VITE_JUSSIMATIC_BACKEND_API_BASE_URL: string;
+  readonly VITE_JUSSILOG_BACKEND_API_BASE_URL: string;
 }
 
 interface ImportMeta {
