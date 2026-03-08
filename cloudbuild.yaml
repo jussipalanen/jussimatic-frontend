@@ -4,12 +4,12 @@ steps:
     args:
       - '--dockerfile=Dockerfile'
       - '--context=dir:///workspace'
-      - '--destination=europe-north1-docker.pkg.dev/client-jussimatic/jussimatic-frontend/jussimatic-frontend:$TAG_NAME'
-      - '--destination=europe-north1-docker.pkg.dev/client-jussimatic/jussimatic-frontend/jussimatic-frontend:latest'
+      - '--destination=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/jussimatic-frontend/jussimatic-frontend:$TAG_NAME'
+      - '--destination=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/jussimatic-frontend/jussimatic-frontend:latest'
       - '--cache=true'
       - '--cache-ttl=336h'
-      - '--cache-repo=europe-north1-docker.pkg.dev/client-jussimatic/jussimatic-frontend/cache'
-      - '--build-arg=VITE_API_BASE_URL=$_VITE_API_BASE_URL'
+      - '--cache-repo=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/jussimatic-frontend/cache'
+      - '--build-arg=VITE_JUSSIMATIC_BACKEND_API_BASE_URL=$_VITE_JUSSIMATIC_BACKEND_API_BASE_URL'
 
   # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -19,19 +19,20 @@ steps:
       - 'deploy'
       - 'jussimatic-frontend-production'
       - '--image'
-      - 'europe-north1-docker.pkg.dev/client-jussimatic/jussimatic-frontend/jussimatic-frontend:$TAG_NAME'
+      - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/jussimatic-frontend/jussimatic-frontend:$TAG_NAME'
       - '--region'
-      - 'europe-north1'
+      - '${_REGION}'
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-
-substitutions:
-  _VITE_API_BASE_URL: 'https://jussimatic-node-server-61766311353.europe-north1.run.app/'
 
 options:
   machineType: E2_MEDIUM
   diskSizeGb: 20
   logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _REGION: europe-north1
+  _PROJECT_ID: client-jussimatic
 
 timeout: '300s'

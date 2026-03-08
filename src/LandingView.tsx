@@ -1,12 +1,37 @@
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
+import { logoutUser } from './api/authApi';
+import AuthModal from './AuthModal';
 
 function LandingView() {
   const navigate = useNavigate();
   const year = new Date().getFullYear();
   const [language] = useState(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Check for auth token on mount
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const handleLogout = async () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+
+    try {
+      await logoutUser(token);
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear token and reload regardless of API response
+      localStorage.removeItem('auth_token');
+      window.location.reload();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
@@ -22,11 +47,32 @@ function LandingView() {
             >
               {t.landing.cta}
             </button>
+            {isLoggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Logout
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded border border-white/20"
+              >
+                Login
+              </button>
+            )}
             <button 
               onClick={() => navigate('/jobs')}
               className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
             >
               {t.landing.jobsCta}
+            </button>
+            <button 
+              onClick={() => navigate('/demo/ecommerce/products')}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Ecommerce Demo
             </button>
           </div>
           
@@ -106,6 +152,8 @@ function LandingView() {
         </div>
         <p className="text-gray-400">&copy; {year} Jussimatic. {t.footer}</p>
       </footer>
+
+      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />
     </div>
   );
 }
