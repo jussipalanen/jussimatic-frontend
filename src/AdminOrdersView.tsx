@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchOrdersByUserId } from './api/ordersApi';
+import { fetchAllOrders, updateOrder } from './api/ordersApi';
 import { getMe } from './api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from './utils/authUtils';
 import { fetchProductById } from './api/productsApi';
@@ -10,6 +10,13 @@ import EcommerceHeader from './EcommerceHeader';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
+const ORDER_STATUS_OPTIONS = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'refunded', label: 'Refunded' },
+];
 
 function formatDate(dateString?: string) {
   if (!dateString) return 'N/A';
@@ -54,68 +61,79 @@ function calculateOrderTotal(order: Order): number {
   if (!Array.isArray(order.items) || order.items.length === 0) {
     return 0;
   }
-  
+
   return order.items.reduce((total, item) => {
     let itemSubtotal = 0;
-    
+
     if (item.subtotal !== undefined && item.subtotal !== null) {
       itemSubtotal = typeof item.subtotal === 'string' ? parseFloat(item.subtotal) : item.subtotal;
     } else {
       itemSubtotal = getEffectivePrice(item) * item.quantity;
     }
-    
+
     return total + itemSubtotal;
   }, 0);
 }
 
-function MyOrdersView() {
+function AdminOrdersView() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editFormValues, setEditFormValues] = useState({
+    firstname: '',
+    lastname: '',
+    streetAddress: '',
+    postCode: '',
+    city: '',
+    state: '',
+    country: '',
+    email: '',
+    phone: '',
+    notes: '',
+    status: 'pending',
+  });
 
   useEffect(() => {
-    const loadUserAndOrders = async () => {
+    const loadOrders = async () => {
       setLoading(true);
       setAuthError(null);
       setOrdersError(null);
 
       try {
-        // Get authenticated user
-        const user = await getMe();
         const token = localStorage.getItem('auth_token');
 
         if (!token) {
-          setAuthError('Authentication required. Please log in to view your orders.');
+          setAuthError('Authentication required. Please log in to view admin orders.');
           setLoading(false);
           return;
         }
 
+        const user = await getMe();
         const access = getRoleAccess(user);
 
-        if (access.isCustomer) {
+        if (!access.isAdmin && !access.isVendor) {
           setAuthError(PERMISSION_MESSAGE);
           setLoading(false);
           return;
         }
 
-        // Fetch orders for the authenticated user
         try {
-          const data = await fetchOrdersByUserId(user.user_id, token);
-          
-          // Enrich order items with product image data
+          const data = await fetchAllOrders(token);
+
           const enrichedOrders = await Promise.all(
             data.map(async (order) => {
               if (!Array.isArray(order.items) || order.items.length === 0) {
                 return order;
               }
 
-              // Fetch product details for all items in parallel
               const enrichedItems = await Promise.all(
                 order.items.map(async (item) => {
-                  // Skip if image data already exists
                   if (item.featured_image) {
                     return item;
                   }
@@ -129,7 +147,7 @@ function MyOrdersView() {
                     };
                   } catch (err) {
                     console.error(`Failed to fetch product ${item.product_id}:`, err);
-                    return item; // Return original item if fetch fails
+                    return item;
                   }
                 })
               );
@@ -144,23 +162,19 @@ function MyOrdersView() {
           setOrders(enrichedOrders);
         } catch (err) {
           console.error('Failed to load orders:', err);
-          setOrdersError('Failed to load orders. Please try again.');
+          setOrdersError('Failed to load admin orders. Please try again.');
           setOrders([]);
         }
       } catch (err) {
         console.error('Authentication failed:', err);
-        setAuthError('Authentication required. Please log in to view your orders.');
+        setAuthError('Authentication required. Please log in to view admin orders.');
       } finally {
         setLoading(false);
       }
     };
 
-    loadUserAndOrders();
-  }, []);
-
-  const handleLoginClick = () => {
-    navigate('/demo/ecommerce/products');
-  };
+    loadOrders();
+  }, [navigate]);
 
   const handleOrderClick = (order: Order) => {
     setSelectedOrder(order);
@@ -168,6 +182,104 @@ function MyOrdersView() {
 
   const handleCloseModal = () => {
     setSelectedOrder(null);
+    setIsEditModalOpen(false);
+    setEditError(null);
+  };
+
+  const handleOpenEditModal = () => {
+    if (!selectedOrder) return;
+
+    setEditFormValues({
+      firstname: selectedOrder.customer_first_name ?? '',
+      lastname: selectedOrder.customer_last_name ?? '',
+      streetAddress: selectedOrder.shipping_address?.street ?? '',
+      postCode: selectedOrder.shipping_address?.postal_code ?? '',
+      city: selectedOrder.shipping_address?.city ?? '',
+      state: selectedOrder.shipping_address?.state ?? '',
+      country: selectedOrder.shipping_address?.country ?? '',
+      email: selectedOrder.customer_email ?? '',
+      phone: selectedOrder.customer_phone ?? '',
+      notes: selectedOrder.notes ?? '',
+      status: selectedOrder.status ?? 'pending',
+    });
+    setEditError(null);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditError(null);
+  };
+
+  const handleEditFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = event.target;
+    setEditFormValues((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleEditOrderSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!selectedOrder?.id) {
+      setEditError('Order ID is missing.');
+      return;
+    }
+
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      setEditError('Authentication required. Please log in again.');
+      return;
+    }
+
+    setEditSubmitting(true);
+    setEditError(null);
+
+    try {
+      const addressPayload = {
+        street: editFormValues.streetAddress.trim(),
+        city: editFormValues.city.trim(),
+        state: editFormValues.state.trim(),
+        postal_code: editFormValues.postCode.trim(),
+        country: editFormValues.country.trim(),
+      };
+
+      const updatedOrder = await updateOrder(
+        selectedOrder.id,
+        {
+          customer_first_name: editFormValues.firstname.trim(),
+          customer_last_name: editFormValues.lastname.trim(),
+          customer_email: editFormValues.email.trim(),
+          customer_phone: editFormValues.phone.trim(),
+          shipping_address: addressPayload,
+          billing_address: addressPayload,
+          status: editFormValues.status,
+          notes: editFormValues.notes.trim() || undefined,
+          items: Array.isArray(selectedOrder.items)
+            ? selectedOrder.items.map((item) => ({
+                product_id: item.product_id,
+                quantity: item.quantity,
+              }))
+            : undefined,
+        },
+        token
+      );
+
+      const mergedOrder: Order = {
+        ...selectedOrder,
+        ...updatedOrder,
+        items: Array.isArray(updatedOrder.items) ? updatedOrder.items : selectedOrder.items,
+      };
+
+      setOrders((currentOrders) =>
+        currentOrders.map((order) => (order.id === selectedOrder.id ? mergedOrder : order))
+      );
+      setSelectedOrder(mergedOrder);
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Failed to update order:', error);
+      setEditError('Failed to update order. Please try again.');
+    } finally {
+      setEditSubmitting(false);
+    }
   };
 
   const cartCount = getCart().reduce((sum, item) => sum + item.quantity, 0);
@@ -175,11 +287,10 @@ function MyOrdersView() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <EcommerceHeader
-        title="My Orders"
+        title="Admin Orders"
         backTo="/demo/ecommerce/products"
         backLabel="Back to products"
         cartCount={cartCount}
-        activeNav="my-orders"
       />
 
       <main className="container mx-auto px-4 py-8">
@@ -202,7 +313,7 @@ function MyOrdersView() {
             <p className="text-lg text-yellow-300 mb-4">{authError}</p>
             {authError !== PERMISSION_MESSAGE && (
               <button
-                onClick={handleLoginClick}
+                onClick={() => navigate('/demo/ecommerce/products')}
                 className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
               >
                 Go to Products
@@ -214,7 +325,7 @@ function MyOrdersView() {
         {loading && !authError && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-            <p className="mt-4 text-gray-300">Loading your orders...</p>
+            <p className="mt-4 text-gray-300">Loading all customer orders...</p>
           </div>
         )}
 
@@ -306,17 +417,15 @@ function MyOrdersView() {
         )}
       </main>
 
-      {/* Order Detail Modal */}
       {selectedOrder && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={handleCloseModal}
         >
-          <div 
+          <div
             className="bg-gray-800 rounded-lg border border-gray-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div className="sticky top-0 bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">Order Details #{selectedOrder.id}</h2>
               <button
@@ -330,9 +439,7 @@ function MyOrdersView() {
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="p-6 space-y-6">
-              {/* Order Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="text-sm">
@@ -377,7 +484,6 @@ function MyOrdersView() {
                 </div>
               </div>
 
-              {/* Shipping Address */}
               {selectedOrder.shipping_address && (
                 <div className="border-t border-gray-700 pt-4">
                   <h3 className="text-sm font-semibold text-gray-400 mb-2">Shipping Address</h3>
@@ -389,13 +495,11 @@ function MyOrdersView() {
                 </div>
               )}
 
-              {/* Order Items */}
               {Array.isArray(selectedOrder.items) && selectedOrder.items.length > 0 && (
                 <div className="border-t border-gray-700 pt-4">
                   <h3 className="text-sm font-semibold text-gray-400 mb-4">Order Items</h3>
                   <div className="space-y-4">
                     {selectedOrder.items.map((item, itemIndex) => (
-                      
                       <div key={itemIndex} className="flex items-center gap-4 bg-gray-900/40 rounded-lg p-4">
                         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-gray-900">
                           <img
@@ -436,7 +540,6 @@ function MyOrdersView() {
                 </div>
               )}
 
-              {/* Notes */}
               {selectedOrder.notes && (
                 <div className="border-t border-gray-700 pt-4">
                   <h3 className="text-sm font-semibold text-gray-400 mb-2">Order Notes</h3>
@@ -445,8 +548,13 @@ function MyOrdersView() {
               )}
             </div>
 
-            {/* Modal Footer */}
-            <div className="sticky bottom-0 bg-gray-800 border-t border-gray-700 px-6 py-4 flex justify-end">
+            <div className="sticky bottom-0 bg-gray-800 border-t border-gray-700 px-6 py-4 flex items-center justify-between">
+              <button
+                onClick={handleOpenEditModal}
+                className="rounded-lg bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700 transition-colors"
+              >
+                Edit order
+              </button>
               <button
                 onClick={handleCloseModal}
                 className="rounded-lg bg-gray-700 px-6 py-2 font-semibold text-white hover:bg-gray-600 transition-colors"
@@ -457,8 +565,190 @@ function MyOrdersView() {
           </div>
         </div>
       )}
+
+      {selectedOrder && isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-60 p-4"
+          onClick={handleCloseEditModal}
+        >
+          <div
+            className="bg-gray-800 rounded-lg border border-gray-700 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold">Edit Order #{selectedOrder.id}</h3>
+              <button
+                onClick={handleCloseEditModal}
+                className="text-gray-400 hover:text-white transition-colors"
+                aria-label="Close edit modal"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleEditOrderSubmit} className="p-6 space-y-4">
+              {editError && (
+                <div className="rounded-lg border border-red-500/30 bg-red-900/20 px-3 py-2 text-sm text-red-300">
+                  {editError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-white/80">Firstname</label>
+                  <input
+                    name="firstname"
+                    required
+                    value={editFormValues.firstname}
+                    onChange={handleEditFormChange}
+                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/80">Lastname</label>
+                  <input
+                    name="lastname"
+                    required
+                    value={editFormValues.lastname}
+                    onChange={handleEditFormChange}
+                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white/80">Street address</label>
+                <input
+                  name="streetAddress"
+                  required
+                  value={editFormValues.streetAddress}
+                  onChange={handleEditFormChange}
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-white/80">Post code</label>
+                  <input
+                    name="postCode"
+                    required
+                    value={editFormValues.postCode}
+                    onChange={handleEditFormChange}
+                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/80">State</label>
+                  <input
+                    name="state"
+                    required
+                    value={editFormValues.state}
+                    onChange={handleEditFormChange}
+                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-white/80">City</label>
+                  <input
+                    name="city"
+                    required
+                    value={editFormValues.city}
+                    onChange={handleEditFormChange}
+                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/80">Country</label>
+                  <input
+                    name="country"
+                    required
+                    value={editFormValues.country}
+                    onChange={handleEditFormChange}
+                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-white/80">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={editFormValues.email}
+                    onChange={handleEditFormChange}
+                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/80">Phone</label>
+                  <input
+                    name="phone"
+                    required
+                    value={editFormValues.phone}
+                    onChange={handleEditFormChange}
+                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white/80">Order status</label>
+                <select
+                  name="status"
+                  required
+                  value={editFormValues.status}
+                  onChange={handleEditFormChange}
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {ORDER_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white/80">Notes</label>
+                <textarea
+                  name="notes"
+                  rows={4}
+                  value={editFormValues.notes}
+                  onChange={handleEditFormChange}
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCloseEditModal}
+                  className="rounded-lg bg-gray-700 px-6 py-2 font-semibold text-white hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="rounded-lg bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {editSubmitting ? 'Saving...' : 'Save changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default MyOrdersView;
+export default AdminOrdersView;

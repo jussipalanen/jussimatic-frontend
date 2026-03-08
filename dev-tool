@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Development script for jussimatic-frontend
+
+set -e
+
+COMMAND=${1:-local}
+
+case $COMMAND in
+  up)
+    echo "Starting Docker Compose development environment..."
+    docker compose up frontend-dev
+    ;;
+  
+  rebuild)
+    echo "Rebuilding and restarting Docker Compose (detached mode)..."
+    docker compose up -d --build --force-recreate frontend-dev
+    ;;
+  
+  down)
+    echo "Stopping Docker Compose..."
+    docker compose down
+    ;;
+  
+  logs)
+    echo "Showing Docker Compose logs..."
+    docker compose logs -f frontend-dev
+    ;;
+  
+  build)
+    echo "Building Docker image..."
+    docker compose build frontend-dev
+    ;;
+  
+  restart)
+    echo "Restarting Docker Compose..."
+    docker compose restart frontend-dev
+    ;;
+  
+  local)
+    echo "Starting local development environment..."
+    
+    # Install dependencies if node_modules doesn't exist
+    if [ ! -d "node_modules" ]; then
+      echo "Installing dependencies..."
+      npm install
+    fi
+    
+    # Start the development server
+    echo "Starting Vite dev server..."
+    npm run dev
+    ;;
+  
+  *)
+    echo "Usage: ./dev-tool [COMMAND]"
+    echo ""
+    echo "Commands:"
+    echo "  up       - Start Docker Compose development environment"
+    echo "  rebuild  - Rebuild and restart Docker Compose (detached, force-recreate)"
+    echo "  down     - Stop Docker Compose"
+    echo "  logs     - Show Docker Compose logs"
+    echo "  build    - Build Docker image"
+    echo "  restart  - Restart Docker Compose"
+    echo "  local    - Start local development (default)"
+    echo ""
+    exit 1
+    ;;
+esac

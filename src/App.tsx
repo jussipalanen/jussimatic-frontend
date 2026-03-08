@@ -7,6 +7,10 @@ import ProductsView from './ProductsView'
 import CartView from './CartView'
 import CheckoutView from './CheckoutView'
 import MyOrdersView from './MyOrdersView'
+import MyProfileView from './MyProfileView'
+import AdminOrdersView from './AdminOrdersView'
+import AdminDashboardView from './AdminDashboardView'
+import AdminUsersView from './AdminUsersView'
 
 function App() {
   return (
@@ -19,6 +23,10 @@ function App() {
         <Route path="/demo/ecommerce/cart" element={<CartView />} />
         <Route path="/demo/ecommerce/checkout" element={<CheckoutView />} />
         <Route path="/demo/ecommerce/my-orders" element={<MyOrdersView />} />
+        <Route path="/demo/ecommerce/my-profile" element={<MyProfileView />} />
+        <Route path="/demo/ecommerce/admin" element={<AdminDashboardView />} />
+        <Route path="/demo/ecommerce/admin/orders" element={<AdminOrdersView />} />
+        <Route path="/demo/ecommerce/admin/users" element={<AdminUsersView />} />
       </Routes>
     </Router>
   )

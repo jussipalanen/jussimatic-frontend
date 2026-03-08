@@ -54,10 +54,39 @@ export async function createOrder(data: CreateOrderData): Promise<unknown> {
   return response.json();
 }
 
+export interface UpdateOrderData {
+  customer_first_name: string;
+  customer_last_name: string;
+  customer_email: string;
+  customer_phone: string;
+  shipping_address: {
+    street: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+  };
+  billing_address: {
+    street: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+  };
+  status?: string;
+  notes?: string;
+  items?: Array<{
+    product_id: number;
+    quantity: number;
+  }>;
+}
+
 export interface OrderItem {
   product_id: number;
   quantity: number;
   price?: string | number;
+  unit_price?: string | number;
+  sale_price?: string | number;
   product_title?: string;
   featured_image?: string | null;
   subtotal?: string | number;
@@ -124,4 +153,67 @@ export async function fetchOrdersByUserId(userId: string | number, token?: strin
     return data.data;
   }
   return [];
+}
+
+export async function fetchAllOrders(token?: string): Promise<Order[]> {
+  const url = buildUrl('orders');
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = (await response.json()) as OrdersListResponse;
+  if (data && Array.isArray(data.data)) {
+    return data.data;
+  }
+  return [];
+}
+
+export async function updateOrder(id: number, data: UpdateOrderData, token?: string): Promise<Order> {
+  const url = buildUrl(`orders/${id}`);
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const responseData = (await response.json()) as unknown;
+  if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+    const wrapped = (responseData as { data?: Order }).data;
+    if (wrapped) {
+      return wrapped;
+    }
+  }
+
+  if (responseData && typeof responseData === 'object') {
+    return responseData as Order;
+  }
+
+  throw new Error('Invalid response format when updating order');
 }

@@ -1,8 +1,10 @@
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { fetchProducts, createProduct, updateProduct, deleteProduct } from './api/productsApi';
 import type { Product, ProductsResponse } from './api/productsApi';
 import { addToCart, getCartCount } from './utils/cartUtils';
+import EcommerceHeader from './EcommerceHeader';
+import { getMe } from './api/authApi';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -23,7 +25,6 @@ const SORT_OPTIONS = [
 ];
 
 function ProductsView() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +64,7 @@ function ProductsView() {
   const [deleting, setDeleting] = useState(false);
   const [cartCount, setCartCount] = useState(getCartCount());
   const [showCartSuccess, setShowCartSuccess] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   const totalPages = useMemo(() => {
     if (pagination?.last_page) return pagination.last_page;
@@ -75,6 +77,24 @@ function ProductsView() {
   useEffect(() => {
     loadProducts(1, appliedSearch, perPage, sortBy, sortDir);
   }, [appliedSearch, perPage, sortBy, sortDir]);
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      try {
+        const me = await getMe();
+        const candidateId = (me as { user_id?: number; id?: number; user?: { id?: number } })?.user_id
+          ?? (me as { user?: { id?: number } })?.user?.id
+          ?? (me as { id?: number })?.id;
+        setCurrentUserId(typeof candidateId === 'number' ? candidateId : null);
+      } catch (err) {
+        console.warn('Failed to load current user:', err);
+        setCurrentUserId(null);
+      }
+    };
+
+    loadCurrentUser();
+  }, []);
+
 
   const loadProducts = async (page: number, search: string, limit: number, sortBy: string, sortDir: 'asc' | 'desc') => {
     try {
@@ -370,6 +390,11 @@ function ProductsView() {
       return;
     }
 
+    if (!currentUserId) {
+      setFormErrors({ submit: 'Unable to determine current user. Please log in again.' });
+      return;
+    }
+
     setSubmitting(true);
     try {
       const productData: any = {
@@ -379,6 +404,7 @@ function ProductsView() {
         sale_price: formValues.salePrice.trim() || undefined,
         quantity: formValues.quantity.trim(),
         visibility: formValues.visibility === 'show' ? '1' : '0',
+        user_id: currentUserId,
         featured_image: featuredFile || undefined,
         images: imageFiles.length > 0 ? imageFiles : undefined,
       };
@@ -455,40 +481,13 @@ function ProductsView() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => navigate('/')}
-              className="text-white hover:text-gray-300 transition-colors"
-              aria-label="Back to home"
-            >
-              ← Back
-            </button>
-            <button
-              onClick={() => navigate('/demo/ecommerce/cart')}
-              className="relative text-white hover:text-gray-300 transition-colors"
-              aria-label="View cart"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 rounded-full px-1.5 py-0.5 text-xs font-semibold leading-none">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-            <h1 className="text-2xl font-bold">Products</h1>
-          </div>
-          <button
-            onClick={() => navigate('/demo/ecommerce/my-orders')}
-            className="rounded-lg border border-gray-600 px-3 py-2 text-sm font-semibold text-gray-200 hover:bg-gray-700"
-          >
-            My Orders
-          </button>
-        </div>
-      </header>
+      <EcommerceHeader
+        title="Products"
+        backTo="/"
+        backLabel="Back to home"
+        cartCount={cartCount}
+        activeNav="products"
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">

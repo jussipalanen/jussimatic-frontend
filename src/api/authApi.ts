@@ -47,8 +47,8 @@ export interface LoginPayload {
 export interface RegisterPayload {
   username: string;
   email: string;
-  firstname: string;
-  lastname: string;
+  first_name: string;
+  last_name: string;
   password: string;
   password_confirmation: string;
 }
@@ -65,8 +65,14 @@ export async function logoutUser(token: string) {
   return postJson<unknown>('logout', {}, token);
 }
 
+export async function requestPasswordReset(email: string) {
+  return postJson<unknown>('lost-password', { email });
+}
+
 export interface User {
   user_id: number;
+  role?: string;
+  is_admin?: boolean;
   [key: string]: unknown;
 }
 

@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { getCart, removeFromCart, updateCartItemQuantity, clearCart } from './utils/cartUtils';
 import type { CartItem } from './utils/cartUtils';
+import EcommerceHeader from './EcommerceHeader';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -52,31 +53,28 @@ function CartView() {
     }, 0);
   };
 
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/demo/ecommerce/products')}
-              className="text-white hover:text-gray-300 transition-colors"
-              aria-label="Back to products"
-            >
-              ← Back
-            </button>
-            <h1 className="text-2xl font-bold">Shopping Cart</h1>
-          </div>
-          {cartItems.length > 0 && (
+      <EcommerceHeader
+        title="Shopping Cart"
+        backTo="/demo/ecommerce/products"
+        backLabel="Back to products"
+        cartCount={cartCount}
+        activeNav="cart"
+        actions={
+          cartItems.length > 0 ? (
             <button
               onClick={handleClearCart}
-              className="rounded-lg border border-red-500/60 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-600/20 transition-colors"
+              className="rounded-lg border border-red-500/60 px-3 py-2 text-sm font-semibold text-red-300 hover:bg-red-600/20 transition-colors"
             >
               Clear Cart
             </button>
-          )}
-        </div>
-      </header>
+          ) : null
+        }
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">

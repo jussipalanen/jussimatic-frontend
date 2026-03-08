@@ -87,6 +87,29 @@ export async function fetchProducts(query: ProductsQuery): Promise<ProductsRespo
   }
 }
 
+export async function fetchProductById(id: number): Promise<Product> {
+  try {
+    const url = buildUrl(`products/${id}`);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data as Product;
+  } catch (error) {
+    console.error('Error fetching product by ID:', error);
+    throw error;
+  }
+}
+
 export interface CreateProductData {
   title: string;
   description: string;
@@ -94,6 +117,7 @@ export interface CreateProductData {
   sale_price?: string;
   quantity: string;
   visibility: string;
+  user_id?: number;
   featured_image?: File;
   images?: File[];
 }
@@ -109,6 +133,9 @@ export async function createProduct(data: CreateProductData): Promise<Product> {
     }
     formData.append('quantity', data.quantity);
     formData.append('visibility', data.visibility);
+    if (typeof data.user_id === 'number') {
+      formData.append('user_id', String(data.user_id));
+    }
     
     if (data.featured_image) {
       formData.append('featured_image', data.featured_image);
@@ -145,6 +172,7 @@ export interface UpdateProductData {
   sale_price?: string;
   quantity: string;
   visibility: string;
+  user_id?: number;
   featured_image?: File;
   images?: File[];
   delete_featured_image?: string;
@@ -163,6 +191,9 @@ export async function updateProduct(id: number, data: UpdateProductData): Promis
     }
     formData.append('quantity', data.quantity);
     formData.append('visibility', data.visibility);
+    if (typeof data.user_id === 'number') {
+      formData.append('user_id', String(data.user_id));
+    }
     
     if (data.featured_image) {
       formData.append('featured_image', data.featured_image);

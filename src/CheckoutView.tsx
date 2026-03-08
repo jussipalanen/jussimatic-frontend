@@ -4,6 +4,7 @@ import { createOrder } from './api/ordersApi';
 import { getMe } from './api/authApi';
 import { clearCart, getCart } from './utils/cartUtils';
 import type { CartItem } from './utils/cartUtils';
+import EcommerceHeader from './EcommerceHeader';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -111,22 +112,16 @@ function CheckoutView() {
     }
   };
 
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/demo/ecommerce/cart')}
-              className="text-white hover:text-gray-300 transition-colors"
-              aria-label="Back to cart"
-            >
-              ← Back
-            </button>
-            <h1 className="text-2xl font-bold">Checkout</h1>
-          </div>
-        </div>
-      </header>
+      <EcommerceHeader
+        title="Checkout"
+        backTo="/demo/ecommerce/cart"
+        backLabel="Back to cart"
+        cartCount={cartCount}
+      />
 
       <main className="container mx-auto px-4 py-8">
         {cartItems.length === 0 ? (
