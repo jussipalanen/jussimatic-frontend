@@ -5,6 +5,7 @@ import type { Product, ProductsResponse } from './api/productsApi';
 import { addToCart, getCartCount } from './utils/cartUtils';
 import EcommerceHeader from './EcommerceHeader';
 import { getMe } from './api/authApi';
+import { getRoleAccess } from './utils/authUtils';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -65,6 +66,7 @@ function ProductsView() {
   const [cartCount, setCartCount] = useState(getCartCount());
   const [showCartSuccess, setShowCartSuccess] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [canManageProducts, setCanManageProducts] = useState(false);
 
   const totalPages = useMemo(() => {
     if (pagination?.last_page) return pagination.last_page;
@@ -82,6 +84,8 @@ function ProductsView() {
     const loadCurrentUser = async () => {
       try {
         const me = await getMe();
+        const access = getRoleAccess(me);
+        setCanManageProducts(access.isAdmin || access.isVendor);
         const candidateId = (me as { user_id?: number; id?: number; user?: { id?: number } })?.user_id
           ?? (me as { user?: { id?: number } })?.user?.id
           ?? (me as { id?: number })?.id;
@@ -89,11 +93,18 @@ function ProductsView() {
       } catch (err) {
         console.warn('Failed to load current user:', err);
         setCurrentUserId(null);
+        setCanManageProducts(false);
       }
     };
 
     loadCurrentUser();
   }, []);
+
+  useEffect(() => {
+    if (!canManageProducts && (activeModal === 'create' || activeModal === 'edit')) {
+      closeModal();
+    }
+  }, [canManageProducts, activeModal]);
 
 
   const loadProducts = async (page: number, search: string, limit: number, sortBy: string, sortDir: 'asc' | 'desc') => {
@@ -178,12 +189,14 @@ function ProductsView() {
   };
 
   const openCreateModal = () => {
+    if (!canManageProducts) return;
     setActiveProduct(null);
     resetForm();
     setActiveModal('create');
   };
 
   const openEditModal = (product: Product) => {
+    if (!canManageProducts) return;
     setActiveProduct(product);
     setFormValues({
       title: product.title ?? '',
@@ -386,6 +399,10 @@ function ProductsView() {
   };
 
   const handleSubmit = async () => {
+    if (!canManageProducts) {
+      setFormErrors({ submit: 'You do not have permission to manage products.' });
+      return;
+    }
     if (!validateForm()) {
       return;
     }
@@ -437,6 +454,7 @@ function ProductsView() {
   };
 
   const handleDeleteClick = () => {
+    if (!canManageProducts) return;
     setShowDeleteConfirm(true);
   };
 
@@ -446,6 +464,7 @@ function ProductsView() {
 
   const handleDeleteConfirm = async () => {
     if (!activeProduct) return;
+    if (!canManageProducts) return;
 
     setDeleting(true);
     try {
@@ -565,12 +584,14 @@ function ProductsView() {
               >
                 Clear
               </button>
-              <button
-                onClick={openCreateModal}
-                className="rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
-              >
-                Create
-              </button>
+              {canManageProducts && (
+                <button
+                  onClick={openCreateModal}
+                  className="rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
+                >
+                  Create
+                </button>
+              )}
             </div>
           </div>
           {pagination && (
@@ -623,12 +644,14 @@ function ProductsView() {
                     >
                       Details
                     </button>
-                    <button
-                      onClick={() => openEditModal(product)}
-                      className="rounded-md border border-blue-500/60 px-3 py-1 text-xs text-blue-200 hover:bg-blue-600/20"
-                    >
-                      Edit
-                    </button>
+                    {canManageProducts && (
+                      <button
+                        onClick={() => openEditModal(product)}
+                        className="rounded-md border border-blue-500/60 px-3 py-1 text-xs text-blue-200 hover:bg-blue-600/20"
+                      >
+                        Edit
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -835,21 +858,23 @@ function ProductsView() {
                         </svg>
                         {activeProduct.quantity === 0 ? 'Out of Stock' : 'Add to cart'}
                       </button>
-                      <div className="flex gap-3">
-                        <button
-                          onClick={handleDeleteClick}
-                          disabled={deleting}
-                          className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Delete
-                        </button>
-                        <button
-                          onClick={() => openEditModal(activeProduct)}
-                          className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
-                        >
-                          Edit
-                        </button>
-                      </div>
+                      {canManageProducts && (
+                        <div className="flex gap-3">
+                          <button
+                            onClick={handleDeleteClick}
+                            disabled={deleting}
+                            className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => openEditModal(activeProduct)}
+                            className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
