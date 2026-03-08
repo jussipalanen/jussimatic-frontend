@@ -11,6 +11,7 @@ import MyProfileView from './MyProfileView'
 import AdminOrdersView from './AdminOrdersView'
 import AdminDashboardView from './AdminDashboardView'
 import AdminUsersView from './AdminUsersView'
+import ResetPasswordView from './ResetPasswordView'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/demo/ecommerce/admin" element={<AdminDashboardView />} />
         <Route path="/demo/ecommerce/admin/orders" element={<AdminOrdersView />} />
         <Route path="/demo/ecommerce/admin/users" element={<AdminUsersView />} />
+        <Route path="/reset-password" element={<ResetPasswordView />} />
       </Routes>
     </Router>
   )

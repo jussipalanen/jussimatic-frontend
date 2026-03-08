@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import { logoutUser } from './api/authApi';
@@ -6,6 +6,7 @@ import AuthModal from './AuthModal';
 
 function LandingView() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const year = new Date().getFullYear();
   const [language] = useState(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
@@ -17,6 +18,15 @@ function LandingView() {
     const token = localStorage.getItem('auth_token');
     setIsLoggedIn(!!token);
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('auth') !== 'login') return;
+
+    setIsModalOpen(true);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('auth');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const handleLogout = async () => {
     const token = localStorage.getItem('auth_token');
