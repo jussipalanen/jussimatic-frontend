@@ -69,6 +69,17 @@ export async function requestPasswordReset(email: string) {
   return postJson<unknown>('lost-password', { email });
 }
 
+export interface ResetPasswordPayload {
+  token: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
+export async function resetPassword(payload: ResetPasswordPayload) {
+  return postJson<unknown>('reset-password', payload);
+}
+
 export interface User {
   user_id: number;
   role?: string;

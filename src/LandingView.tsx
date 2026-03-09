@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import { logoutUser } from './api/authApi';
@@ -6,6 +6,7 @@ import AuthModal from './AuthModal';
 
 function LandingView() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const year = new Date().getFullYear();
   const [language] = useState(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
@@ -17,6 +18,15 @@ function LandingView() {
     const token = localStorage.getItem('auth_token');
     setIsLoggedIn(!!token);
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('auth') !== 'login') return;
+
+    setIsModalOpen(true);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('auth');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const handleLogout = async () => {
     const token = localStorage.getItem('auth_token');
@@ -36,41 +46,41 @@ function LandingView() {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       {/* Hero Section */}
-      <header className="grow flex items-center justify-center px-4 py-16">
-        <div className="text-center">
-          <h1 className="text-5xl font-bold mb-4">{t.landing.title}</h1>
-          <p className="text-xl mb-8">{t.landing.subtitle}</p>
-          <div className="flex gap-4 justify-center">
+      <header className="grow flex items-center justify-center px-4 py-12 sm:py-16">
+        <div className="text-center w-full max-w-3xl">
+          <h1 className="text-3xl sm:text-5xl font-bold mb-4">{t.landing.title}</h1>
+          <p className="text-lg sm:text-xl mb-8">{t.landing.subtitle}</p>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 justify-center">
             <button 
               onClick={() => navigate('/chat')}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             >
               {t.landing.cta}
             </button>
             {isLoggedIn ? (
               <button
                 onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
               >
                 Logout
               </button>
             ) : (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded border border-white/20"
+                className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded border border-white/20"
               >
                 Login
               </button>
             )}
             <button 
               onClick={() => navigate('/jobs')}
-              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
             >
               {t.landing.jobsCta}
             </button>
             <button 
               onClick={() => navigate('/demo/ecommerce/products')}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+              className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
             >
               Ecommerce Demo
             </button>
