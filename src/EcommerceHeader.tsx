@@ -30,6 +30,7 @@ function EcommerceHeader({
   const [roleAccess, setRoleAccess] = useState<ReturnType<typeof getRoleAccess> | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authInitialTab, setAuthInitialTab] = useState<'login' | 'register'>('login');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isProductsActive = activeNav === 'products';
   const isCartActive = activeNav === 'cart';
   const isOrdersActive = activeNav === 'my-orders';
@@ -72,8 +73,14 @@ function EcommerceHeader({
     } finally {
       localStorage.removeItem('auth_token');
       setRoleAccess(null);
+      setIsMobileMenuOpen(false);
       window.location.reload();
     }
+  };
+
+  const navigateAndCloseMenu = (path: string) => {
+    navigate(path);
+    setIsMobileMenuOpen(false);
   };
 
   const canShowOrdersNav = Boolean(isLoggedIn && roleAccess && !roleAccess.isCustomer);
@@ -83,24 +90,38 @@ function EcommerceHeader({
     <>
       <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
               <button
                 onClick={() => navigate(backTo)}
-                className="text-white hover:text-gray-300 transition-colors"
+                className="text-sm sm:text-base text-white hover:text-gray-300 transition-colors shrink-0"
                 aria-label={backLabel}
               >
                 ← Back
               </button>
-              <h1 className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold">{ECOMMERCE_MAIN_TITLE}</span>
-                <span className="text-xl font-semibold text-gray-300">/ {title}</span>
+              <h1 className="flex min-w-0 items-baseline gap-2 flex-wrap">
+                <span className="text-xl sm:text-2xl font-bold truncate">{ECOMMERCE_MAIN_TITLE}</span>
+                <span className="text-base sm:text-xl font-semibold text-gray-300 truncate">/ {title}</span>
               </h1>
             </div>
-            <div className="flex items-center gap-3">
+
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              className="lg:hidden rounded-lg border border-gray-600 p-2 text-white hover:bg-gray-700 transition-colors"
+              aria-label="Toggle navigation menu"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="ecommerce-mobile-menu"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+
+            <div className="hidden lg:flex items-center gap-3">
               {actions && <div className="flex items-center gap-3">{actions}</div>}
               <button
-                onClick={() => navigate('/demo/ecommerce/products')}
+                onClick={() => navigateAndCloseMenu('/demo/ecommerce/products')}
                 className={isProductsActive ? activeButtonClass : navButtonClass}
                 aria-label="Browse products"
                 disabled={isProductsActive}
@@ -114,7 +135,7 @@ function EcommerceHeader({
                 </div>
               </button>
               <button
-                onClick={() => navigate('/demo/ecommerce/cart')}
+                onClick={() => navigateAndCloseMenu('/demo/ecommerce/cart')}
                 className={isCartActive ? `relative ${activeButtonClass}` : `relative ${navButtonClass}`}
                 aria-label="View cart"
                 disabled={isCartActive}
@@ -134,7 +155,7 @@ function EcommerceHeader({
               </button>
               {canShowOrdersNav && (
                 <button
-                  onClick={() => navigate('/demo/ecommerce/my-orders')}
+                  onClick={() => navigateAndCloseMenu('/demo/ecommerce/my-orders')}
                   className={isOrdersActive ? activeWideButtonClass : navWideButtonClass}
                   disabled={isOrdersActive}
                   aria-current={isOrdersActive ? 'page' : undefined}
@@ -144,7 +165,7 @@ function EcommerceHeader({
               )}
               {isLoggedIn && (
                 <button
-                  onClick={() => navigate('/demo/ecommerce/my-profile')}
+                  onClick={() => navigateAndCloseMenu('/demo/ecommerce/my-profile')}
                   className={isProfileActive ? activeWideButtonClass : navWideButtonClass}
                   disabled={isProfileActive}
                   aria-current={isProfileActive ? 'page' : undefined}
@@ -154,7 +175,7 @@ function EcommerceHeader({
               )}
               {canShowAdminNav && (
                 <button
-                  onClick={() => navigate('/demo/ecommerce/admin')}
+                  onClick={() => navigateAndCloseMenu('/demo/ecommerce/admin')}
                   className={isAdminActive ? activeWideButtonClass : navWideButtonClass}
                   disabled={isAdminActive}
                   aria-current={isAdminActive ? 'page' : undefined}
@@ -193,6 +214,91 @@ function EcommerceHeader({
               )}
             </div>
           </div>
+
+          {isMobileMenuOpen && (
+            <div id="ecommerce-mobile-menu" className="mt-4 space-y-2 rounded-xl border border-gray-700 bg-gray-900/80 p-3 lg:hidden">
+              {actions && <div className="flex flex-wrap items-center gap-2 pb-1">{actions}</div>}
+              <button
+                onClick={() => navigateAndCloseMenu('/demo/ecommerce/products')}
+                className={`w-full text-left ${isProductsActive ? activeButtonClass : navButtonClass}`}
+                aria-label="Browse products"
+                disabled={isProductsActive}
+                aria-current={isProductsActive ? 'page' : undefined}
+              >
+                Browse Products
+              </button>
+              <button
+                onClick={() => navigateAndCloseMenu('/demo/ecommerce/cart')}
+                className={`relative w-full text-left ${isCartActive ? activeButtonClass : navButtonClass}`}
+                aria-label="View cart"
+                disabled={isCartActive}
+                aria-current={isCartActive ? 'page' : undefined}
+              >
+                Cart {cartCount > 0 ? `(${cartCount})` : ''}
+              </button>
+              {canShowOrdersNav && (
+                <button
+                  onClick={() => navigateAndCloseMenu('/demo/ecommerce/my-orders')}
+                  className={`w-full text-left ${isOrdersActive ? activeWideButtonClass : navWideButtonClass}`}
+                  disabled={isOrdersActive}
+                  aria-current={isOrdersActive ? 'page' : undefined}
+                >
+                  My Orders
+                </button>
+              )}
+              {isLoggedIn && (
+                <button
+                  onClick={() => navigateAndCloseMenu('/demo/ecommerce/my-profile')}
+                  className={`w-full text-left ${isProfileActive ? activeWideButtonClass : navWideButtonClass}`}
+                  disabled={isProfileActive}
+                  aria-current={isProfileActive ? 'page' : undefined}
+                >
+                  My Profile
+                </button>
+              )}
+              {canShowAdminNav && (
+                <button
+                  onClick={() => navigateAndCloseMenu('/demo/ecommerce/admin')}
+                  className={`w-full text-left ${isAdminActive ? activeWideButtonClass : navWideButtonClass}`}
+                  disabled={isAdminActive}
+                  aria-current={isAdminActive ? 'page' : undefined}
+                >
+                  Admin Dashboard
+                </button>
+              )}
+              {isLoggedIn ? (
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                >
+                  Logout
+                </button>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setAuthInitialTab('login');
+                      setIsAuthModalOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAuthInitialTab('register');
+                      setIsAuthModalOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                  >
+                    Register
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </header>
 

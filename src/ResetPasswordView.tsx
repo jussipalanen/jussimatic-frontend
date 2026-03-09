@@ -7,7 +7,9 @@ function ResetPasswordView() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const token = (searchParams.get('token') ?? '').trim()
+  const email = (searchParams.get('email') ?? '').trim()
   const isTokenMissing = token.length === 0
+  const isEmailMissing = email.length === 0
 
   const [form, setForm] = useState({ password: '', repassword: '' })
   const [touched, setTouched] = useState({ password: false, repassword: false })
@@ -34,7 +36,7 @@ function ResetPasswordView() {
     return nextErrors
   }, [form])
 
-  const hasErrors = isTokenMissing || Object.keys(errors).length > 0
+  const hasErrors = isTokenMissing || isEmailMissing || Object.keys(errors).length > 0
 
   const shouldShowError = (field: keyof typeof touched) =>
     (submitted || touched[field]) && Boolean(errors[field])
@@ -52,6 +54,7 @@ function ResetPasswordView() {
     try {
       const data = await resetPassword({
         token,
+        email,
         password: form.password,
         password_confirmation: form.repassword,
       })
@@ -73,12 +76,18 @@ function ResetPasswordView() {
       <div className="mx-auto w-full max-w-lg rounded-2xl border border-white/10 bg-gray-800 p-6 shadow-2xl">
         <h1 className="text-2xl font-bold">Reset password</h1>
         <p className="mt-2 text-sm text-white/70">
-          Set a new password for your account using the reset link token.
+          Set a new password for your account using the reset link details.
         </p>
 
         {isTokenMissing && (
           <div className="mt-4 rounded-lg border border-red-500/30 bg-red-900/20 p-3 text-sm text-red-300">
             Reset token is missing. Please use the full reset link from your email.
+          </div>
+        )}
+
+        {isEmailMissing && (
+          <div className="mt-4 rounded-lg border border-red-500/30 bg-red-900/20 p-3 text-sm text-red-300">
+            Email is missing. Please use the full reset link from your email.
           </div>
         )}
 

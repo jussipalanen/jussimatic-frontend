@@ -211,11 +211,11 @@ function ChatView() {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       {/* Header */}
-      <header className="bg-gray-800 py-4 px-6 border-b border-gray-700">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t.chat.title}</h1>
+      <header className="bg-gray-800 py-4 px-4 sm:px-6 border-b border-gray-700">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-xl sm:text-2xl font-bold">{t.chat.title}</h1>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <label htmlFor="language" className="sr-only">
               {t.chat.languageLabel}
             </label>
@@ -223,14 +223,14 @@ function ChatView() {
               id="language"
               value={language}
               onChange={(e) => setLanguage(e.target.value as Language)}
-              className="bg-gray-900 text-white border border-gray-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="bg-gray-900 text-white border border-gray-700 rounded-lg px-3 py-1.5 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-600"
             >
               <option value="en">English</option>
               <option value="fi">Finnish</option>
             </select>
             <button
               onClick={() => navigate('/')}
-              className="text-gray-400 hover:text-white"
+              className="text-sm sm:text-base text-gray-400 hover:text-white"
             >
               ← {t.chat.back}
             </button>
@@ -239,7 +239,7 @@ function ChatView() {
       </header>
 
       {/* Chat content */}
-      <main className="grow flex flex-col p-4 min-h-0">
+      <main className="grow flex flex-col p-3 sm:p-4 min-h-0">
         <div className="flex-1 min-h-0 bg-gray-800 rounded-lg p-4 mb-4 overflow-y-auto">
           {messages.length === 0 ? (
             <p className="text-gray-400 text-center">{t.chat.empty}</p>
@@ -251,7 +251,7 @@ function ChatView() {
             className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
           >
             <div
-                    className={`max-w-[60%] rounded-lg px-4 py-2 ${
+                    className={`max-w-[88%] sm:max-w-[70%] lg:max-w-[60%] rounded-lg px-4 py-2 ${
                 msg.isUser
             ? 'bg-blue-600 text-white'
                         : 'bg-gray-700 text-gray-100 fade-in-message'
@@ -272,7 +272,7 @@ function ChatView() {
                       key={img.dataUri}
                       src={img.dataUri}
                       alt="AI generated"
-                      className="max-w-[320px] max-h-[200px] h-auto object-contain rounded-lg"
+                      className="max-w-[320px] max-h-50 h-auto object-contain rounded-lg"
                     />
                   ))}
                 </div>
@@ -287,7 +287,7 @@ function ChatView() {
               ))}
               {isLoading && (
           <div className="flex justify-start">
-            <div className="max-w-[70%] rounded-lg px-4 py-2 bg-gray-700 text-gray-100">
+            <div className="max-w-[88%] sm:max-w-[70%] rounded-lg px-4 py-2 bg-gray-700 text-gray-100">
               <div className="typing-indicator" aria-label="AI is typing">
                 <span className="typing-dot" />
                 <span className="typing-dot typing-dot--2" />
@@ -302,7 +302,7 @@ function ChatView() {
 
         {/* Input area */}
         <div className="flex flex-col gap-3">
-          <div className="flex gap-2 relative">
+          <div className="flex flex-col sm:flex-row gap-2 relative">
             <input 
               type="text" 
               placeholder={t.chat.inputPlaceholder}
@@ -310,12 +310,12 @@ function ChatView() {
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               disabled={isLoading}
-              className="grow bg-gray-800 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
+              className="w-full grow bg-gray-800 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
             />
             <button 
               onClick={handleSend}
               disabled={isLoading || !message.trim()}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? t.chat.sending : t.chat.send}
             </button>
@@ -323,7 +323,7 @@ function ChatView() {
             {/* Tips button */}
             <button
               onClick={() => setShowTips(!showTips)}
-              className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              className="w-full sm:w-auto bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
               title={t.chat.tips}
               aria-label={t.chat.tips}
             >
@@ -332,7 +332,7 @@ function ChatView() {
             
             {/* Tips dropdown */}
             {showTips && (
-              <div className="absolute bottom-full right-0 mb-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 z-10">
+              <div className="absolute bottom-full left-0 sm:left-auto sm:right-0 mb-2 w-full sm:w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 z-10">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-sm font-semibold text-gray-300">{t.chat.tips}</h3>
                   <button

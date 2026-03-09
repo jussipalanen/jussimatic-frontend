@@ -256,7 +256,13 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
 
         <div className="px-6 py-5">
           {activeTab === 'login' ? (
-            <div className="space-y-4">
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleLogin();
+              }}
+            >
               <div>
                 <label className="block text-sm font-medium text-white/80">Username or Email</label>
                 <input
@@ -305,13 +311,14 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
               </div>
               <div className="flex flex-col gap-3 pt-2">
                 <button
-                  onClick={handleLogin}
+                  type="submit"
                   disabled={loginHasErrors || loginLoading}
                   className="w-full rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loginLoading ? 'Logging in...' : 'Login'}
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setActiveTab('register');
                     setRegisterSubmitted(false);
@@ -338,9 +345,15 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   )}
                 </div>
               )}
-            </div>
+            </form>
           ) : activeTab === 'register' ? (
-            <div className="space-y-4">
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleRegister();
+              }}
+            >
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-white/80">Username</label>
@@ -440,6 +453,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
               </div>
               <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
                 <button
+                  type="button"
                   onClick={() => {
                     setActiveTab('login');
                     setLoginSubmitted(false);
@@ -449,6 +463,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   Login
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setRegisterForm({
                       username: '',
@@ -474,7 +489,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   Reset
                 </button>
                 <button
-                  onClick={handleRegister}
+                  type="submit"
                   disabled={registerHasErrors || registerLoading}
                   className="w-full rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
@@ -501,7 +516,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   )}
                 </div>
               )}
-            </div>
+            </form>
           ) : (
             <div className="space-y-4">
               <div>
