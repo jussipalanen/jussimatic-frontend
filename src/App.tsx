@@ -2,16 +2,17 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './App.css'
 import LandingView from './LandingView'
 import ChatView from './ChatView'
-import JobsView from './JobsView'
-import ProductsView from './ProductsView'
-import CartView from './CartView'
-import CheckoutView from './CheckoutView'
-import MyOrdersView from './MyOrdersView'
-import MyProfileView from './MyProfileView'
-import AdminOrdersView from './AdminOrdersView'
-import AdminDashboardView from './AdminDashboardView'
-import AdminUsersView from './AdminUsersView'
+import BrowseJobsView from './demo/browse-jobs'
+import ProductsView from './demo/ecommerce/views/ProductsView'
+import CartView from './demo/ecommerce/views/CartView'
+import CheckoutView from './demo/ecommerce/views/CheckoutView'
+import MyOrdersView from './demo/ecommerce/views/MyOrdersView'
+import MyProfileView from './demo/ecommerce/views/MyProfileView'
+import AdminOrdersView from './demo/ecommerce/views/AdminOrdersView'
+import AdminDashboardView from './demo/ecommerce/views/AdminDashboardView'
+import AdminUsersView from './demo/ecommerce/views/AdminUsersView'
 import ResetPasswordView from './ResetPasswordView'
+import AICVReviewView from './demo/ai-cv-review'
 
 function App() {
   return (
@@ -19,7 +20,8 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingView />} />
         <Route path="/chat" element={<ChatView />} />
-        <Route path="/jobs" element={<JobsView />} />
+        <Route path="/demo/browse-jobs" element={<BrowseJobsView />} />
+        <Route path="/demo/ai-cv-review" element={<AICVReviewView />} />
         <Route path="/demo/ecommerce/products" element={<ProductsView />} />
         <Route path="/demo/ecommerce/cart" element={<CartView />} />
         <Route path="/demo/ecommerce/checkout" element={<CheckoutView />} />

@@ -1,29 +1,15 @@
 import { useSearchParams, Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { fetchProducts, createProduct, updateProduct, deleteProduct } from './api/productsApi';
-import type { Product, ProductsResponse } from './api/productsApi';
-import { addToCart, getCartCount } from './utils/cartUtils';
-import EcommerceHeader from './EcommerceHeader';
-import { getMe } from './api/authApi';
-import { getRoleAccess } from './utils/authUtils';
+import { fetchProducts, createProduct, updateProduct, deleteProduct } from '../../../api/productsApi';
+import type { Product, ProductsResponse } from '../../../api/productsApi';
+import { addToCart, getCartCount } from '../../../utils/cartUtils';
+import EcommerceHeader from '../components/EcommerceHeader';
+import { getMe } from '../../../api/authApi';
+import { getRoleAccess } from '../../../utils/authUtils';
+import { getStoredLanguage, translations, type Language } from '../../../i18n';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
-
-const SORT_OPTIONS = [
-  { value: 'created_at_desc', label: 'Newest First' },
-  { value: 'created_at_asc', label: 'Oldest First' },
-  { value: 'title_asc', label: 'Title (A-Z)' },
-  { value: 'title_desc', label: 'Title (Z-A)' },
-  { value: 'price_asc', label: 'Price (Low to High)' },
-  { value: 'price_desc', label: 'Price (High to Low)' },
-  { value: 'sale_price_asc', label: 'Sale Price (Low to High)' },
-  { value: 'sale_price_desc', label: 'Sale Price (High to Low)' },
-  { value: 'quantity_asc', label: 'Quantity (Low to High)' },
-  { value: 'quantity_desc', label: 'Quantity (High to Low)' },
-  { value: 'updated_at_desc', label: 'Recently Updated' },
-  { value: 'updated_at_asc', label: 'Least Recently Updated' },
-];
 
 function ProductsView() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -67,6 +53,30 @@ function ProductsView() {
   const [showCartSuccess, setShowCartSuccess] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [canManageProducts, setCanManageProducts] = useState(false);
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+
+  useEffect(() => {
+    const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
+
+  const t = translations[language].products;
+
+  const sortOptions = [
+    { value: 'created_at_desc', label: t.sortNewestFirst },
+    { value: 'created_at_asc', label: t.sortOldestFirst },
+    { value: 'title_asc', label: t.sortTitleAZ },
+    { value: 'title_desc', label: t.sortTitleZA },
+    { value: 'price_asc', label: t.sortPriceLowHigh },
+    { value: 'price_desc', label: t.sortPriceHighLow },
+    { value: 'sale_price_asc', label: t.sortSalePriceLowHigh },
+    { value: 'sale_price_desc', label: t.sortSalePriceHighLow },
+    { value: 'quantity_asc', label: t.sortQuantityLowHigh },
+    { value: 'quantity_desc', label: t.sortQuantityHighLow },
+    { value: 'updated_at_desc', label: t.sortRecentlyUpdated },
+    { value: 'updated_at_asc', label: t.sortLeastRecentlyUpdated },
+  ];
 
   const totalPages = useMemo(() => {
     if (pagination?.last_page) return pagination.last_page;
@@ -128,7 +138,7 @@ function ProductsView() {
       setPagination(data);
       setProducts(data.data);
     } catch (err) {
-      setError('Failed to load products. Please try again later.');
+      setError(t.errorLoading);
       console.error('Error loading products:', err);
     } finally {
       setLoading(false);
@@ -262,9 +272,9 @@ function ProductsView() {
       const maxSize = 5 * 1024 * 1024; // 5MB
       
       if (!validTypes.includes(file.type)) {
-        errors.featured_image = 'Invalid file type. Allowed: JPG, PNG, GIF, WebP';
+        errors.featured_image = t.errFileType;
       } else if (file.size > maxSize) {
-        errors.featured_image = 'File too large. Maximum size is 5MB';
+        errors.featured_image = t.errFileSize;
       }
       
       setFormErrors((prev) => ({ ...prev, ...errors }));
@@ -290,15 +300,15 @@ function ProductsView() {
     const maxCount = 15;
     
     if (files.length > maxCount) {
-      errors.images = `Too many files. Maximum is ${maxCount} images`;
+      errors.images = t.errTooManyFiles;
     } else {
       for (const file of files) {
         if (!validTypes.includes(file.type)) {
-          errors.images = 'Invalid file type. All files must be JPG, PNG, GIF, or WebP';
+          errors.images = t.errImagesType;
           break;
         }
         if (file.size > maxSize) {
-          errors.images = 'One or more files exceed 5MB limit';
+          errors.images = t.errImagesSize;
           break;
         }
       }
@@ -364,25 +374,25 @@ function ProductsView() {
 
     // Required fields
     if (!formValues.title.trim()) {
-      errors.title = 'Title is required';
+      errors.title = t.errTitleRequired;
     }
     if (!formValues.description.trim()) {
-      errors.description = 'Description is required';
+      errors.description = t.errDescriptionRequired;
     }
     if (!formValues.price.trim()) {
-      errors.price = 'Price is required';
+      errors.price = t.errPriceRequired;
     } else {
       const priceNum = parseFloat(formValues.price);
       if (isNaN(priceNum) || priceNum <= 0) {
-        errors.price = 'Price must be a positive number';
+        errors.price = t.errPricePositive;
       }
     }
     if (!formValues.quantity.trim()) {
-      errors.quantity = 'Quantity is required';
+      errors.quantity = t.errQuantityRequired;
     } else {
       const quantityNum = parseInt(formValues.quantity, 10);
       if (isNaN(quantityNum) || quantityNum < 0) {
-        errors.quantity = 'Quantity must be a non-negative integer';
+        errors.quantity = t.errQuantityInteger;
       }
     }
 
@@ -390,7 +400,7 @@ function ProductsView() {
     if (formValues.salePrice.trim()) {
       const salePriceNum = parseFloat(formValues.salePrice);
       if (isNaN(salePriceNum) || salePriceNum <= 0) {
-        errors.salePrice = 'Sale price must be a positive number';
+        errors.salePrice = t.errSalePricePositive;
       }
     }
 
@@ -400,7 +410,7 @@ function ProductsView() {
 
   const handleSubmit = async () => {
     if (!canManageProducts) {
-      setFormErrors({ submit: 'You do not have permission to manage products.' });
+      setFormErrors({ submit: t.errNoPermission });
       return;
     }
     if (!validateForm()) {
@@ -408,7 +418,7 @@ function ProductsView() {
     }
 
     if (!currentUserId) {
-      setFormErrors({ submit: 'Unable to determine current user. Please log in again.' });
+      setFormErrors({ submit: t.errNoUser });
       return;
     }
 
@@ -447,7 +457,7 @@ function ProductsView() {
       await loadProducts(currentPage, appliedSearch, perPage, sortBy, sortDir);
     } catch (err) {
       console.error(`Failed to ${activeModal === 'create' ? 'create' : 'update'} product:`, err);
-      setFormErrors({ submit: `Failed to ${activeModal === 'create' ? 'create' : 'update'} product. Please try again.` });
+      setFormErrors({ submit: activeModal === 'create' ? t.errCreateFailed : t.errUpdateFailed });
     } finally {
       setSubmitting(false);
     }
@@ -473,7 +483,7 @@ function ProductsView() {
       await loadProducts(currentPage, appliedSearch, perPage, sortBy, sortDir);
     } catch (err) {
       console.error('Failed to delete product:', err);
-      alert('Failed to delete product. Please try again.');
+      alert(t.errDeleteFailed);
     } finally {
       setDeleting(false);
     }
@@ -501,9 +511,9 @@ function ProductsView() {
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
       <EcommerceHeader
-        title="Products"
+        title={t.title}
         backTo="/"
-        backLabel="Back to home"
+        backLabel={t.backToHome}
         cartCount={cartCount}
         activeNav="products"
       />
@@ -513,7 +523,7 @@ function ProductsView() {
         {showCartSuccess && (
           <div className="mx-auto mb-4 w-full max-w-3xl rounded-lg border border-green-500/30 bg-green-900/20 p-3 flex items-center justify-between">
             <span className="text-green-200">
-              Product added to cart. <Link to="/demo/ecommerce/cart" className="underline hover:text-green-100">View your cart</Link>
+              {t.cartSuccess} <Link to="/demo/ecommerce/cart" className="underline hover:text-green-100">{t.viewCart}</Link>
             </span>
             <button
               onClick={() => setShowCartSuccess(false)}
@@ -528,7 +538,7 @@ function ProductsView() {
           <div className="flex flex-col gap-4 rounded-lg border border-gray-700 bg-gray-800 p-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <div className="flex-1 min-w-0">
-                <label className="block text-sm font-medium text-gray-300">Search</label>
+                <label className="block text-sm font-medium text-gray-300">{t.search}</label>
                 <input
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
@@ -539,11 +549,11 @@ function ProductsView() {
                     }
                   }}
                   className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Search products..."
+                  placeholder={t.searchPlaceholder}
                 />
               </div>
               <div className="w-full sm:w-32">
-                <label className="block text-sm font-medium text-gray-300">Per page</label>
+                <label className="block text-sm font-medium text-gray-300">{t.perPage}</label>
                 <select
                   value={perPage}
                   onChange={(event) => setPerPage(Number(event.target.value))}
@@ -557,13 +567,13 @@ function ProductsView() {
                 </select>
               </div>
               <div className="w-full sm:w-56">
-                <label className="block text-sm font-medium text-gray-300">Sort by</label>
+                <label className="block text-sm font-medium text-gray-300">{t.sortBy}</label>
                 <select
                   value={`${sortBy}_${sortDir}`}
                   onChange={handleSortChange}
                   className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {SORT_OPTIONS.map((option) => (
+                  {sortOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -576,29 +586,29 @@ function ProductsView() {
                 onClick={handleSearchSubmit}
                 className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
               >
-                Search
+                {t.searchButton}
               </button>
               <button
                 onClick={handleClear}
                 className="rounded-lg border border-gray-600 px-4 py-2 font-semibold text-white/90 hover:bg-white/5"
               >
-                Clear
+                {t.clear}
               </button>
               {canManageProducts && (
                 <button
                   onClick={openCreateModal}
                   className="rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
                 >
-                  Create
+                  {t.create}
                 </button>
               )}
             </div>
           </div>
           {pagination && (
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-300">
-              <div>Total results: {pagination.total}</div>
+              <div>{t.totalResults} {pagination.total}</div>
               <div>
-                Page {pagination.current_page} of {totalPages}
+                {t.page} {pagination.current_page} {t.of} {totalPages}
               </div>
             </div>
           )}
@@ -606,7 +616,7 @@ function ProductsView() {
 
         {loading && (
           <div className="text-center py-12">
-            <p className="text-xl text-gray-400">Loading products...</p>
+            <p className="text-xl text-gray-400">{t.loading}</p>
           </div>
         )}
 
@@ -617,14 +627,14 @@ function ProductsView() {
               onClick={() => loadProducts(currentPage, appliedSearch, perPage, sortBy, sortDir)}
               className="mt-2 text-red-400 hover:text-red-300 underline"
             >
-              Try again
+              {t.tryAgain}
             </button>
           </div>
         )}
 
         {!loading && !error && products.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-xl text-gray-400">No products found.</p>
+            <p className="text-xl text-gray-400">{t.noProducts}</p>
           </div>
         )}
 
@@ -642,14 +652,14 @@ function ProductsView() {
                       onClick={() => openDetailsModal(product)}
                       className="rounded-md border border-gray-600 px-3 py-1 text-xs text-gray-200 hover:bg-gray-700"
                     >
-                      Details
+                      {t.details}
                     </button>
                     {canManageProducts && (
                       <button
                         onClick={() => openEditModal(product)}
                         className="rounded-md border border-blue-500/60 px-3 py-1 text-xs text-blue-200 hover:bg-blue-600/20"
                       >
-                        Edit
+                        {t.edit}
                       </button>
                     )}
                   </div>
@@ -674,7 +684,7 @@ function ProductsView() {
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Price:</span>
+                    <span className="text-gray-400">{t.priceLabel}</span>
                     <span className="font-semibold text-green-400">
                       {formatPrice(product.price)}
                     </span>
@@ -682,7 +692,7 @@ function ProductsView() {
 
                   {product.sale_price && (
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Sale Price:</span>
+                      <span className="text-gray-400">{t.salePriceLabel}</span>
                       <span className="font-semibold text-yellow-400">
                         {formatPrice(product.sale_price)}
                       </span>
@@ -690,7 +700,7 @@ function ProductsView() {
                   )}
 
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Quantity:</span>
+                    <span className="text-gray-400">{t.quantityLabel}</span>
                     <span className={product.quantity > 0 ? 'text-white' : 'text-red-400'}>
                       {product.quantity}
                     </span>
@@ -698,11 +708,11 @@ function ProductsView() {
 
                   <div className="pt-3 mt-3 border-t border-gray-700">
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">Created:</span>
+                      <span className="text-gray-500">{t.createdLabel}</span>
                       <span className="text-gray-400">{formatDate(product.created_at)}</span>
                     </div>
                     <div className="flex justify-between text-xs mt-1">
-                      <span className="text-gray-500">Updated:</span>
+                      <span className="text-gray-500">{t.updatedLabel}</span>
                       <span className="text-gray-400">{formatDate(product.updated_at)}</span>
                     </div>
                   </div>
@@ -716,7 +726,7 @@ function ProductsView() {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  {product.quantity === 0 ? 'Out of Stock' : 'Add to cart'}
+                  {product.quantity === 0 ? t.outOfStock : t.addToCart}
                 </button>
               </div>
             ))}
@@ -763,18 +773,18 @@ function ProductsView() {
       {activeModal && (
         <>
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-3 sm:items-center sm:p-4"
             onClick={closeModal}
           >
             <div
-              className="w-full max-w-3xl rounded-2xl bg-gray-800 text-white shadow-2xl border border-white/10"
+              className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-gray-800 text-white shadow-2xl"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-                <div className="text-sm font-semibold text-white/80">
-                  {activeModal === 'details' && 'Product details'}
-                  {activeModal === 'create' && 'Create product'}
-                  {activeModal === 'edit' && 'Edit product'}
+              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-6 sm:py-4">
+                <div className="text-xs font-semibold text-white/80 sm:text-sm">
+                  {activeModal === 'details' && t.modalDetails}
+                  {activeModal === 'create' && t.modalCreate}
+                  {activeModal === 'edit' && t.modalEdit}
                 </div>
                 <button
                   onClick={closeModal}
@@ -785,7 +795,7 @@ function ProductsView() {
                 </button>
               </div>
 
-              <div className="px-6 py-5 featured-image">
+              <div className="featured-image overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
                 {activeModal === 'details' && activeProduct && (
                   <div className="space-y-4">
                     <div className="aspect-video overflow-hidden rounded-xl border border-white/10 bg-gray-900/40">
@@ -797,7 +807,7 @@ function ProductsView() {
                       />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold">{activeProduct.title}</h2>
+                      <h2 className="text-xl font-bold sm:text-2xl">{activeProduct.title}</h2>
                       <p className="mt-2 text-sm text-gray-300 whitespace-pre-line">
                         {activeProduct.description}
                       </p>
@@ -809,7 +819,7 @@ function ProductsView() {
                             key={`${image}-${index}`}
                             type="button"
                             onClick={() => setZoomImage(buildStorageUrl(image))}
-                            className="h-16 w-16 overflow-hidden rounded-lg border border-white/10 bg-gray-900/40"
+                            className="h-14 w-14 overflow-hidden rounded-lg border border-white/10 bg-gray-900/40 sm:h-16 sm:w-16"
                             aria-label={`View image ${index + 1}`}
                           >
                             <img
@@ -824,54 +834,54 @@ function ProductsView() {
                     )}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div className="text-sm text-gray-300">
-                        <span className="text-gray-400">Price:</span> {formatPrice(activeProduct.price)}
+                        <span className="text-gray-400">{t.priceLabel}</span> {formatPrice(activeProduct.price)}
                       </div>
                       {activeProduct.sale_price && (
                         <div className="text-sm text-gray-300">
-                          <span className="text-gray-400">Sale Price:</span> {formatPrice(activeProduct.sale_price)}
+                          <span className="text-gray-400">{t.salePriceLabel}</span> {formatPrice(activeProduct.sale_price)}
                         </div>
                       )}
                       <div className="text-sm text-gray-300">
-                        <span className="text-gray-400">Quantity:</span> {activeProduct.quantity}
+                        <span className="text-gray-400">{t.quantityLabel}</span> {activeProduct.quantity}
                       </div>
                       <div className="text-sm text-gray-300">
-                        <span className="text-gray-400">Visibility:</span>{' '}
-                        {activeProduct.visibility ? 'Show' : 'Hidden'}
+                        <span className="text-gray-400">{t.visibilityLabel}</span>{' '}
+                        {activeProduct.visibility ? t.visibilityShow : t.visibilityHidden}
                       </div>
                       <div className="text-sm text-gray-300">
-                        <span className="text-gray-400">Created:</span>{' '}
+                        <span className="text-gray-400">{t.createdLabel}</span>{' '}
                         {formatDate(activeProduct.created_at)}
                       </div>
                       <div className="text-sm text-gray-300">
-                        <span className="text-gray-400">Updated:</span>{' '}
+                        <span className="text-gray-400">{t.updatedLabel}</span>{' '}
                         {formatDate(activeProduct.updated_at)}
                       </div>
                     </div>
-                    <div className="flex justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <button
                         onClick={() => handleAddToCart(activeProduct)}
                         disabled={activeProduct.quantity === 0}
-                        className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-green-600"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-green-600 sm:w-auto"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                        {activeProduct.quantity === 0 ? 'Out of Stock' : 'Add to cart'}
+                        {activeProduct.quantity === 0 ? t.outOfStock : t.addToCart}
                       </button>
                       {canManageProducts && (
-                        <div className="flex gap-3">
+                        <div className="flex w-full gap-3 sm:w-auto">
                           <button
                             onClick={handleDeleteClick}
                             disabled={deleting}
-                            className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
                           >
-                            Delete
+                            {t.delete}
                           </button>
                           <button
                             onClick={() => openEditModal(activeProduct)}
-                            className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                            className="flex-1 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 sm:flex-none"
                           >
-                            Edit
+                            {t.edit}
                           </button>
                         </div>
                       )}
@@ -888,7 +898,7 @@ function ProductsView() {
                   )}
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium text-white/80">Title *</label>
+                      <label className="block text-sm font-medium text-white/80">{t.formTitle}</label>
                       <input
                         value={formValues.title}
                         onChange={(event) =>
@@ -903,7 +913,7 @@ function ProductsView() {
                       )}
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium text-white/80">Description *</label>
+                      <label className="block text-sm font-medium text-white/80">{t.formDescription}</label>
                       <textarea
                         rows={5}
                         value={formValues.description}
@@ -919,7 +929,7 @@ function ProductsView() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-white/80">Price *</label>
+                      <label className="block text-sm font-medium text-white/80">{t.formPrice}</label>
                       <input
                         type="number"
                         step="0.01"
@@ -936,7 +946,7 @@ function ProductsView() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-white/80">Sale price</label>
+                      <label className="block text-sm font-medium text-white/80">{t.formSalePrice}</label>
                       <input
                         type="number"
                         step="0.01"
@@ -953,7 +963,7 @@ function ProductsView() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-white/80">Quantity *</label>
+                      <label className="block text-sm font-medium text-white/80">{t.formQuantity}</label>
                       <input
                         type="number"
                         value={formValues.quantity}
@@ -969,7 +979,7 @@ function ProductsView() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-white/80">Visibility *</label>
+                      <label className="block text-sm font-medium text-white/80">{t.formVisibility}</label>
                       <select
                         value={formValues.visibility}
                         onChange={(event) =>
@@ -977,8 +987,8 @@ function ProductsView() {
                         }
                         className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="show">Show</option>
-                        <option value="hidden">Hidden</option>
+                        <option value="show">{t.visibilityShow}</option>
+                        <option value="hidden">{t.visibilityHidden}</option>
                       </select>
                     </div>
                   </div>
@@ -986,7 +996,7 @@ function ProductsView() {
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium text-white/80">
-                        Featured image <span className="text-xs text-gray-500">(JPG, PNG, GIF, WebP, max 5MB)</span>
+                        {t.formFeaturedImage} <span className="text-xs text-gray-500">{t.formFeaturedImageHint}</span>
                       </label>
                       <input
                         type="file"
@@ -1003,7 +1013,7 @@ function ProductsView() {
                       {/* Show existing featured image in edit mode */}
                       {activeModal === 'edit' && existingFeaturedImage && !deleteFeaturedImage && (
                         <div className="mt-3">
-                          <p className="text-xs text-gray-400 mb-2">Current image:</p>
+                          <p className="text-xs text-gray-400 mb-2">{t.currentImage}</p>
                           <div className="relative inline-block">
                             <img
                               src={buildStorageUrl(existingFeaturedImage)}
@@ -1027,7 +1037,7 @@ function ProductsView() {
                       {/* Show new preview */}
                       {featuredPreview && (
                         <div className="mt-3">
-                          <p className="text-xs text-gray-400 mb-2">New upload:</p>
+                          <p className="text-xs text-gray-400 mb-2">{t.newUpload}</p>
                           <img
                             src={featuredPreview}
                             alt="Featured preview"
@@ -1038,7 +1048,7 @@ function ProductsView() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-white/80">
-                        Images <span className="text-xs text-gray-500">(max 15, JPG/PNG/GIF/WebP, 5MB each)</span>
+                        {t.formImages} <span className="text-xs text-gray-500">{t.formImagesHint}</span>
                       </label>
                       <input
                         type="file"
@@ -1056,7 +1066,7 @@ function ProductsView() {
                       {/* Show existing images in edit mode */}
                       {activeModal === 'edit' && existingImages.length > 0 && (
                         <div className="mt-3">
-                          <p className="text-xs text-gray-400 mb-2">Current images:</p>
+                          <p className="text-xs text-gray-400 mb-2">{t.currentImages}</p>
                           <div className="flex flex-wrap gap-2">
                             {existingImages.map((image, index) => (
                               <div key={`existing-${index}`} className="relative">
@@ -1084,7 +1094,7 @@ function ProductsView() {
                       {/* Show new previews */}
                       {imagePreviews.length > 0 && (
                         <div className="mt-3">
-                          <p className="text-xs text-gray-400 mb-2">New uploads:</p>
+                          <p className="text-xs text-gray-400 mb-2">{t.newUploads}</p>
                           <div className="flex flex-wrap gap-2">
                             {imagePreviews.map((preview, index) => (
                               <img
@@ -1107,7 +1117,7 @@ function ProductsView() {
                       disabled={submitting}
                       className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
                     >
-                      Cancel
+                      {t.cancel}
                     </button>
                     <button
                       type="button"
@@ -1115,7 +1125,9 @@ function ProductsView() {
                       disabled={submitting}
                       className="w-full rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
                     >
-                      {submitting ? (activeModal === 'create' ? 'Creating...' : 'Updating...') : activeModal === 'create' ? 'Create product' : 'Save changes'}
+                      {submitting
+                        ? (activeModal === 'create' ? t.creating : t.updating)
+                        : (activeModal === 'create' ? t.modalCreate : t.saveChanges)}
                     </button>
                   </div>
                 </form>
@@ -1125,32 +1137,32 @@ function ProductsView() {
           </div>
           {showDeleteConfirm && (
             <div
-              className="fixed inset-0 z-70 flex items-center justify-center bg-black/80 px-4"
+              className="fixed inset-0 z-70 flex items-end justify-center bg-black/80 p-3 sm:items-center sm:p-4"
               onClick={handleDeleteCancel}
             >
               <div
-                className="w-full max-w-md rounded-2xl bg-gray-800 text-white shadow-2xl border border-white/10"
+                className="w-full max-w-md rounded-2xl border border-white/10 bg-gray-800 text-white shadow-2xl"
                 onClick={(event) => event.stopPropagation()}
               >
-                <div className="px-6 py-5">
-                  <h3 className="text-lg font-semibold mb-3">Delete Product</h3>
+                <div className="px-4 py-4 sm:px-6 sm:py-5">
+                  <h3 className="text-lg font-semibold mb-3">{t.deleteTitle}</h3>
                   <p className="text-gray-300 mb-6">
-                    Are you sure you want to delete this product? This action cannot be undone.
+                    {t.deleteConfirm}
                   </p>
-                  <div className="flex justify-end gap-3">
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                     <button
                       onClick={handleDeleteCancel}
                       disabled={deleting}
-                      className="rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     >
-                      Cancel
+                      {t.cancel}
                     </button>
                     <button
                       onClick={handleDeleteConfirm}
                       disabled={deleting}
-                      className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     >
-                      {deleting ? 'Deleting...' : 'Yes, Delete'}
+                      {deleting ? t.deleting : t.yesDelete}
                     </button>
                   </div>
                 </div>
@@ -1159,13 +1171,13 @@ function ProductsView() {
           )}
           {zoomImage && (
             <div
-              className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-6"
+              className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-3 sm:p-6"
               onClick={() => setZoomImage(null)}
             >
               <img
                 src={zoomImage}
                 alt="Enlarged product"
-                className="max-h-full max-w-full rounded-xl object-contain"
+                className="max-h-[90vh] max-w-full rounded-xl object-contain"
               />
             </div>
           )}

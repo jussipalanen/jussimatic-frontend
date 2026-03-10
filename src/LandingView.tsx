@@ -1,23 +1,90 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
+import { useEffect, useRef, useState } from 'react';
+import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from './i18n';
+import type { Language } from './i18n';
 import { logoutUser } from './api/authApi';
+import { getVisitorsToday, getVisitorsTotal, trackVisitor } from './api/visitorsApi';
 import AuthModal from './AuthModal';
 
 function LandingView() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const year = new Date().getFullYear();
-  const [language] = useState(() => getStoredLanguage());
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showProjects, setShowProjects] = useState(false);
+  const projectsRef = useRef<HTMLDivElement>(null);
+  const [visitorsCount, setVisitorsCount] = useState<number | null>(null);
+  const [visitorsTotalCount, setVisitorsTotalCount] = useState<number | null>(null);
+  const [visitorsError, setVisitorsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setStoredLanguage(language);
+  }, [language]);
 
   // Check for auth token on mount
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     setIsLoggedIn(!!token);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadVisitorsStats = async () => {
+      try {
+        const [todayData, totalData] = await Promise.all([
+          getVisitorsToday(),
+          getVisitorsTotal(),
+        ]);
+        if (!active) return;
+        setVisitorsCount(todayData.visitors);
+        setVisitorsTotalCount(totalData.visitors);
+      } catch (error) {
+        console.error('Failed to load visitors count:', error);
+        if (!active) return;
+        setVisitorsError('Visitors count unavailable');
+      }
+    };
+
+    loadVisitorsStats();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Track visitor on first visit (once per session)
+  useEffect(() => {
+    const sessionKey = 'visitor_tracked';
+    const alreadyTracked = sessionStorage.getItem(sessionKey);
+
+    if (alreadyTracked) return;
+
+    const trackVisit = async () => {
+      try {
+        await trackVisitor();
+        sessionStorage.setItem(sessionKey, 'true');
+      } catch (error) {
+        console.error('Failed to track visitor:', error);
+      }
+    };
+
+    trackVisit();
+  }, []);
+
+  useEffect(() => {
+    if (!showProjects) return;
+    const handler = (e: MouseEvent) => {
+      if (projectsRef.current && !projectsRef.current.contains(e.target as Node)) {
+        setShowProjects(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showProjects]);
 
   useEffect(() => {
     if (searchParams.get('auth') !== 'login') return;
@@ -45,45 +112,161 @@ function LandingView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+      {/* Language Selector */}
+      <div className="fixed top-4 right-4 z-40">
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value as Language)}
+          className="rounded-lg border border-white/20 bg-gray-800/90 backdrop-blur-sm px-3 py-2 text-sm text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Select language"
+        >
+          <option value="en">English</option>
+          <option value="fi">Suomi</option>
+        </select>
+      </div>
+
       {/* Hero Section */}
       <header className="grow flex items-center justify-center px-4 py-12 sm:py-16">
         <div className="text-center w-full max-w-3xl">
           <h1 className="text-3xl sm:text-5xl font-bold mb-4">{t.landing.title}</h1>
-          <p className="text-lg sm:text-xl mb-8">{t.landing.subtitle}</p>
+          <p className="text-lg sm:text-xl text-white/90 mb-2">{t.landing.subtitle}</p>
+          <p className="text-base sm:text-lg text-white/60 mb-8">{t.landing.subtitleSecond}</p>
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 justify-center">
             <button 
               onClick={() => navigate('/chat')}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2"
             >
+              {/* Chat bubble icon */}
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
               {t.landing.cta}
             </button>
             {isLoggedIn ? (
               <button
                 onClick={handleLogout}
-                className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2"
               >
+                {/* Logout icon */}
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                 Logout
               </button>
             ) : (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded border border-white/20"
+                className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded border border-white/20 flex items-center justify-center gap-2"
               >
+                {/* Login icon */}
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
                 Login
               </button>
             )}
-            <button 
-              onClick={() => navigate('/jobs')}
-              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-            >
-              {t.landing.jobsCta}
-            </button>
-            <button 
-              onClick={() => navigate('/demo/ecommerce/products')}
-              className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Ecommerce Demo
-            </button>
+            {/* Projects / Demos dropdown */}
+            <div className="relative w-full sm:w-auto" ref={projectsRef}>
+              <button
+                onClick={() => setShowProjects((v) => !v)}
+                className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2"
+              >
+                {/* Grid/apps icon */}
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                {t.landing.projectsCta}
+                <svg
+                  className={`w-4 h-4 shrink-0 transition-transform duration-200 ${showProjects ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showProjects && (
+                <div className="absolute top-full mt-1 left-0 sm:left-1/2 sm:-translate-x-1/2 w-full sm:w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                  <button
+                    onClick={() => { navigate('/chat'); setShowProjects(false); }}
+                    className="w-full text-left px-4 py-3 text-sm text-white hover:bg-gray-700 flex flex-col gap-2 border-b border-gray-700"
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Chat bubble icon */}
+                      <svg className="w-4 h-4 shrink-0 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                      <span className="font-medium">{t.landing.chatCta}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 pl-7">
+                      <span className="inline-flex items-center rounded-full bg-blue-400/15 px-2 py-0.5 text-xs font-semibold text-blue-300">TypeScript</span>
+                      <span className="inline-flex items-center rounded-full bg-green-600/20 px-2 py-0.5 text-xs font-semibold text-green-300">Node.js</span>
+                      <span className="inline-flex items-center rounded-full bg-amber-400/15 px-2 py-0.5 text-xs font-medium text-amber-300">AI</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => { navigate('/demo/browse-jobs'); setShowProjects(false); }}
+                    className="w-full text-left px-4 py-3 text-sm text-white hover:bg-gray-700 flex flex-col gap-2 border-b border-gray-700"
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Briefcase icon */}
+                      <svg className="w-4 h-4 shrink-0 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                      <span className="font-medium">{t.landing.jobsCta}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 pl-7">
+                      <span className="inline-flex items-center rounded-full bg-blue-400/15 px-2 py-0.5 text-xs font-semibold text-blue-300">TypeScript</span>
+                      <span className="inline-flex items-center rounded-full bg-gray-500/25 px-2 py-0.5 text-xs font-semibold text-gray-300">JSON</span>
+                      <span className="inline-flex items-center rounded-full bg-teal-500/15 px-2 py-0.5 text-xs font-medium text-teal-300">API integration</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => { navigate('/demo/ecommerce/products'); setShowProjects(false); }}
+                    className="w-full text-left px-4 py-3 text-sm text-white hover:bg-gray-700 flex flex-col gap-2 border-b border-gray-700"
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Shopping bag icon */}
+                      <svg className="w-4 h-4 shrink-0 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                      <span className="font-medium">{t.landing.ecommerceCta}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 pl-7">
+                      <span className="inline-flex items-center rounded-full bg-blue-400/15 px-2 py-0.5 text-xs font-semibold text-blue-300">TypeScript</span>
+                      <span className="inline-flex items-center rounded-full bg-indigo-400/15 px-2 py-0.5 text-xs font-semibold text-indigo-300">PHP</span>
+                      <span className="inline-flex items-center rounded-full bg-red-400/15 px-2 py-0.5 text-xs font-semibold text-red-300">Laravel</span>
+                      <span className="inline-flex items-center rounded-full bg-orange-400/15 px-2 py-0.5 text-xs font-semibold text-orange-300">Blade</span>
+                      <span className="inline-flex items-center rounded-full bg-teal-500/15 px-2 py-0.5 text-xs font-medium text-teal-300">API integration</span>
+                      <span className="inline-flex items-center rounded-full bg-cyan-500/15 px-2 py-0.5 text-xs font-semibold text-cyan-300">MySQL</span>
+                      <span className="inline-flex items-center rounded-full bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-300">Ecommerce</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => { navigate('/demo/ai-cv-review'); setShowProjects(false); }}
+                    className="w-full text-left px-4 py-3 text-sm text-white hover:bg-gray-700 flex flex-col gap-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Document check icon */}
+                      <svg className="w-4 h-4 shrink-0 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <span className="font-medium">{t.landing.aiCvCta}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 pl-7">
+                      <span className="inline-flex items-center rounded-full bg-blue-400/15 px-2 py-0.5 text-xs font-semibold text-blue-300">TypeScript</span>
+                      <span className="inline-flex items-center rounded-full bg-blue-400/15 px-2 py-0.5 text-xs font-semibold text-blue-300">Python</span>
+                      <span className="inline-flex items-center rounded-full bg-amber-400/15 px-2 py-0.5 text-xs font-medium text-amber-300">AI</span>
+                      <span className="inline-flex items-center rounded-full bg-teal-500/15 px-2 py-0.5 text-xs font-medium text-teal-300">API integration</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <p className="text-sm text-white/60">{t.landing.visitorsDescription}</p>
+            <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
+              {visitorsError ? (
+                <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/70">
+                  {visitorsError}
+                </div>
+              ) : (
+                <>
+                  <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/70">
+                    {visitorsCount === null ? 'Loading...' : `${t.landing.visitorsToday}: ${visitorsCount}`}
+                  </div>
+                  <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/70">
+                    {visitorsTotalCount === null ? 'Loading...' : `${t.landing.visitorsAllTime}: ${visitorsTotalCount}`}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           
           {/* Social Links */}
@@ -160,7 +343,7 @@ function LandingView() {
             </svg>
           </a>
         </div>
-        <p className="text-gray-400">&copy; {year} Jussimatic. {t.footer}</p>
+        <p className="text-gray-400">&copy; {year} Jussimatic (Jussi Alanen). {t.footer}</p>
       </footer>
 
       <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteUser, fetchAllUsers } from './api/usersApi';
-import type { UserSummary } from './api/usersApi';
-import { getCart } from './utils/cartUtils';
-import EcommerceHeader from './EcommerceHeader';
-import { getMe } from './api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from './utils/authUtils';
-import UserEditModal from './UserEditModal';
+import { deleteUser, fetchAllUsers } from '../../../api/usersApi';
+import type { UserSummary } from '../../../api/usersApi';
+import { getCart } from '../../../utils/cartUtils';
+import EcommerceHeader from '../components/EcommerceHeader';
+import { getMe } from '../../../api/authApi';
+import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
+import UserEditModal from '../components/UserEditModal';
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Admin',

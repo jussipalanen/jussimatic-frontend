@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createOrder } from './api/ordersApi';
-import { getMe } from './api/authApi';
-import { clearCart, getCart } from './utils/cartUtils';
-import type { CartItem } from './utils/cartUtils';
-import EcommerceHeader from './EcommerceHeader';
+import { createOrder } from '../../../api/ordersApi';
+import { getMe } from '../../../api/authApi';
+import { clearCart, getCart } from '../../../utils/cartUtils';
+import type { CartItem } from '../../../utils/cartUtils';
+import EcommerceHeader from '../components/EcommerceHeader';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -15,15 +15,21 @@ function CheckoutView() {
   const [formValues, setFormValues] = useState({
     firstname: '',
     lastname: '',
-    streetAddress: '',
-    postCode: '',
-    city: '',
-    state: '',
-    country: '',
+    billingStreet: '',
+    billingPostCode: '',
+    billingCity: '',
+    billingState: '',
+    billingCountry: '',
+    shippingStreet: '',
+    shippingPostCode: '',
+    shippingCity: '',
+    shippingState: '',
+    shippingCountry: '',
     email: '',
     phone: '',
     notes: '',
   });
+  const [useBillingForShipping, setUseBillingForShipping] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -53,7 +59,31 @@ function CheckoutView() {
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target;
-    setFormValues((current) => ({ ...current, [name]: value }));
+    setFormValues((current) => {
+      const next = { ...current, [name]: value };
+      if (useBillingForShipping) {
+        if (name === 'billingStreet') next.shippingStreet = value;
+        if (name === 'billingPostCode') next.shippingPostCode = value;
+        if (name === 'billingCity') next.shippingCity = value;
+        if (name === 'billingState') next.shippingState = value;
+        if (name === 'billingCountry') next.shippingCountry = value;
+      }
+      return next;
+    });
+  };
+
+  const handleToggleUseBilling = (checked: boolean) => {
+    setUseBillingForShipping(checked);
+    if (checked) {
+      setFormValues((current) => ({
+        ...current,
+        shippingStreet: current.billingStreet,
+        shippingPostCode: current.billingPostCode,
+        shippingCity: current.billingCity,
+        shippingState: current.billingState,
+        shippingCountry: current.billingCountry,
+      }));
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -77,13 +107,23 @@ function CheckoutView() {
         console.log('Proceeding with guest checkout:', error);
       }
 
-      const shippingAddress = {
-        street: formValues.streetAddress.trim(),
-        city: formValues.city.trim(),
-        state: formValues.state.trim(),
-        postal_code: formValues.postCode.trim(),
-        country: formValues.country.trim(),
+      const billingAddress = {
+        street: formValues.billingStreet.trim(),
+        city: formValues.billingCity.trim(),
+        state: formValues.billingState.trim(),
+        postal_code: formValues.billingPostCode.trim(),
+        country: formValues.billingCountry.trim(),
       };
+
+      const shippingAddress = useBillingForShipping
+        ? billingAddress
+        : {
+            street: formValues.shippingStreet.trim(),
+            city: formValues.shippingCity.trim(),
+            state: formValues.shippingState.trim(),
+            postal_code: formValues.shippingPostCode.trim(),
+            country: formValues.shippingCountry.trim(),
+          };
 
       await createOrder({
         ...(userId !== undefined && { user_id: userId }),
@@ -92,7 +132,7 @@ function CheckoutView() {
         customer_email: formValues.email.trim(),
         customer_phone: formValues.phone.trim(),
         shipping_address: shippingAddress,
-        billing_address: shippingAddress,
+        billing_address: billingAddress,
         items: cartItems.map((item) => ({
           product_id: item.productId,
           quantity: item.quantity,
@@ -217,12 +257,15 @@ function CheckoutView() {
                     />
                   </div>
                 </div>
+                <div className="pt-2">
+                  <h3 className="text-base font-semibold text-white">Billing Address</h3>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-white/80">Street address</label>
                   <input
-                    name="streetAddress"
+                    name="billingStreet"
                     required
-                    value={formValues.streetAddress}
+                    value={formValues.billingStreet}
                     onChange={handleChange}
                     className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -231,9 +274,9 @@ function CheckoutView() {
                   <div>
                     <label className="block text-sm font-medium text-white/80">Post code</label>
                     <input
-                      name="postCode"
+                      name="billingPostCode"
                       required
-                      value={formValues.postCode}
+                      value={formValues.billingPostCode}
                       onChange={handleChange}
                       className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -241,9 +284,9 @@ function CheckoutView() {
                   <div>
                     <label className="block text-sm font-medium text-white/80">State</label>
                     <input
-                      name="state"
+                      name="billingState"
                       required
-                      value={formValues.state}
+                      value={formValues.billingState}
                       onChange={handleChange}
                       className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -253,9 +296,9 @@ function CheckoutView() {
                   <div>
                     <label className="block text-sm font-medium text-white/80">City</label>
                     <input
-                      name="city"
+                      name="billingCity"
                       required
-                      value={formValues.city}
+                      value={formValues.billingCity}
                       onChange={handleChange}
                       className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -263,11 +306,85 @@ function CheckoutView() {
                   <div>
                     <label className="block text-sm font-medium text-white/80">Country</label>
                     <input
-                      name="country"
+                      name="billingCountry"
                       required
-                      value={formValues.country}
+                      value={formValues.billingCountry}
                       onChange={handleChange}
                       className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="useBillingForShipping"
+                    type="checkbox"
+                    checked={useBillingForShipping}
+                    onChange={(event) => handleToggleUseBilling(event.target.checked)}
+                    className="h-4 w-4 rounded border-white/20 bg-gray-900 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="useBillingForShipping" className="text-sm text-white/80">
+                    Use the same information for shipping
+                  </label>
+                </div>
+                <div className="pt-2">
+                  <h3 className="text-base font-semibold text-white">Shipping Address</h3>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/80">Street address</label>
+                  <input
+                    name="shippingStreet"
+                    required={!useBillingForShipping}
+                    disabled={useBillingForShipping}
+                    value={formValues.shippingStreet}
+                    onChange={handleChange}
+                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-white/80">Post code</label>
+                    <input
+                      name="shippingPostCode"
+                      required={!useBillingForShipping}
+                      disabled={useBillingForShipping}
+                      value={formValues.shippingPostCode}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white/80">State</label>
+                    <input
+                      name="shippingState"
+                      required={!useBillingForShipping}
+                      disabled={useBillingForShipping}
+                      value={formValues.shippingState}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-white/80">City</label>
+                    <input
+                      name="shippingCity"
+                      required={!useBillingForShipping}
+                      disabled={useBillingForShipping}
+                      value={formValues.shippingCity}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white/80">Country</label>
+                    <input
+                      name="shippingCountry"
+                      required={!useBillingForShipping}
+                      disabled={useBillingForShipping}
+                      value={formValues.shippingCountry}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
                     />
                   </div>
                 </div>

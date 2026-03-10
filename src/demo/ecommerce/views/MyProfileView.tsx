@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMe } from './api/authApi';
-import { getRoleAccess } from './utils/authUtils';
-import { getCart } from './utils/cartUtils';
-import EcommerceHeader from './EcommerceHeader';
-import UserEditModal from './UserEditModal';
+import { getMe } from '../../../api/authApi';
+import { getRoleAccess } from '../../../utils/authUtils';
+import { getCart } from '../../../utils/cartUtils';
+import EcommerceHeader from '../components/EcommerceHeader';
+import UserEditModal from '../components/UserEditModal';
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Admin',
