@@ -12,6 +12,7 @@ import AdminOrdersView from './demo/ecommerce/views/AdminOrdersView'
 import AdminDashboardView from './demo/ecommerce/views/AdminDashboardView'
 import AdminUsersView from './demo/ecommerce/views/AdminUsersView'
 import ResetPasswordView from './ResetPasswordView'
+import AICVReviewView from './demo/ai-cv-review'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/" element={<LandingView />} />
         <Route path="/chat" element={<ChatView />} />
         <Route path="/demo/browse-jobs" element={<BrowseJobsView />} />
+        <Route path="/demo/ai-cv-review" element={<AICVReviewView />} />
         <Route path="/demo/ecommerce/products" element={<ProductsView />} />
         <Route path="/demo/ecommerce/cart" element={<CartView />} />
         <Route path="/demo/ecommerce/checkout" element={<CheckoutView />} />

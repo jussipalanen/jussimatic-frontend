@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { loginUser, loginWithGoogle, registerUser, requestPasswordReset } from './api/authApi';
+import { getStoredLanguage, translations, type Language } from './i18n';
 
 type AuthTab = 'login' | 'register' | 'forgot';
 
@@ -47,6 +48,18 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
   const [googleReady, setGoogleReady] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const lang = (event as CustomEvent<Language>).detail;
+      setLanguage(lang);
+    };
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
+
+  const t = translations[language].auth;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -98,7 +111,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
       const authError = error as { data?: unknown; message?: string };
       const errorData = authError.data as { message?: string } | undefined;
       setLoginResponse({
-        message: errorData?.message ?? authError.message ?? 'Google login failed',
+        message: errorData?.message ?? authError.message ?? t.loginFailed,
       });
     } finally {
       setGoogleLoading(false);
@@ -131,7 +144,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
         size: 'large',
         text: 'continue_with',
         shape: 'rectangular',
-        width: 320,
+        width: googleButtonRef.current.clientWidth || 320,
       });
 
       setGoogleReady(true);
@@ -152,7 +165,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
     script.onerror = () => {
       if (!active) return;
       setGoogleReady(false);
-      setLoginResponse({ message: 'Google sign-in is temporarily unavailable.' });
+      setLoginResponse({ message: t.googleUnavailable });
     };
     document.head.appendChild(script);
 
@@ -167,19 +180,19 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
     const errors: { identifier?: string; password?: string } = {};
     const trimmedIdentifier = loginForm.identifier.trim();
     if (!trimmedIdentifier) {
-      errors.identifier = 'Username or email is required.';
+      errors.identifier = t.errIdentifierRequired;
     } else if (trimmedIdentifier.includes('@')) {
       const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedIdentifier);
-      if (!emailOk) errors.identifier = 'Enter a valid email address.';
+      if (!emailOk) errors.identifier = t.errEmailFormat;
     } else {
       const usernameOk = /^[a-zA-Z0-9._-]{3,}$/.test(trimmedIdentifier);
-      if (!usernameOk) errors.identifier = 'Username must be at least 3 characters.';
+      if (!usernameOk) errors.identifier = t.errUsernameFormat;
     }
     if (!loginForm.password.trim()) {
-      errors.password = 'Password is required.';
+      errors.password = t.errPasswordRequired;
     }
     return errors;
-  }, [loginForm]);
+  }, [loginForm, language]);
 
   const registerErrors = useMemo(() => {
     const errors: {
@@ -192,37 +205,37 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
     } = {};
     const trimmedUsername = registerForm.username.trim();
     if (!trimmedUsername) {
-      errors.username = 'Username is required.';
+      errors.username = t.errUsernameRequired;
     } else if (!/^[a-zA-Z0-9._-]{3,}$/.test(trimmedUsername)) {
-      errors.username = 'Username must be at least 3 characters.';
+      errors.username = t.errUsernameFormat;
     }
     if (!registerForm.email.trim()) {
-      errors.email = 'Email is required.';
+      errors.email = t.errEmailRequired;
     } else {
       const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email.trim());
-      if (!emailOk) errors.email = 'Enter a valid email address.';
+      if (!emailOk) errors.email = t.errEmailFormat;
     }
-    if (!registerForm.firstname.trim()) errors.firstname = 'First name is required.';
-    if (!registerForm.lastname.trim()) errors.lastname = 'Last name is required.';
-    if (!registerForm.password.trim()) errors.password = 'Password is required.';
+    if (!registerForm.firstname.trim()) errors.firstname = t.errFirstnameRequired;
+    if (!registerForm.lastname.trim()) errors.lastname = t.errLastnameRequired;
+    if (!registerForm.password.trim()) errors.password = t.errPasswordRequired;
     if (!registerForm.repassword.trim()) {
-      errors.repassword = 'Please re-enter the password.';
+      errors.repassword = t.errRepasswordRequired;
     } else if (registerForm.password.trim() && registerForm.password !== registerForm.repassword) {
-      errors.repassword = 'Passwords do not match.';
+      errors.repassword = t.errPasswordsMismatch;
     }
     return errors;
-  }, [registerForm]);
+  }, [registerForm, language]);
 
   const forgotErrors = useMemo(() => {
     const errors: { email?: string } = {};
     if (!forgotForm.email.trim()) {
-      errors.email = 'Email is required.';
+      errors.email = t.errEmailRequired;
     } else {
       const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotForm.email.trim());
-      if (!emailOk) errors.email = 'Enter a valid email address.';
+      if (!emailOk) errors.email = t.errEmailFormat;
     }
     return errors;
-  }, [forgotForm]);
+  }, [forgotForm, language]);
 
   const loginHasErrors = Object.keys(loginErrors).length > 0;
   const registerHasErrors = Object.keys(registerErrors).length > 0;
@@ -263,7 +276,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
       const authError = error as { data?: unknown; message?: string };
       const errorData = authError.data as { message?: string } | undefined;
       setLoginResponse({
-        message: errorData?.message ?? authError.message ?? 'Login failed',
+        message: errorData?.message ?? authError.message ?? t.loginFailed,
       });
     } finally {
       setLoginLoading(false);
@@ -300,7 +313,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
       const authError = error as { data?: unknown; message?: string };
       const errorData = authError.data as { message?: string } | undefined;
       setRegisterResponse({
-        message: errorData?.message ?? authError.message ?? 'Registration failed',
+        message: errorData?.message ?? authError.message ?? t.registerFailed,
       });
     } finally {
       setRegisterLoading(false);
@@ -317,14 +330,12 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
     try {
       await requestPasswordReset(forgotForm.email.trim());
       setForgotSuccess(true);
-      setForgotResponse({
-        message: 'If the email exists, you will receive password reset instructions shortly.',
-      });
+      setForgotResponse({});
     } catch (error) {
       const authError = error as { data?: unknown; message?: string };
       const errorData = authError.data as { message?: string } | undefined;
       setForgotResponse({
-        message: errorData?.message ?? authError.message ?? 'Password reset failed',
+        message: errorData?.message ?? authError.message ?? t.forgotFailed,
       });
     } finally {
       setForgotLoading(false);
@@ -334,14 +345,15 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70" onClick={onClose}>
+      <div className="flex min-h-full items-center justify-center px-4 py-6">
       <div
         className="w-full max-w-lg rounded-2xl bg-gray-800 text-white shadow-2xl border border-white/10"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <div className="text-sm font-semibold text-white/80">
-            {activeTab === 'login' ? 'Login' : activeTab === 'register' ? 'Register' : 'Forgot password'}
+            {activeTab === 'login' ? t.tabLogin : activeTab === 'register' ? t.tabRegister : t.tabForgot}
           </div>
           <button onClick={onClose} className="text-white/60 hover:text-white" aria-label="Close">
             x
@@ -358,7 +370,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
               }}
             >
               <div>
-                <label className="block text-sm font-medium text-white/80">Username or Email</label>
+                <label className="block text-sm font-medium text-white/80">{t.labelIdentifier}</label>
                 <input
                   value={loginForm.identifier}
                   onChange={(event) =>
@@ -366,14 +378,14 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   }
                   onBlur={() => setLoginTouched((current) => ({ ...current, identifier: true }))}
                   className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter username or email"
+                  placeholder={t.placeholderIdentifier}
                 />
                 {shouldShowLoginError('identifier') && (
                   <p className="mt-1 text-sm text-red-400">{loginErrors.identifier}</p>
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80">Password</label>
+                <label className="block text-sm font-medium text-white/80">{t.labelPassword}</label>
                 <input
                   type="password"
                   value={loginForm.password}
@@ -382,7 +394,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   }
                   onBlur={() => setLoginTouched((current) => ({ ...current, password: true }))}
                   className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter password"
+                  placeholder={t.placeholderPassword}
                 />
                 {shouldShowLoginError('password') && (
                   <p className="mt-1 text-sm text-red-400">{loginErrors.password}</p>
@@ -399,7 +411,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                     }}
                     className="text-xs font-semibold text-blue-300 hover:text-blue-200"
                   >
-                    Forgot password?
+                    {t.forgotPasswordLink}
                   </button>
                 </div>
               </div>
@@ -409,7 +421,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   disabled={loginHasErrors || loginLoading || googleLoading}
                   className="w-full rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {loginLoading ? 'Logging in...' : 'Login'}
+                  {loginLoading ? t.btnLoggingIn : t.btnLogin}
                 </button>
                 <button
                   type="button"
@@ -419,29 +431,29 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   }}
                   className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5"
                 >
-                  Register
+                  {t.btnRegister}
                 </button>
               </div>
 
               <div className="pt-2">
                 <div className="mb-3 flex items-center gap-3 text-[11px] uppercase tracking-[0.18em] text-white/45">
                   <span className="h-px flex-1 bg-gradient-to-r from-transparent to-white/20" />
-                  <span>Or continue with</span>
+                  <span>{t.orContinueWith}</span>
                   <span className="h-px flex-1 bg-gradient-to-l from-transparent to-white/20" />
                 </div>
 
                 <div className="rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.03] p-3 shadow-inner">
-                  <div ref={googleButtonRef} className="flex min-h-11 justify-center" />
+                  <div ref={googleButtonRef} className="flex min-h-11 w-full justify-center overflow-hidden" />
                   {googleLoading && (
-                    <p className="mt-2 text-center text-xs text-white/70">Signing in with Google...</p>
+                    <p className="mt-2 text-center text-xs text-white/70">{t.googleSigningIn}</p>
                   )}
                   {!googleClientId && (
                     <p className="mt-2 text-center text-xs text-amber-300">
-                      Google login is not configured. Add `VITE_GOOGLE_CLIENT_ID` to enable it.
+                      {t.googleNotConfigured}
                     </p>
                   )}
                   {googleClientId && !googleReady && !googleLoading && (
-                    <p className="mt-2 text-center text-xs text-white/60">Loading Google sign-in...</p>
+                    <p className="mt-2 text-center text-xs text-white/60">{t.googleLoading}</p>
                   )}
                 </div>
               </div>
@@ -456,10 +468,10 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                 >
                   {loginSuccess ? (
                     <div>
-                      <p className="font-semibold mb-2">Login successful!</p>
+                      <p className="font-semibold mb-2">{t.loginSuccess}</p>
                     </div>
                   ) : (
-                    <p>{(loginResponse as { message?: string })?.message ?? 'Login failed'}</p>
+                    <p>{(loginResponse as { message?: string })?.message ?? t.loginFailed}</p>
                   )}
                 </div>
               )}
@@ -474,7 +486,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
             >
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-white/80">Username</label>
+                  <label className="block text-sm font-medium text-white/80">{t.labelUsername}</label>
                   <input
                     value={registerForm.username}
                     onChange={(event) =>
@@ -482,14 +494,14 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                     }
                     onBlur={() => setRegisterTouched((current) => ({ ...current, username: true }))}
                     className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Username"
+                    placeholder={t.placeholderUsername}
                   />
                   {shouldShowRegisterError('username') && (
                     <p className="mt-1 text-sm text-red-400">{registerErrors.username}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/80">Email</label>
+                  <label className="block text-sm font-medium text-white/80">{t.labelEmail}</label>
                   <input
                     type="email"
                     value={registerForm.email}
@@ -498,14 +510,14 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                     }
                     onBlur={() => setRegisterTouched((current) => ({ ...current, email: true }))}
                     className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Email"
+                    placeholder={t.placeholderEmail}
                   />
                   {shouldShowRegisterError('email') && (
                     <p className="mt-1 text-sm text-red-400">{registerErrors.email}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/80">First name</label>
+                  <label className="block text-sm font-medium text-white/80">{t.labelFirstname}</label>
                   <input
                     value={registerForm.firstname}
                     onChange={(event) =>
@@ -513,14 +525,14 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                     }
                     onBlur={() => setRegisterTouched((current) => ({ ...current, firstname: true }))}
                     className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="First name"
+                    placeholder={t.placeholderFirstname}
                   />
                   {shouldShowRegisterError('firstname') && (
                     <p className="mt-1 text-sm text-red-400">{registerErrors.firstname}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/80">Last name</label>
+                  <label className="block text-sm font-medium text-white/80">{t.labelLastname}</label>
                   <input
                     value={registerForm.lastname}
                     onChange={(event) =>
@@ -528,7 +540,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                     }
                     onBlur={() => setRegisterTouched((current) => ({ ...current, lastname: true }))}
                     className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Last name"
+                    placeholder={t.placeholderLastname}
                   />
                   {shouldShowRegisterError('lastname') && (
                     <p className="mt-1 text-sm text-red-400">{registerErrors.lastname}</p>
@@ -537,7 +549,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-white/80">Password</label>
+                  <label className="block text-sm font-medium text-white/80">{t.labelPassword}</label>
                   <input
                     type="password"
                     value={registerForm.password}
@@ -546,14 +558,14 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                     }
                     onBlur={() => setRegisterTouched((current) => ({ ...current, password: true }))}
                     className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Password"
+                    placeholder={t.placeholderPassword}
                   />
                   {shouldShowRegisterError('password') && (
                     <p className="mt-1 text-sm text-red-400">{registerErrors.password}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/80">Re-enter password</label>
+                  <label className="block text-sm font-medium text-white/80">{t.labelRepassword}</label>
                   <input
                     type="password"
                     value={registerForm.repassword}
@@ -562,7 +574,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                     }
                     onBlur={() => setRegisterTouched((current) => ({ ...current, repassword: true }))}
                     className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Re-enter password"
+                    placeholder={t.placeholderRepassword}
                   />
                   {shouldShowRegisterError('repassword') && (
                     <p className="mt-1 text-sm text-red-400">{registerErrors.repassword}</p>
@@ -578,7 +590,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   }}
                   className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5 sm:w-auto"
                 >
-                  Login
+                  {t.btnLogin}
                 </button>
                 <button
                   type="button"
@@ -604,14 +616,14 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   }}
                   className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5 sm:w-auto"
                 >
-                  Reset
+                  {t.btnReset}
                 </button>
                 <button
                   type="submit"
                   disabled={registerHasErrors || registerLoading}
                   className="w-full rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
-                  {registerLoading ? 'Creating...' : 'Create new user'}
+                  {registerLoading ? t.btnCreating : t.btnCreateUser}
                 </button>
               </div>
               {registerResponse && (
@@ -624,13 +636,13 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                 >
                   {registerSuccess ? (
                     <div>
-                      <p className="font-semibold mb-2">Registration successful!</p>
+                      <p className="font-semibold mb-2">{t.registerSuccess}</p>
                       <pre className="text-xs text-white/60 whitespace-pre-wrap overflow-wrap-break-word">
                         {JSON.stringify(registerResponse, null, 2)}
                       </pre>
                     </div>
                   ) : (
-                    <p>{(registerResponse as { message?: string })?.message ?? 'Registration failed'}</p>
+                    <p>{(registerResponse as { message?: string })?.message ?? t.registerFailed}</p>
                   )}
                 </div>
               )}
@@ -638,14 +650,14 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white/80">Email</label>
+                <label className="block text-sm font-medium text-white/80">{t.labelEmail}</label>
                 <input
                   type="email"
                   value={forgotForm.email}
                   onChange={(event) => setForgotForm({ email: event.target.value })}
                   onBlur={() => setForgotTouched({ email: true })}
                   className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your email"
+                  placeholder={t.placeholderForgotEmail}
                 />
                 {shouldShowForgotError('email') && (
                   <p className="mt-1 text-sm text-red-400">{forgotErrors.email}</p>
@@ -657,7 +669,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   disabled={forgotHasErrors || forgotLoading}
                   className="w-full rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {forgotLoading ? 'Sending...' : 'Send reset link'}
+                  {forgotLoading ? t.btnSending : t.btnSendResetLink}
                 </button>
                 <button
                   onClick={() => {
@@ -666,7 +678,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   }}
                   className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5"
                 >
-                  Back to login
+                  {t.btnBackToLogin}
                 </button>
               </div>
               {forgotResponse && (
@@ -677,12 +689,17 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                       : 'border-red-500/30 bg-red-900/20 text-red-300'
                   }`}
                 >
-                  <p>{(forgotResponse as { message?: string })?.message ?? 'Request failed'}</p>
+                  {forgotSuccess ? (
+                    <p>{t.forgotSuccess}</p>
+                  ) : (
+                    <p>{(forgotResponse as { message?: string })?.message ?? t.forgotFailed}</p>
+                  )}
                 </div>
               )}
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

@@ -40,7 +40,7 @@ export function Footer({ year, footerText }: FooterProps) {
           </svg>
         </a>
       </div>
-      <p className="text-gray-400">&copy; {year} Jussimatic. {footerText}</p>
+      <p className="text-gray-400">&copy; {year} Jussimatic (Jussi Alanen). {footerText}</p>
     </footer>
   );
 }

@@ -5,6 +5,7 @@ import { ECOMMERCE_MAIN_TITLE } from '../../../constants';
 import { getMe, logoutUser } from '../../../api/authApi';
 import { getRoleAccess } from '../../../utils/authUtils';
 import AuthModal from '../../../AuthModal';
+import { getStoredLanguage, setStoredLanguage, translations, type Language } from '../../../i18n';
 
 type NavKey = 'products' | 'cart' | 'my-orders' | 'my-profile' | 'admin-dashboard';
 
@@ -31,6 +32,14 @@ function EcommerceHeader({
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authInitialTab, setAuthInitialTab] = useState<'login' | 'register'>('login');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+
+  useEffect(() => {
+    setStoredLanguage(language);
+    window.dispatchEvent(new CustomEvent('jussimatic-language-change', { detail: language }));
+  }, [language]);
+
+  const t = translations[language].ecommerce;
   const isProductsActive = activeNav === 'products';
   const isCartActive = activeNav === 'cart';
   const isOrdersActive = activeNav === 'my-orders';
@@ -97,7 +106,7 @@ function EcommerceHeader({
                 className="text-sm sm:text-base text-white hover:text-gray-300 transition-colors shrink-0"
                 aria-label={backLabel}
               >
-                ← Back
+                {t.back}
               </button>
               <h1 className="flex min-w-0 items-baseline gap-2 flex-wrap">
                 <span className="text-xl sm:text-2xl font-bold truncate">{ECOMMERCE_MAIN_TITLE}</span>
@@ -123,7 +132,7 @@ function EcommerceHeader({
               <button
                 onClick={() => navigateAndCloseMenu('/demo/ecommerce/products')}
                 className={isProductsActive ? activeButtonClass : navButtonClass}
-                aria-label="Browse products"
+                aria-label={t.browseProducts}
                 disabled={isProductsActive}
                 aria-current={isProductsActive ? 'page' : undefined}
               >
@@ -131,13 +140,13 @@ function EcommerceHeader({
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
-                  <span className="text-sm font-semibold">Browse Products</span>
+                  <span className="text-sm font-semibold">{t.browseProducts}</span>
                 </div>
               </button>
               <button
                 onClick={() => navigateAndCloseMenu('/demo/ecommerce/cart')}
                 className={isCartActive ? `relative ${activeButtonClass}` : `relative ${navButtonClass}`}
-                aria-label="View cart"
+                aria-label={t.cart}
                 disabled={isCartActive}
                 aria-current={isCartActive ? 'page' : undefined}
               >
@@ -145,7 +154,7 @@ function EcommerceHeader({
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  <span className="text-sm font-semibold">Cart</span>
+                  <span className="text-sm font-semibold">{t.cart}</span>
                   {cartCount > 0 && (
                     <span className="ml-1 bg-red-500 rounded-full px-2 py-0.5 text-xs font-bold">
                       {cartCount}
@@ -160,7 +169,7 @@ function EcommerceHeader({
                   disabled={isOrdersActive}
                   aria-current={isOrdersActive ? 'page' : undefined}
                 >
-                  My Orders
+                  {t.myOrders}
                 </button>
               )}
               {isLoggedIn && (
@@ -170,7 +179,7 @@ function EcommerceHeader({
                   disabled={isProfileActive}
                   aria-current={isProfileActive ? 'page' : undefined}
                 >
-                  My Profile
+                  {t.myProfile}
                 </button>
               )}
               {canShowAdminNav && (
@@ -180,7 +189,7 @@ function EcommerceHeader({
                   disabled={isAdminActive}
                   aria-current={isAdminActive ? 'page' : undefined}
                 >
-                  Admin Dashboard
+                  {t.adminDashboard}
                 </button>
               )}
               {isLoggedIn ? (
@@ -188,7 +197,7 @@ function EcommerceHeader({
                   onClick={handleLogout}
                   className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
                 >
-                  Logout
+                  {t.logout}
                 </button>
               ) : (
                 <>
@@ -199,7 +208,7 @@ function EcommerceHeader({
                     }}
                     className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20"
                   >
-                    Login
+                    {t.login}
                   </button>
                   <button
                     onClick={() => {
@@ -208,10 +217,20 @@ function EcommerceHeader({
                     }}
                     className="rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700"
                   >
-                    Register
+                    {t.register}
                   </button>
                 </>
               )}
+              <label htmlFor="ecommerce-language" className="sr-only">{t.languageLabel}</label>
+              <select
+                id="ecommerce-language"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as Language)}
+                className="bg-gray-900 text-white border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="en">English</option>
+                <option value="fi">Finnish</option>
+              </select>
             </div>
           </div>
 
@@ -221,20 +240,20 @@ function EcommerceHeader({
               <button
                 onClick={() => navigateAndCloseMenu('/demo/ecommerce/products')}
                 className={`w-full text-left ${isProductsActive ? activeButtonClass : navButtonClass}`}
-                aria-label="Browse products"
+                aria-label={t.browseProducts}
                 disabled={isProductsActive}
                 aria-current={isProductsActive ? 'page' : undefined}
               >
-                Browse Products
+                {t.browseProducts}
               </button>
               <button
                 onClick={() => navigateAndCloseMenu('/demo/ecommerce/cart')}
                 className={`relative w-full text-left ${isCartActive ? activeButtonClass : navButtonClass}`}
-                aria-label="View cart"
+                aria-label={t.cart}
                 disabled={isCartActive}
                 aria-current={isCartActive ? 'page' : undefined}
               >
-                Cart {cartCount > 0 ? `(${cartCount})` : ''}
+                {t.cart}{cartCount > 0 ? ` (${cartCount})` : ''}
               </button>
               {canShowOrdersNav && (
                 <button
@@ -243,7 +262,7 @@ function EcommerceHeader({
                   disabled={isOrdersActive}
                   aria-current={isOrdersActive ? 'page' : undefined}
                 >
-                  My Orders
+                  {t.myOrders}
                 </button>
               )}
               {isLoggedIn && (
@@ -253,7 +272,7 @@ function EcommerceHeader({
                   disabled={isProfileActive}
                   aria-current={isProfileActive ? 'page' : undefined}
                 >
-                  My Profile
+                  {t.myProfile}
                 </button>
               )}
               {canShowAdminNav && (
@@ -263,7 +282,7 @@ function EcommerceHeader({
                   disabled={isAdminActive}
                   aria-current={isAdminActive ? 'page' : undefined}
                 >
-                  Admin Dashboard
+                  {t.adminDashboard}
                 </button>
               )}
               {isLoggedIn ? (
@@ -271,7 +290,7 @@ function EcommerceHeader({
                   onClick={handleLogout}
                   className="w-full text-left rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
                 >
-                  Logout
+                  {t.logout}
                 </button>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
@@ -283,7 +302,7 @@ function EcommerceHeader({
                     }}
                     className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20"
                   >
-                    Login
+                    {t.login}
                   </button>
                   <button
                     onClick={() => {
@@ -293,10 +312,22 @@ function EcommerceHeader({
                     }}
                     className="rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700"
                   >
-                    Register
+                    {t.register}
                   </button>
                 </div>
               )}
+              <div className="pt-1">
+                <label htmlFor="ecommerce-language-mobile" className="sr-only">{t.languageLabel}</label>
+                <select
+                  id="ecommerce-language-mobile"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as Language)}
+                  className="w-full bg-gray-900 text-white border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                >
+                  <option value="en">English</option>
+                  <option value="fi">Finnish</option>
+                </select>
+              </div>
             </div>
           )}
         </div>
