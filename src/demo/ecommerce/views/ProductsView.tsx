@@ -1,11 +1,11 @@
 import { useSearchParams, Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { fetchProducts, createProduct, updateProduct, deleteProduct } from './api/productsApi';
-import type { Product, ProductsResponse } from './api/productsApi';
-import { addToCart, getCartCount } from './utils/cartUtils';
-import EcommerceHeader from './EcommerceHeader';
-import { getMe } from './api/authApi';
-import { getRoleAccess } from './utils/authUtils';
+import { fetchProducts, createProduct, updateProduct, deleteProduct } from '../../../api/productsApi';
+import type { Product, ProductsResponse } from '../../../api/productsApi';
+import { addToCart, getCartCount } from '../../../utils/cartUtils';
+import EcommerceHeader from '../components/EcommerceHeader';
+import { getMe } from '../../../api/authApi';
+import { getRoleAccess } from '../../../utils/authUtils';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';

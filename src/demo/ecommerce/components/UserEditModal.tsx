@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { deleteUser, updateUser } from './api/usersApi';
+import { deleteUser, updateUser } from '../../../api/usersApi';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

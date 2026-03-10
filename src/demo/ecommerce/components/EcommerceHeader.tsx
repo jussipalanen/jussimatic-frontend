@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ECOMMERCE_MAIN_TITLE } from './constants';
-import { getMe, logoutUser } from './api/authApi';
-import { getRoleAccess } from './utils/authUtils';
-import AuthModal from './AuthModal';
+import { ECOMMERCE_MAIN_TITLE } from '../../../constants';
+import { getMe, logoutUser } from '../../../api/authApi';
+import { getRoleAccess } from '../../../utils/authUtils';
+import AuthModal from '../../../AuthModal';
 
 type NavKey = 'products' | 'cart' | 'my-orders' | 'my-profile' | 'admin-dashboard';
 

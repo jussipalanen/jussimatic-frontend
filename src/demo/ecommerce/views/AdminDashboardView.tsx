@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMe } from './api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from './utils/authUtils';
-import { getCart } from './utils/cartUtils';
-import EcommerceHeader from './EcommerceHeader';
+import { getMe } from '../../../api/authApi';
+import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
+import { getCart } from '../../../utils/cartUtils';
+import EcommerceHeader from '../components/EcommerceHeader';
 
 function AdminDashboardView() {
   const navigate = useNavigate();

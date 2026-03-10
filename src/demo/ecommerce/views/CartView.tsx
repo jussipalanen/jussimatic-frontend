@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { getCart, removeFromCart, updateCartItemQuantity, clearCart } from './utils/cartUtils';
-import type { CartItem } from './utils/cartUtils';
-import EcommerceHeader from './EcommerceHeader';
+import { getCart, removeFromCart, updateCartItemQuantity, clearCart } from '../../../utils/cartUtils';
+import type { CartItem } from '../../../utils/cartUtils';
+import EcommerceHeader from '../components/EcommerceHeader';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
