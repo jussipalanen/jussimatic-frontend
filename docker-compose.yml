@@ -23,6 +23,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
     container_name: jussimatic-frontend-prod
     ports:
       - "8080:80"

@@ -57,6 +57,10 @@ export async function loginUser(payload: LoginPayload) {
   return postJson<unknown>('login', payload);
 }
 
+export async function loginWithGoogle(idToken: string) {
+  return postJson<unknown>('auth/google', { id_token: idToken });
+}
+
 export async function registerUser(payload: RegisterPayload) {
   return postJson<unknown>('register', payload);
 }

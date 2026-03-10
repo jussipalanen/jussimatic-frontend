@@ -62,6 +62,7 @@ Copy `.env.example` to `.env.local` and set the API base URLs:
 ```dotenv
 VITE_JUSSIMATIC_BACKEND_API_BASE_URL=https://your-api-url-here
 VITE_JUSSILOG_BACKEND_API_BASE_URL=http://localhost:8000/api/
+VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
 ```
 
 Currently, two official plugins are available:

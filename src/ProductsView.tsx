@@ -763,15 +763,15 @@ function ProductsView() {
       {activeModal && (
         <>
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-3 sm:items-center sm:p-4"
             onClick={closeModal}
           >
             <div
-              className="w-full max-w-3xl rounded-2xl bg-gray-800 text-white shadow-2xl border border-white/10"
+              className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-gray-800 text-white shadow-2xl"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-                <div className="text-sm font-semibold text-white/80">
+              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-6 sm:py-4">
+                <div className="text-xs font-semibold text-white/80 sm:text-sm">
                   {activeModal === 'details' && 'Product details'}
                   {activeModal === 'create' && 'Create product'}
                   {activeModal === 'edit' && 'Edit product'}
@@ -785,7 +785,7 @@ function ProductsView() {
                 </button>
               </div>
 
-              <div className="px-6 py-5 featured-image">
+              <div className="featured-image overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
                 {activeModal === 'details' && activeProduct && (
                   <div className="space-y-4">
                     <div className="aspect-video overflow-hidden rounded-xl border border-white/10 bg-gray-900/40">
@@ -797,7 +797,7 @@ function ProductsView() {
                       />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold">{activeProduct.title}</h2>
+                      <h2 className="text-xl font-bold sm:text-2xl">{activeProduct.title}</h2>
                       <p className="mt-2 text-sm text-gray-300 whitespace-pre-line">
                         {activeProduct.description}
                       </p>
@@ -809,7 +809,7 @@ function ProductsView() {
                             key={`${image}-${index}`}
                             type="button"
                             onClick={() => setZoomImage(buildStorageUrl(image))}
-                            className="h-16 w-16 overflow-hidden rounded-lg border border-white/10 bg-gray-900/40"
+                            className="h-14 w-14 overflow-hidden rounded-lg border border-white/10 bg-gray-900/40 sm:h-16 sm:w-16"
                             aria-label={`View image ${index + 1}`}
                           >
                             <img
@@ -847,11 +847,11 @@ function ProductsView() {
                         {formatDate(activeProduct.updated_at)}
                       </div>
                     </div>
-                    <div className="flex justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <button
                         onClick={() => handleAddToCart(activeProduct)}
                         disabled={activeProduct.quantity === 0}
-                        className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-green-600"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-green-600 sm:w-auto"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -859,17 +859,17 @@ function ProductsView() {
                         {activeProduct.quantity === 0 ? 'Out of Stock' : 'Add to cart'}
                       </button>
                       {canManageProducts && (
-                        <div className="flex gap-3">
+                        <div className="flex w-full gap-3 sm:w-auto">
                           <button
                             onClick={handleDeleteClick}
                             disabled={deleting}
-                            className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
                           >
                             Delete
                           </button>
                           <button
                             onClick={() => openEditModal(activeProduct)}
-                            className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                            className="flex-1 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 sm:flex-none"
                           >
                             Edit
                           </button>
@@ -1125,30 +1125,30 @@ function ProductsView() {
           </div>
           {showDeleteConfirm && (
             <div
-              className="fixed inset-0 z-70 flex items-center justify-center bg-black/80 px-4"
+              className="fixed inset-0 z-70 flex items-end justify-center bg-black/80 p-3 sm:items-center sm:p-4"
               onClick={handleDeleteCancel}
             >
               <div
-                className="w-full max-w-md rounded-2xl bg-gray-800 text-white shadow-2xl border border-white/10"
+                className="w-full max-w-md rounded-2xl border border-white/10 bg-gray-800 text-white shadow-2xl"
                 onClick={(event) => event.stopPropagation()}
               >
-                <div className="px-6 py-5">
+                <div className="px-4 py-4 sm:px-6 sm:py-5">
                   <h3 className="text-lg font-semibold mb-3">Delete Product</h3>
                   <p className="text-gray-300 mb-6">
                     Are you sure you want to delete this product? This action cannot be undone.
                   </p>
-                  <div className="flex justify-end gap-3">
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                     <button
                       onClick={handleDeleteCancel}
                       disabled={deleting}
-                      className="rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleDeleteConfirm}
                       disabled={deleting}
-                      className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     >
                       {deleting ? 'Deleting...' : 'Yes, Delete'}
                     </button>
@@ -1159,13 +1159,13 @@ function ProductsView() {
           )}
           {zoomImage && (
             <div
-              className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-6"
+              className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-3 sm:p-6"
               onClick={() => setZoomImage(null)}
             >
               <img
                 src={zoomImage}
                 alt="Enlarged product"
-                className="max-h-full max-w-full rounded-xl object-contain"
+                className="max-h-[90vh] max-w-full rounded-xl object-contain"
               />
             </div>
           )}

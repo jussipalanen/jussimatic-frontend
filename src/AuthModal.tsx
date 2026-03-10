@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { loginUser, registerUser, requestPasswordReset } from './api/authApi';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { loginUser, loginWithGoogle, registerUser, requestPasswordReset } from './api/authApi';
 
 type AuthTab = 'login' | 'register' | 'forgot';
 
@@ -43,6 +43,10 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
   const [loginLoading, setLoginLoading] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -56,6 +60,8 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
     setLoginSubmitted(false);
     setRegisterSubmitted(false);
     setForgotSubmitted(false);
+    setGoogleLoading(false);
+    setGoogleReady(false);
     setLoginTouched({ identifier: false, password: false });
     setRegisterTouched({
       username: false,
@@ -68,6 +74,94 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
     setForgotTouched({ email: false });
     setForgotForm({ email: '' });
   }, [isOpen, initialTab]);
+
+  const handleGoogleLogin = useCallback(async (idToken: string) => {
+    if (!idToken || googleLoading) return;
+
+    setLoginResponse(null);
+    setLoginSuccess(false);
+    setGoogleLoading(true);
+
+    try {
+      const data = await loginWithGoogle(idToken);
+      if (data && typeof data === 'object' && 'token' in data) {
+        localStorage.setItem('auth_token', (data as { token: string }).token);
+        setLoginSuccess(true);
+        setLoginResponse(data as Record<string, unknown>);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        setLoginResponse(data as Record<string, unknown>);
+      }
+    } catch (error) {
+      const authError = error as { data?: unknown; message?: string };
+      const errorData = authError.data as { message?: string } | undefined;
+      setLoginResponse({
+        message: errorData?.message ?? authError.message ?? 'Google login failed',
+      });
+    } finally {
+      setGoogleLoading(false);
+    }
+  }, [googleLoading]);
+
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'login') return;
+
+    if (!googleClientId) {
+      setGoogleReady(false);
+      return;
+    }
+
+    let active = true;
+
+    const initializeGoogleButton = () => {
+      if (!active || !googleButtonRef.current || !window.google?.accounts?.id) return;
+
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (response: GoogleCredentialResponse) => {
+          void handleGoogleLogin(response.credential ?? '');
+        },
+      });
+
+      googleButtonRef.current.innerHTML = '';
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: 'filled_blue',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        width: 320,
+      });
+
+      setGoogleReady(true);
+    };
+
+    if (window.google?.accounts?.id) {
+      initializeGoogleButton();
+      return () => {
+        active = false;
+      };
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = initializeGoogleButton;
+    script.onerror = () => {
+      if (!active) return;
+      setGoogleReady(false);
+      setLoginResponse({ message: 'Google sign-in is temporarily unavailable.' });
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      active = false;
+      script.onload = null;
+      script.onerror = null;
+    };
+  }, [activeTab, googleClientId, handleGoogleLogin, isOpen]);
 
   const loginErrors = useMemo(() => {
     const errors: { identifier?: string; password?: string } = {};
@@ -312,7 +406,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
               <div className="flex flex-col gap-3 pt-2">
                 <button
                   type="submit"
-                  disabled={loginHasErrors || loginLoading}
+                  disabled={loginHasErrors || loginLoading || googleLoading}
                   className="w-full rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loginLoading ? 'Logging in...' : 'Login'}
@@ -328,6 +422,30 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   Register
                 </button>
               </div>
+
+              <div className="pt-2">
+                <div className="mb-3 flex items-center gap-3 text-[11px] uppercase tracking-[0.18em] text-white/45">
+                  <span className="h-px flex-1 bg-gradient-to-r from-transparent to-white/20" />
+                  <span>Or continue with</span>
+                  <span className="h-px flex-1 bg-gradient-to-l from-transparent to-white/20" />
+                </div>
+
+                <div className="rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.03] p-3 shadow-inner">
+                  <div ref={googleButtonRef} className="flex min-h-11 justify-center" />
+                  {googleLoading && (
+                    <p className="mt-2 text-center text-xs text-white/70">Signing in with Google...</p>
+                  )}
+                  {!googleClientId && (
+                    <p className="mt-2 text-center text-xs text-amber-300">
+                      Google login is not configured. Add `VITE_GOOGLE_CLIENT_ID` to enable it.
+                    </p>
+                  )}
+                  {googleClientId && !googleReady && !googleLoading && (
+                    <p className="mt-2 text-center text-xs text-white/60">Loading Google sign-in...</p>
+                  )}
+                </div>
+              </div>
+
               {loginResponse && (
                 <div
                   className={`mt-4 rounded-lg border p-3 text-sm ${
