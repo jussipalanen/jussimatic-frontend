@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { updateUser } from './api/usersApi';
+import { deleteUser, updateUser } from './api/usersApi';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -66,6 +66,8 @@ function UserEditModal({
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const [profileForm, setProfileForm] = useState({
     username: initialData.username,
@@ -168,6 +170,8 @@ function UserEditModal({
     setEditError(null);
     setEditSuccess(null);
     setEditMode('profile');
+    setShowDeleteConfirm(false);
+    setDeletingAccount(false);
   };
 
   const handleClose = () => {
@@ -243,6 +247,24 @@ function UserEditModal({
       setEditError(err instanceof Error ? err.message : 'Failed to update password. Please try again.');
     } finally {
       setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deletingAccount) return;
+    setEditError(null);
+    setEditSuccess(null);
+    setDeletingAccount(true);
+
+    try {
+      await deleteUser(userId);
+      localStorage.removeItem('auth_token');
+      window.location.href = '/';
+    } catch (err) {
+      console.error('Failed to delete user:', err);
+      setEditError(err instanceof Error ? err.message : 'Failed to delete user. Please try again.');
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -423,6 +445,46 @@ function UserEditModal({
               >
                 {savingEdit ? 'Saving...' : 'Save'}
               </button>
+            </div>
+
+            <div className="mt-6 rounded-lg border border-red-500/30 bg-red-900/10 p-4">
+              <h3 className="text-sm font-semibold text-red-300">Delete account</h3>
+              <p className="mt-2 text-xs text-red-200/80">
+                This permanently deletes your account and cannot be undone.
+              </p>
+              {!showDeleteConfirm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="mt-3 rounded-lg border border-red-500/50 px-4 py-2 text-xs font-semibold text-red-200 hover:bg-red-500/10"
+                >
+                  Delete my account
+                </button>
+              ) : (
+                <div className="mt-3 rounded-lg border border-red-500/40 bg-red-900/20 p-3">
+                  <p className="text-xs text-red-200">
+                    Are you sure? This will delete your account and log you out immediately.
+                  </p>
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="rounded-lg border border-gray-600 px-3 py-2 text-xs font-semibold text-gray-200 hover:bg-gray-800"
+                      disabled={deletingAccount}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeleteAccount}
+                      className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                      disabled={deletingAccount}
+                    >
+                      {deletingAccount ? 'Deleting...' : 'Yes, delete'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

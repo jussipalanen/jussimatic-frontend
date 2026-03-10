@@ -1,22 +1,76 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
+import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from './i18n';
+import type { Language } from './i18n';
 import { logoutUser } from './api/authApi';
+import { getVisitorsToday, getVisitorsTotal, trackVisitor } from './api/visitorsApi';
 import AuthModal from './AuthModal';
 
 function LandingView() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const year = new Date().getFullYear();
-  const [language] = useState(() => getStoredLanguage());
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [visitorsCount, setVisitorsCount] = useState<number | null>(null);
+  const [visitorsTotalCount, setVisitorsTotalCount] = useState<number | null>(null);
+  const [visitorsError, setVisitorsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setStoredLanguage(language);
+  }, [language]);
 
   // Check for auth token on mount
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     setIsLoggedIn(!!token);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadVisitorsStats = async () => {
+      try {
+        const [todayData, totalData] = await Promise.all([
+          getVisitorsToday(),
+          getVisitorsTotal(),
+        ]);
+        if (!active) return;
+        setVisitorsCount(todayData.visitors);
+        setVisitorsTotalCount(totalData.visitors);
+      } catch (error) {
+        console.error('Failed to load visitors count:', error);
+        if (!active) return;
+        setVisitorsError('Visitors count unavailable');
+      }
+    };
+
+    loadVisitorsStats();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Track visitor on first visit (once per session)
+  useEffect(() => {
+    const sessionKey = 'visitor_tracked';
+    const alreadyTracked = sessionStorage.getItem(sessionKey);
+
+    if (alreadyTracked) return;
+
+    const trackVisit = async () => {
+      try {
+        await trackVisitor();
+        sessionStorage.setItem(sessionKey, 'true');
+      } catch (error) {
+        console.error('Failed to track visitor:', error);
+      }
+    };
+
+    trackVisit();
   }, []);
 
   useEffect(() => {
@@ -45,6 +99,19 @@ function LandingView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+      {/* Language Selector */}
+      <div className="fixed top-4 right-4 z-40">
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value as Language)}
+          className="rounded-lg border border-white/20 bg-gray-800/90 backdrop-blur-sm px-3 py-2 text-sm text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Select language"
+        >
+          <option value="en">English</option>
+          <option value="fi">Suomi</option>
+        </select>
+      </div>
+
       {/* Hero Section */}
       <header className="grow flex items-center justify-center px-4 py-12 sm:py-16">
         <div className="text-center w-full max-w-3xl">
@@ -73,7 +140,7 @@ function LandingView() {
               </button>
             )}
             <button 
-              onClick={() => navigate('/jobs')}
+              onClick={() => navigate('/demo/browse-jobs')}
               className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
             >
               {t.landing.jobsCta}
@@ -84,6 +151,26 @@ function LandingView() {
             >
               Ecommerce Demo
             </button>
+          </div>
+
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <p className="text-sm text-white/60">{t.landing.visitorsDescription}</p>
+            <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
+              {visitorsError ? (
+                <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/70">
+                  {visitorsError}
+                </div>
+              ) : (
+                <>
+                  <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/70">
+                    {visitorsCount === null ? 'Loading...' : `${t.landing.visitorsToday}: ${visitorsCount}`}
+                  </div>
+                  <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/70">
+                    {visitorsTotalCount === null ? 'Loading...' : `${t.landing.visitorsAllTime}: ${visitorsTotalCount}`}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           
           {/* Social Links */}

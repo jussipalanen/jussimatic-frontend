@@ -50,6 +50,9 @@ export const translations = {
       subtitle: 'Your ultimate solution for automated justice.',
       cta: 'Get Started',
       jobsCta: 'Browse Jobs',
+      visitorsDescription: 'Unique visitors have visited this site',
+      visitorsToday: 'Today',
+      visitorsAllTime: 'All time',
     },
     jobs: {
       title: 'Vantaa City Jobs',
@@ -97,6 +100,9 @@ export const translations = {
       subtitle: 'Oikeuden automatisoinnin paras ratkaisu.',
       cta: 'Aloita',
       jobsCta: 'Selaa työpaikkoja',
+      visitorsDescription: 'Yksilöllistä vierailijaa on käynyt sivustolla',
+      visitorsToday: 'Tänään',
+      visitorsAllTime: 'Yhteensä',
     },
     jobs: {
       title: 'Vantaa kaupunki työpaikat',
