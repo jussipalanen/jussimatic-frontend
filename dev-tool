@@ -51,17 +51,56 @@ case $COMMAND in
     npm run dev
     ;;
   
+  deploy)
+    ENV_FILE="${2:-.env.production}"
+
+    if [ ! -f "$ENV_FILE" ]; then
+      echo "Error: '$ENV_FILE' not found. Create it or pass a path: ./dev-tool deploy .env.myfile"
+      exit 1
+    fi
+
+    echo "Loading environment from '$ENV_FILE'..."
+    set -a
+    # shellcheck source=/dev/null
+    source "$ENV_FILE"
+    set +a
+
+    # Require a TAG_NAME for the image destination
+    if [ -z "${TAG_NAME:-}" ]; then
+      echo "Error: TAG_NAME is not set. Export it or add it to '$ENV_FILE'."
+      echo "  Example: TAG_NAME=v0.4.0 ./dev-tool deploy"
+      exit 1
+    fi
+
+    echo "Submitting Cloud Build (tag: $TAG_NAME)..."
+    gcloud builds submit \
+      --config=cloudbuild.yaml \
+      --substitutions=\
+"_VITE_JUSSIMATIC_BACKEND_API_BASE_URL=${VITE_JUSSIMATIC_BACKEND_API_BASE_URL:-},\
+_VITE_JUSSILOG_BACKEND_API_BASE_URL=${VITE_JUSSILOG_BACKEND_API_BASE_URL:-},\
+_VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL=${VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL:-},\
+_VITE_JUSSI_AIBOT_API_URL=${VITE_JUSSI_AIBOT_API_URL:-},\
+_VITE_JUSSI_AIBOT_API_KEY=${VITE_JUSSI_AIBOT_API_KEY:-},\
+_VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID:-},\
+_VITE_APP_TITLE=${VITE_APP_TITLE:-},\
+_VITE_APP_DESCRIPTION=${VITE_APP_DESCRIPTION:-},\
+TAG_NAME=$TAG_NAME"
+    ;;
+
   *)
     echo "Usage: ./dev-tool [COMMAND]"
     echo ""
     echo "Commands:"
-    echo "  up       - Start Docker Compose development environment"
-    echo "  rebuild  - Rebuild and restart Docker Compose (detached, force-recreate)"
-    echo "  down     - Stop Docker Compose"
-    echo "  logs     - Show Docker Compose logs"
-    echo "  build    - Build Docker image"
-    echo "  restart  - Restart Docker Compose"
-    echo "  local    - Start local development (default)"
+    echo "  up                      - Start Docker Compose development environment"
+    echo "  rebuild                 - Rebuild and restart Docker Compose (detached, force-recreate)"
+    echo "  down                    - Stop Docker Compose"
+    echo "  logs                    - Show Docker Compose logs"
+    echo "  build                   - Build Docker image"
+    echo "  restart                 - Restart Docker Compose"
+    echo "  local                   - Start local development (default)"
+    echo "  deploy [env-file]       - Submit a Cloud Build using variables from .env.production"
+    echo "                            Optionally pass a custom env file path as second argument."
+    echo "                            TAG_NAME must be set in the env file or exported beforehand."
     echo ""
     exit 1
     ;;
