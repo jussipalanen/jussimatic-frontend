@@ -11,6 +11,7 @@ import MyProfileView from './demo/ecommerce/views/MyProfileView'
 import AdminOrdersView from './demo/ecommerce/views/AdminOrdersView'
 import AdminDashboardView from './demo/ecommerce/views/AdminDashboardView'
 import AdminUsersView from './demo/ecommerce/views/AdminUsersView'
+import AdminInvoicesView from './demo/ecommerce/views/AdminInvoicesView'
 import ResetPasswordView from './ResetPasswordView'
 import AICVReviewView from './demo/ai-cv-review'
 
@@ -30,6 +31,7 @@ function App() {
         <Route path="/demo/ecommerce/admin" element={<AdminDashboardView />} />
         <Route path="/demo/ecommerce/admin/orders" element={<AdminOrdersView />} />
         <Route path="/demo/ecommerce/admin/users" element={<AdminUsersView />} />
+        <Route path="/demo/ecommerce/admin/invoices" element={<AdminInvoicesView />} />
         <Route path="/reset-password" element={<ResetPasswordView />} />
       </Routes>
     </Router>

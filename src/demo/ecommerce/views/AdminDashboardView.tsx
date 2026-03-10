@@ -50,7 +50,7 @@ function AdminDashboardView() {
       <EcommerceHeader
         title="Admin Dashboard"
         backTo="/demo/ecommerce/products"
-        backLabel="Back to products"
+        backLabel="Products"
         cartCount={cartCount}
         activeNav="admin-dashboard"
       />
@@ -120,6 +120,19 @@ function AdminDashboardView() {
                   className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition-colors"
                 >
                   Go to Users
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+              <div className="rounded-xl border border-gray-700 bg-gray-900/60 p-5">
+                <h3 className="text-lg font-semibold text-white">Invoices</h3>
+                <p className="text-sm text-gray-400 mt-2">View and search customer invoices.</p>
+                <button
+                  onClick={() => navigate('/demo/ecommerce/admin/invoices')}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition-colors"
+                >
+                  Go to Invoices
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>

@@ -220,8 +220,9 @@ function AdminUsersView() {
       <EcommerceHeader
         title="Admin Users"
         backTo="/demo/ecommerce/admin"
-        backLabel="Back to admin dashboard"
+        backLabel="Admin Dashboard"
         cartCount={cartCount}
+        activeNav="admin-dashboard"
       />
 
       <main className="container mx-auto px-4 py-8">

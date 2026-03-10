@@ -152,8 +152,9 @@ function MyProfileView() {
       <EcommerceHeader
         title="My Profile"
         backTo="/demo/ecommerce/products"
-        backLabel="Back to products"
+        backLabel="Products"
         cartCount={cartCount}
+        activeNav="my-profile"
       />
 
       <main className="container mx-auto px-4 py-8">

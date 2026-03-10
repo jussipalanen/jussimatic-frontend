@@ -288,9 +288,10 @@ function AdminOrdersView() {
     <div className="min-h-screen bg-gray-900 text-white">
       <EcommerceHeader
         title="Admin Orders"
-        backTo="/demo/ecommerce/products"
-        backLabel="Back to products"
+        backTo="/demo/ecommerce/admin"
+        backLabel="Admin Dashboard"
         cartCount={cartCount}
+        activeNav="admin-dashboard"
       />
 
       <main className="container mx-auto px-4 py-8">

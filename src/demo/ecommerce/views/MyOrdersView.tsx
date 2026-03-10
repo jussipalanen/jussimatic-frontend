@@ -177,7 +177,7 @@ function MyOrdersView() {
       <EcommerceHeader
         title="My Orders"
         backTo="/demo/ecommerce/products"
-        backLabel="Back to products"
+        backLabel="Products"
         cartCount={cartCount}
         activeNav="my-orders"
       />
