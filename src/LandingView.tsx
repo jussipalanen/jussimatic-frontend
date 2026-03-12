@@ -1,10 +1,10 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
-import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from './i18n';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import type { Language } from './i18n';
-import { logoutUser } from './api/authApi';
 import { getVisitorsToday, getVisitorsTotal, trackVisitor } from './api/visitorsApi';
 import AuthModal from './AuthModal';
+import NavBar from './components/NavBar';
 
 function LandingView() {
   const navigate = useNavigate();
@@ -12,7 +12,6 @@ function LandingView() {
   const year = new Date().getFullYear();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
   const projectsRef = useRef<HTMLDivElement>(null);
@@ -20,14 +19,26 @@ function LandingView() {
   const [visitorsTotalCount, setVisitorsTotalCount] = useState<number | null>(null);
   const [visitorsError, setVisitorsError] = useState<string | null>(null);
 
+  // Close hero projects dropdown on outside click
   useEffect(() => {
-    setStoredLanguage(language);
-  }, [language]);
+    if (!showProjects) return;
+    const handler = (e: MouseEvent) => {
+      if (projectsRef.current && !projectsRef.current.contains(e.target as Node)) {
+        setShowProjects(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showProjects]);
 
-  // Check for auth token on mount
+  // Keep language in sync when NavBar dispatches language-change events
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    setIsLoggedIn(!!token);
+    const handler = (event: Event) => {
+      const lang = (event as CustomEvent<Language>).detail;
+      setLanguage(lang);
+    };
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
   }, []);
 
   useEffect(() => {
@@ -76,17 +87,6 @@ function LandingView() {
   }, []);
 
   useEffect(() => {
-    if (!showProjects) return;
-    const handler = (e: MouseEvent) => {
-      if (projectsRef.current && !projectsRef.current.contains(e.target as Node)) {
-        setShowProjects(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showProjects]);
-
-  useEffect(() => {
     if (searchParams.get('auth') !== 'login') return;
 
     setIsModalOpen(true);
@@ -95,35 +95,9 @@ function LandingView() {
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
-  const handleLogout = async () => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
-
-    try {
-      await logoutUser(token);
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      // Clear token and reload regardless of API response
-      localStorage.removeItem('auth_token');
-      window.location.reload();
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      {/* Language Selector */}
-      <div className="fixed top-4 right-4 z-40">
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value as Language)}
-          className="rounded-lg border border-white/20 bg-gray-800/90 backdrop-blur-sm px-3 py-2 text-sm text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label="Select language"
-        >
-          <option value="en">English</option>
-          <option value="fi">Suomi</option>
-        </select>
-      </div>
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-14">
+      <NavBar onLoginClick={() => setIsModalOpen(true)} />
 
       {/* Hero Section */}
       <header className="grow flex items-center justify-center px-4 py-12 sm:py-16">
@@ -140,25 +114,6 @@ function LandingView() {
               <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
               {t.landing.cta}
             </button>
-            {isLoggedIn ? (
-              <button
-                onClick={handleLogout}
-                className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2"
-              >
-                {/* Logout icon */}
-                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                Logout
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded border border-white/20 flex items-center justify-center gap-2"
-              >
-                {/* Login icon */}
-                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
-                Login
-              </button>
-            )}
             {/* Projects / Demos dropdown */}
             <div className="relative w-full sm:w-auto" ref={projectsRef}>
               <button

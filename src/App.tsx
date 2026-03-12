@@ -14,6 +14,9 @@ import AdminUsersView from './demo/ecommerce/views/AdminUsersView'
 import AdminInvoicesView from './demo/ecommerce/views/AdminInvoicesView'
 import ResetPasswordView from './ResetPasswordView'
 import AICVReviewView from './demo/ai-cv-review'
+import LogoutView from './profile/LogoutView'
+import ResumesView from './profile/resumes/ResumesView'
+import ResumeFormView from './profile/resumes/ResumeFormView'
 
 function App() {
   return (
@@ -21,6 +24,10 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingView />} />
         <Route path="/chat" element={<ChatView />} />
+        <Route path="/logout" element={<LogoutView />} />
+        <Route path="/profile/resumes" element={<ResumesView />} />
+        <Route path="/profile/resumes/new" element={<ResumeFormView />} />
+        <Route path="/profile/resumes/:id" element={<ResumeFormView />} />
         <Route path="/demo/browse-jobs" element={<BrowseJobsView />} />
         <Route path="/demo/ai-cv-review" element={<AICVReviewView />} />
         <Route path="/demo/ecommerce/products" element={<ProductsView />} />
