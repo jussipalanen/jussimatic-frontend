@@ -344,11 +344,27 @@ export async function exportInvoiceHtmlPublic(payload: InvoiceExportPayload): Pr
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-export async function sendInvoiceEmailPublic(payload: InvoiceExportPayload & { email: string }): Promise<void> {
+export async function sendInvoiceEmailPublic(payload: InvoiceExportPayload & { to_email: string }): Promise<void> {
+  const { to_email, billing_address, items, ...flat } = payload;
+  const formData = new FormData();
+  formData.append('to_email', to_email);
+  Object.entries(flat).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      formData.append(key, String(value));
+    }
+  });
+  Object.entries(billing_address).forEach(([key, value]) => {
+    formData.append(`billing_address[${key}]`, String(value));
+  });
+  items.forEach((item, index) => {
+    Object.entries(item).forEach(([key, value]) => {
+      formData.append(`items[${index}][${key}]`, String(value));
+    });
+  });
   const response = await fetch(buildUrl('invoices/export/email'), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify(payload),
+    headers: { Accept: 'application/json' },
+    body: formData,
   });
   if (!response.ok) throw new Error(`Failed to send invoice email: ${response.status}`);
 }

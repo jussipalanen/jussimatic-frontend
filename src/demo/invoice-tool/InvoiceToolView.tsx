@@ -285,7 +285,7 @@ export default function InvoiceToolView() {
     setSendError(null);
     setSendSuccess(false);
     try {
-      await sendInvoiceEmailPublic({ ...buildPayload(), email: sendEmail });
+      await sendInvoiceEmailPublic({ ...buildPayload(), to_email: sendEmail });
       setSendSuccess(true);
     } catch (err) {
       console.error('Send failed:', err);
