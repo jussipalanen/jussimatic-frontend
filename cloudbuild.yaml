@@ -1,7 +1,8 @@
 steps:
   # Build and push Docker image with Kaniko (with layer caching)
   # VITE_GOOGLE_CLIENT_ID and VITE_JUSSI_AIBOT_API_KEY are injected from Secret Manager via secretEnv.
-  - name: 'gcr.io/kaniko-project/executor:latest'
+  # Note: 'debug' tag is required — it includes busybox shell needed for secretEnv expansion.
+  - name: 'gcr.io/kaniko-project/executor:debug'
     entrypoint: '/busybox/sh'
     args:
       - '-c'
