@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-03-13
+### Added
+- Resume Builder demo: theme and template dropdowns populated dynamically from `/api/resumes/export/options`.
+- Resume Builder demo and Resume Management: language dropdown populated dynamically from `/api/resumes/export/options`.
+- Resume language, theme, and template are now required fields with translated validation messages (EN/FI) in both the demo builder and authenticated resume editor.
+- Resume language field marked with `*` required indicator in both resume views.
+- Dependabot configuration (`.github/dependabot.yml`) for automated npm dependency updates (weekly, max 10 PRs).
+
+### Changed
+- `getExportOptions` now accepts an optional `lang` parameter and appends `?lang=` to the request URL.
+- Template field appears before Theme field in both the Resume Builder and Resume Form views.
+- Copying a resume always sets `is_primary: false` on the copy to preserve the uniqueness of the primary resume.
+- NavBar: "Resume Builder" label uses i18n translation key; "Resumes" and "Login" labels translated.
+- NavBar user account menu reads name and email from the nested `user` object returned by `/api/me`.
+- Landing view hero no longer shows the "My Profile" button for authenticated users.
+
+### Fixed
+- Registration success response no longer exposes the raw API JSON (including auth token) in the UI.
+- NavBar user display name and email now resolve correctly from the nested `/api/me` response shape.
+
+### Security
+- Removed `<pre>{JSON.stringify(registerResponse)}</pre>` block from `AuthModal` that leaked the auth token to the DOM after successful registration.
+
+### Maintenance
+- Ran `npm update`: 66 packages updated, 0 vulnerabilities.
+
 ## [0.3.0] - 2026-03-09
 ### Added
 - Reset password page with token and email support from reset-link query params.
