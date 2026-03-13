@@ -636,10 +636,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                 >
                   {registerSuccess ? (
                     <div>
-                      <p className="font-semibold mb-2">{t.registerSuccess}</p>
-                      <pre className="text-xs text-white/60 whitespace-pre-wrap overflow-wrap-break-word">
-                        {JSON.stringify(registerResponse, null, 2)}
-                      </pre>
+                      <p className="font-semibold">{t.registerSuccess}</p>
                     </div>
                   ) : (
                     <p>{(registerResponse as { message?: string })?.message ?? t.registerFailed}</p>

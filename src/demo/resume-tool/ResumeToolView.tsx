@@ -247,12 +247,13 @@ function listMove<T>(arr: T[], index: number, direction: -1 | 1): T[] {
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
 
-function PersonalSection({ data, onChange, t, themes, templates }: {
+function PersonalSection({ data, onChange, t, themes, templates, languages }: {
   data: FormData;
   onChange: (partial: Partial<FormData>) => void;
   t: (typeof translations)[typeof DEFAULT_LANGUAGE]['resumes'];
   themes: ExportOption[];
   templates: ExportOption[];
+  languages: ExportOption[];
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -301,15 +302,12 @@ function PersonalSection({ data, onChange, t, themes, templates }: {
       {field('portfolio_url', t.fieldPortfolio, 'url', 'https://yoursite.com')}
       {field('github_url', t.fieldGitHub, 'url', 'https://github.com/username')}
       <div>
-        <label className={LABEL_CLS}>{t.fieldResumeLanguage}</label>
+        <label className={LABEL_CLS}>{t.fieldResumeLanguage} *</label>
         <select value={data.language} onChange={(e) => onChange({ language: e.target.value })} className={INPUT_CLS}>
           <option value="">{t.fieldResumeLanguagePlaceholder}</option>
-          <option value="en">English</option>
-          <option value="fi">Finnish (Suomi)</option>
-          <option value="sv">Swedish (Svenska)</option>
-          <option value="de">German (Deutsch)</option>
-          <option value="fr">French (Français)</option>
-          <option value="es">Spanish (Español)</option>
+          {languages.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </select>
       </div>
       {/* Template */}
@@ -332,7 +330,7 @@ function PersonalSection({ data, onChange, t, themes, templates }: {
           ))}
         </select>
       </div>
-      {/* Profile photo */}}
+      {/* Profile photo */}
       <div>
         <label className={LABEL_CLS}>{t.fieldPhoto}</label>
         <input
@@ -491,6 +489,11 @@ function ResumeToolView() {
   const handleExport = async (format: 'pdf' | 'html') => {
     setExportMenuOpen(false);
 
+    if (!form.language) {
+      setError(t.errLanguageRequired);
+      setActiveSection('personal');
+      return;
+    }
     if (!form.theme) {
       setError(t.errThemeRequired);
       setActiveSection('personal');
@@ -534,7 +537,7 @@ function ResumeToolView() {
   const renderSection = () => {
     switch (activeSection) {
       case 'personal':
-        return <PersonalSection data={form} onChange={patch} t={t} themes={exportOptions.themes} templates={exportOptions.templates} />;
+        return <PersonalSection data={form} onChange={patch} t={t} themes={exportOptions.themes} templates={exportOptions.templates} languages={exportOptions.languages} />;
 
       case 'summary':
         return (

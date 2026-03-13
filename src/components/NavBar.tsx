@@ -10,6 +10,13 @@ interface NavUserData {
   last_name?: string;
   lastname?: string;
   email?: string;
+  user?: {
+    first_name?: string;
+    last_name?: string;
+    name?: string;
+    email?: string;
+    [key: string]: unknown;
+  };
   [key: string]: unknown;
 }
 
@@ -81,18 +88,25 @@ export default function NavBar({ onLoginClick }: NavBarProps) {
   };
 
   const getFullName = () => {
-    const first = String(userData?.first_name ?? userData?.firstname ?? '').trim();
-    const last = String(userData?.last_name ?? userData?.lastname ?? '').trim();
-    return `${first} ${last}`.trim() || 'Account';
+    const first = String(userData?.user?.first_name ?? userData?.first_name ?? userData?.firstname ?? '').trim();
+    const last = String(userData?.user?.last_name ?? userData?.last_name ?? userData?.lastname ?? '').trim();
+    const full = `${first} ${last}`.trim();
+    if (full) return full;
+    const name = String(userData?.user?.name ?? '').trim();
+    return name || 'Account';
   };
 
   const getInitials = () => {
-    const first = String(userData?.first_name ?? userData?.firstname ?? '').trim();
-    const last = String(userData?.last_name ?? userData?.lastname ?? '').trim();
+    const first = String(userData?.user?.first_name ?? userData?.first_name ?? userData?.firstname ?? '').trim();
+    const last = String(userData?.user?.last_name ?? userData?.last_name ?? userData?.lastname ?? '').trim();
     if (first && last) return `${first[0]}${last[0]}`.toUpperCase();
     if (first) return first[0].toUpperCase();
+    const name = String(userData?.user?.name ?? '').trim();
+    if (name) return name[0].toUpperCase();
     return 'U';
   };
+
+  const getEmail = () => String(userData?.user?.email ?? userData?.email ?? '').trim();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-white/10">
@@ -216,8 +230,8 @@ export default function NavBar({ onLoginClick }: NavBarProps) {
                     {/* User info */}
                     <div className="px-4 py-3 border-b border-gray-700">
                       <div className="font-medium text-white text-sm">{getFullName()}</div>
-                      {userData?.email && (
-                        <div className="text-xs text-white/60 mt-0.5 truncate">{String(userData.email)}</div>
+                      {getEmail() && (
+                        <div className="text-xs text-white/60 mt-0.5 truncate">{getEmail()}</div>
                       )}
                     </div>
 
@@ -244,7 +258,7 @@ export default function NavBar({ onLoginClick }: NavBarProps) {
                         <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        Resumes
+                        {t.landing.myResumes}
                       </button>
                     </div>
 
@@ -270,7 +284,7 @@ export default function NavBar({ onLoginClick }: NavBarProps) {
                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
-                Login
+                {t.auth.tabLogin}
               </button>
             )}
           </div>

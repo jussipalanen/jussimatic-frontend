@@ -291,6 +291,7 @@ function PersonalSection({
   onRemovePhoto,
   themes,
   templates,
+  languages,
   t,
 }: {
   data: FormData;
@@ -300,6 +301,7 @@ function PersonalSection({
   onRemovePhoto: () => void;
   themes: ExportOption[];
   templates: ExportOption[];
+  languages: ExportOption[];
   t: (typeof translations)[typeof DEFAULT_LANGUAGE]['resumes'];
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -351,19 +353,16 @@ function PersonalSection({
 
       {/* Resume language */}
       <div>
-        <label className={LABEL_CLS}>{t.fieldResumeLanguage}</label>
+        <label className={LABEL_CLS}>{t.fieldResumeLanguage} *</label>
         <select
           value={data.language}
           onChange={(e) => onChange({ language: e.target.value })}
           className={INPUT_CLS}
         >
           <option value="">{t.fieldResumeLanguagePlaceholder}</option>
-          <option value="en">English</option>
-          <option value="fi">Finnish (Suomi)</option>
-          <option value="sv">Swedish (Svenska)</option>
-          <option value="de">German (Deutsch)</option>
-          <option value="fr">French (Français)</option>
-          <option value="es">Spanish (Español)</option>
+          {languages.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </select>
       </div>
 
@@ -665,6 +664,11 @@ function ResumeFormView() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.language) {
+      setError(t.errLanguageRequired);
+      setActiveSection('personal');
+      return;
+    }
     setSaving(true);
     setError(null);
     setSuccessMsg(null);
@@ -759,6 +763,7 @@ function ResumeFormView() {
             onRemovePhoto={() => setRemovePhoto(true)}
             themes={exportOptions.themes}
             templates={exportOptions.templates}
+            languages={exportOptions.languages}
             t={t}
           />
         );

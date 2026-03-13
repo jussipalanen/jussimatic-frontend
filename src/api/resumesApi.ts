@@ -220,6 +220,7 @@ export async function copyResume(id: number): Promise<Resume> {
   const payload: ResumePayload = {
     ...rest,
     title: `${source.title || 'Resume'} (Copy)`,
+    is_primary: false,
   };
   return createResume(payload);
 }
