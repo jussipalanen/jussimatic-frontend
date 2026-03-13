@@ -220,8 +220,9 @@ function AdminUsersView() {
       <EcommerceHeader
         title="Admin Users"
         backTo="/demo/ecommerce/admin"
-        backLabel="Back to admin dashboard"
+        backLabel="Admin Dashboard"
         cartCount={cartCount}
+        activeNav="admin-dashboard"
       />
 
       <main className="container mx-auto px-4 py-8">
@@ -271,8 +272,8 @@ function AdminUsersView() {
         )}
 
         {!loading && !error && !authError && rows.length > 0 && (
-          <div className="mx-auto max-w-5xl overflow-hidden rounded-lg border border-gray-700 bg-gray-800">
-            <table className="w-full text-left">
+          <div className="mx-auto max-w-5xl overflow-x-auto rounded-lg border border-gray-700">
+            <table className="w-full min-w-[700px] text-left bg-gray-800">
               <thead className="bg-gray-850 border-b border-gray-700">
                 <tr className="text-xs uppercase tracking-wider text-gray-400">
                   <th className="px-6 py-3">ID</th>

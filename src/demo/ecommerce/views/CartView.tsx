@@ -61,7 +61,7 @@ function CartView() {
       <EcommerceHeader
         title="Shopping Cart"
         backTo="/demo/ecommerce/products"
-        backLabel="Back to products"
+        backLabel="Products"
         cartCount={cartCount}
         activeNav="cart"
         actions={

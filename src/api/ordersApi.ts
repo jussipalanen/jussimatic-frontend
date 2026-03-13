@@ -95,8 +95,10 @@ export interface OrderItem {
 
 export interface Order {
   id?: number;
+  order_number?: string;
   status?: string;
   total?: number | string;
+  total_amount?: string;
   created_at?: string;
   items?: OrderItem[];
   customer_first_name?: string;
@@ -130,15 +132,15 @@ export async function fetchOrdersByUserId(userId: string | number, token?: strin
   const params = new URLSearchParams();
   params.set('user_id', String(userId));
   const url = `${buildUrl('orders')}?${params.toString()}`;
-  
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   const response = await fetch(url, {
     method: 'GET',
     headers,
@@ -216,4 +218,30 @@ export async function updateOrder(id: number, data: UpdateOrderData, token?: str
   }
 
   throw new Error('Invalid response format when updating order');
+}
+
+export async function fetchOrderById(id: number, token?: string): Promise<Order> {
+  const url = buildUrl(`orders/${id}`);
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, { method: 'GET', headers });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = (await response.json()) as unknown;
+  if (data && typeof data === 'object' && 'data' in data) {
+    const wrapped = (data as { data?: Order }).data;
+    if (wrapped) return wrapped;
+  }
+  if (data && typeof data === 'object') return data as Order;
+  throw new Error('Invalid response format when fetching order');
 }

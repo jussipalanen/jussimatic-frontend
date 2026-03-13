@@ -40,12 +40,18 @@ export interface UpdateUserPayload {
 }
 
 export async function fetchAllUsers(): Promise<UserSummary[]> {
+  const token = localStorage.getItem('auth_token');
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
+
   const url = buildUrl('users');
 
   const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
     },
   });
 

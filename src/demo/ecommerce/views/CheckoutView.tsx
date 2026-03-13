@@ -159,7 +159,7 @@ function CheckoutView() {
       <EcommerceHeader
         title="Checkout"
         backTo="/demo/ecommerce/cart"
-        backLabel="Back to cart"
+        backLabel="Cart"
         cartCount={cartCount}
       />
 

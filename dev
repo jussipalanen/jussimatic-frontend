@@ -55,7 +55,7 @@ case $COMMAND in
     ENV_FILE="${2:-.env.production}"
 
     if [ ! -f "$ENV_FILE" ]; then
-      echo "Error: '$ENV_FILE' not found. Create it or pass a path: ./dev-tool deploy .env.myfile"
+      echo "Error: '$ENV_FILE' not found. Create it or pass a path: ./dev deploy .env.myfile"
       exit 1
     fi
 
@@ -68,7 +68,7 @@ case $COMMAND in
     # Require a TAG_NAME for the image destination
     if [ -z "${TAG_NAME:-}" ]; then
       echo "Error: TAG_NAME is not set. Export it or add it to '$ENV_FILE'."
-      echo "  Example: TAG_NAME=v0.4.0 ./dev-tool deploy"
+      echo "  Example: TAG_NAME=v0.4.0 ./dev deploy"
       exit 1
     fi
 
@@ -88,7 +88,7 @@ TAG_NAME=$TAG_NAME"
     ;;
 
   *)
-    echo "Usage: ./dev-tool [COMMAND]"
+    echo "Usage: ./dev [COMMAND]"
     echo ""
     echo "Commands:"
     echo "  up                      - Start Docker Compose development environment"

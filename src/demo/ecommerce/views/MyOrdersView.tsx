@@ -54,16 +54,16 @@ function calculateOrderTotal(order: Order): number {
   if (!Array.isArray(order.items) || order.items.length === 0) {
     return 0;
   }
-  
+
   return order.items.reduce((total, item) => {
     let itemSubtotal = 0;
-    
+
     if (item.subtotal !== undefined && item.subtotal !== null) {
       itemSubtotal = typeof item.subtotal === 'string' ? parseFloat(item.subtotal) : item.subtotal;
     } else {
       itemSubtotal = getEffectivePrice(item) * item.quantity;
     }
-    
+
     return total + itemSubtotal;
   }, 0);
 }
@@ -104,7 +104,7 @@ function MyOrdersView() {
         // Fetch orders for the authenticated user
         try {
           const data = await fetchOrdersByUserId(user.user_id, token);
-          
+
           // Enrich order items with product image data
           const enrichedOrders = await Promise.all(
             data.map(async (order) => {
@@ -177,7 +177,7 @@ function MyOrdersView() {
       <EcommerceHeader
         title="My Orders"
         backTo="/demo/ecommerce/products"
-        backLabel="Back to products"
+        backLabel="Products"
         cartCount={cartCount}
         activeNav="my-orders"
       />
@@ -308,11 +308,11 @@ function MyOrdersView() {
 
       {/* Order Detail Modal */}
       {selectedOrder && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={handleCloseModal}
         >
-          <div 
+          <div
             className="bg-gray-800 rounded-lg border border-gray-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -395,7 +395,7 @@ function MyOrdersView() {
                   <h3 className="text-sm font-semibold text-gray-400 mb-4">Order Items</h3>
                   <div className="space-y-4">
                     {selectedOrder.items.map((item, itemIndex) => (
-                      
+
                       <div key={itemIndex} className="flex items-center gap-4 bg-gray-900/40 rounded-lg p-4">
                         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-gray-900">
                           <img

@@ -91,22 +91,22 @@ function MyProfileView() {
   const getUserRole = () => {
     const user = getUser();
     if (!user) return 'N/A';
-    
+
     // Try different role fields
     const role = user.role || user.user_role || user.type;
     if (role) {
       return normalizeRoleLabel(role);
     }
-    
+
     if (user.is_admin) {
       return 'Admin';
     }
-    
+
     // Check roles array
     if (Array.isArray(user.roles) && user.roles.length > 0) {
       return user.roles.map((r: string) => normalizeRoleLabel(r)).join(', ');
     }
-    
+
     return 'Customer';
   };
 
@@ -152,8 +152,9 @@ function MyProfileView() {
       <EcommerceHeader
         title="My Profile"
         backTo="/demo/ecommerce/products"
-        backLabel="Back to products"
+        backLabel="Products"
         cartCount={cartCount}
+        activeNav="my-profile"
       />
 
       <main className="container mx-auto px-4 py-8">
