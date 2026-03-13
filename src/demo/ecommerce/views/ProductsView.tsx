@@ -1,7 +1,7 @@
 import { useSearchParams, Link } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
-import { fetchProducts, createProduct, updateProduct, deleteProduct } from '../../../api/productsApi';
-import type { Product, ProductsResponse } from '../../../api/productsApi';
+import React, { useEffect, useMemo, useState } from 'react';
+import { fetchProducts, createProduct, updateProduct, deleteProduct, fetchTaxRates } from '../../../api/productsApi';
+import type { Product, ProductsResponse, TaxRate } from '../../../api/productsApi';
 import { addToCart, getCartCount } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
 import { getMe } from '../../../api/authApi';
@@ -25,6 +25,7 @@ function ProductsView() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>(urlSortDir);
   const [perPage, setPerPage] = useState(9);
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [pagination, setPagination] = useState<ProductsResponse | null>(null);
   const [activeModal, setActiveModal] = useState<'details' | 'create' | 'edit' | null>(null);
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
@@ -33,6 +34,8 @@ function ProductsView() {
     description: '',
     price: '',
     salePrice: '',
+    taxCode: '',
+    taxRate: '',
     quantity: '',
     visibility: 'show',
   });
@@ -50,13 +53,20 @@ function ProductsView() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [cartCount, setCartCount] = useState(getCartCount());
-  const [showCartSuccess, setShowCartSuccess] = useState(false);
+  const [cartToast, setCartToast] = useState<{ title: string; visible: boolean } | null>(null);
+  const cartToastTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [canManageProducts, setCanManageProducts] = useState(false);
+  const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
+  const [taxSearch, setTaxSearch] = useState('');
+  const [taxDropdownOpen, setTaxDropdownOpen] = useState(false);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
 
   useEffect(() => {
-    const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
+    const handler = (e: Event) => {
+      setLanguage((e as CustomEvent<Language>).detail);
+      setTaxRates([]); // reload tax rates in new language on next modal open
+    };
     window.addEventListener('jussimatic-language-change', handler);
     return () => window.removeEventListener('jussimatic-language-change', handler);
   }, []);
@@ -145,9 +155,28 @@ function ProductsView() {
     }
   };
 
-  const formatPrice = (price: string | null) => {
-    if (!price) return 'N/A';
-    return `€${parseFloat(price).toFixed(2)}`;
+  const formatPrice = (price: string | number | null | undefined) => {
+    if (price == null || price === '') return 'N/A';
+    const n = typeof price === 'string' ? parseFloat(price) : price;
+    if (isNaN(n)) return 'N/A';
+    return `€${n.toFixed(2)}`;
+  };
+
+  const calcGrossPrice = (net: string | number | null | undefined, taxRate: string | number | null | undefined): number | null => {
+    if (net == null || net === '') return null;
+    const netNum = typeof net === 'string' ? parseFloat(net) : net;
+    if (isNaN(netNum)) return null;
+    if (taxRate == null || taxRate === '') return netNum;
+    const rate = typeof taxRate === 'string' ? parseFloat(taxRate) : Number(taxRate);
+    if (isNaN(rate) || rate === 0) return netNum;
+    const effectiveRate = rate > 1 ? rate / 100 : rate;
+    return netNum * (1 + effectiveRate);
+  };
+
+  const formatGrossPrice = (net: string | number | null | undefined, taxRate: string | number | null | undefined): string => {
+    const gross = calcGrossPrice(net, taxRate);
+    if (gross == null) return 'N/A';
+    return `€${gross.toFixed(2)}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -158,6 +187,14 @@ function ProductsView() {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${day}.${month}.${year} ${hours}:${minutes}`;
+  };
+
+  const formatTaxPct = (rate: string | number | null | undefined): string => {
+    if (rate == null || rate === '') return '';
+    const r = typeof rate === 'string' ? parseFloat(rate) : rate;
+    if (isNaN(r)) return '';
+    const pct = parseFloat(((r > 1 ? r : r * 100)).toPrecision(10));
+    return `${pct.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
   };
 
   const buildStorageUrl = (path: string | null | undefined) => {
@@ -174,9 +211,13 @@ function ProductsView() {
       description: '',
       price: '',
       salePrice: '',
+      taxCode: '',
+      taxRate: '',
       quantity: '',
       visibility: 'show',
     });
+    setTaxSearch('');
+    setTaxDropdownOpen(false);
     if (featuredPreview) {
       URL.revokeObjectURL(featuredPreview);
     }
@@ -202,40 +243,51 @@ function ProductsView() {
     if (!canManageProducts) return;
     setActiveProduct(null);
     resetForm();
+    if (taxRates.length === 0) fetchTaxRates(language).then(setTaxRates).catch(() => {});
     setActiveModal('create');
   };
 
   const openEditModal = (product: Product) => {
     if (!canManageProducts) return;
+    if (taxRates.length === 0) fetchTaxRates(language).then(setTaxRates).catch(() => {});
     setActiveProduct(product);
     setFormValues({
       title: product.title ?? '',
       description: product.description ?? '',
       price: product.price ?? '',
       salePrice: product.sale_price ?? '',
+      taxCode: (product.tax_code as string | null | undefined) ?? '',
+      taxRate: product.tax_rate != null ? String(product.tax_rate) : '',
       quantity: String(product.quantity ?? ''),
       visibility: product.visibility ? 'show' : 'hidden',
     });
+    const existingCode = (product.tax_code as string | null | undefined) ?? '';
+    const matchedTr = taxRates.find(tr => tr.code === existingCode);
+    setTaxSearch(matchedTr
+      ? (matchedTr.label ?? (matchedTr.name ? `${matchedTr.name} (${matchedTr.code})` : matchedTr.code))
+      : existingCode
+    );
+    setTaxDropdownOpen(false);
     if (featuredPreview) {
       URL.revokeObjectURL(featuredPreview);
     }
-    
+
     // Track existing featured image
     setExistingFeaturedImage(product.featured_image || null);
     setFeaturedPreview(null);
     setDeleteFeaturedImage(false);
-    
+
     imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
-    
+
     // Track existing images
     setExistingImages(product.images || []);
     setImagePreviews([]);
     setDeleteImagePaths([]);
-    
+
     // Clear file objects (for new uploads only)
     setFeaturedFile(null);
     setImageFiles([]);
-    
+
     setActiveModal('edit');
   };
 
@@ -264,19 +316,19 @@ function ProductsView() {
     }
     setFeaturedPreview(file ? URL.createObjectURL(file) : null);
     setFeaturedFile(file);
-    
+
     // Validate file
     if (file) {
       const errors: Record<string, string> = {};
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
       const maxSize = 5 * 1024 * 1024; // 5MB
-      
+
       if (!validTypes.includes(file.type)) {
         errors.featured_image = t.errFileType;
       } else if (file.size > maxSize) {
         errors.featured_image = t.errFileSize;
       }
-      
+
       setFormErrors((prev) => ({ ...prev, ...errors }));
       if (!errors.featured_image && formErrors.featured_image) {
         setFormErrors((prev) => {
@@ -292,13 +344,13 @@ function ProductsView() {
     imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
     setImagePreviews(files.map((file) => URL.createObjectURL(file)));
     setImageFiles(files);
-    
+
     // Validate files
     const errors: Record<string, string> = {};
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     const maxSize = 5 * 1024 * 1024; // 5MB
     const maxCount = 15;
-    
+
     if (files.length > maxCount) {
       errors.images = t.errTooManyFiles;
     } else {
@@ -313,7 +365,7 @@ function ProductsView() {
         }
       }
     }
-    
+
     setFormErrors((prev) => ({ ...prev, ...errors }));
     if (!errors.images && formErrors.images) {
       setFormErrors((prev) => {
@@ -327,7 +379,7 @@ function ProductsView() {
     const trimmed = searchInput.trim();
     setAppliedSearch(trimmed);
     setCurrentPage(1);
-    
+
     // Update URL with search and sort params
     const params: Record<string, string> = {};
     if (trimmed) params.search = trimmed;
@@ -345,7 +397,7 @@ function ProductsView() {
     setPerPage(9);
     setSortBy('created_at');
     setSortDir('desc');
-    
+
     // Remove all params from URL
     setSearchParams({});
   };
@@ -358,7 +410,7 @@ function ProductsView() {
     setSortBy(newSortBy);
     setSortDir(newSortDir);
     setCurrentPage(1);
-    
+
     // Update URL
     const params: Record<string, string> = {};
     if (appliedSearch) params.search = appliedSearch;
@@ -429,6 +481,8 @@ function ProductsView() {
         description: formValues.description.trim(),
         price: formValues.price.trim(),
         sale_price: formValues.salePrice.trim() || undefined,
+        tax_code: formValues.taxCode.trim() || undefined,
+        tax_rate: formValues.taxRate.trim() ? parseFloat(formValues.taxRate) : undefined,
         quantity: formValues.quantity.trim(),
         visibility: formValues.visibility === 'show' ? '1' : '0',
         user_id: currentUserId,
@@ -498,8 +552,9 @@ function ProductsView() {
     const success = addToCart(product);
     if (success) {
       setCartCount(getCartCount());
-      setShowCartSuccess(true);
-      setTimeout(() => setShowCartSuccess(false), 5000);
+      if (cartToastTimerRef.current) clearTimeout(cartToastTimerRef.current);
+      setCartToast({ title: product.title ?? '', visible: true });
+      cartToastTimerRef.current = setTimeout(() => setCartToast(null), 4000);
     }
   };
 
@@ -518,22 +573,45 @@ function ProductsView() {
         activeNav="products"
       />
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {showCartSuccess && (
-          <div className="mx-auto mb-4 w-full max-w-3xl rounded-lg border border-green-500/30 bg-green-900/20 p-3 flex items-center justify-between">
-            <span className="text-green-200">
-              {t.cartSuccess} <Link to="/demo/ecommerce/cart" className="underline hover:text-green-100">{t.viewCart}</Link>
-            </span>
+      {/* Cart toast — top-right */}
+      {cartToast && (
+        <div className="fixed top-5 right-5 z-50 w-80 max-w-[calc(100vw-2.5rem)] rounded-xl border border-green-500/30 bg-gray-900 shadow-2xl overflow-hidden animate-in slide-in-from-right-4 fade-in duration-200">
+          <div className="flex items-start gap-3 px-4 py-3">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500/15">
+              <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white">{t.cartSuccess}</p>
+              <p className="mt-0.5 text-xs text-gray-300 truncate">{cartToast.title}</p>
+              <Link
+                to="/demo/ecommerce/cart"
+                onClick={() => setCartToast(null)}
+                className="mt-1.5 inline-block text-xs font-medium text-green-400 hover:text-green-300 underline underline-offset-2"
+              >
+                {t.viewCart} →
+              </Link>
+            </div>
             <button
-              onClick={() => setShowCartSuccess(false)}
-              className="text-green-300 hover:text-green-100 text-xl leading-none"
+              onClick={() => setCartToast(null)}
+              className="shrink-0 text-gray-500 hover:text-white transition-colors"
               aria-label="Close"
             >
-              ✕
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
-        )}
+          {/* progress bar */}
+          <div className="h-0.5 bg-green-500/20">
+            <div className="h-full bg-green-500 animate-shrink" />
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
         <div className="mx-auto mb-6 w-full">
           <div className="flex flex-col gap-4 rounded-lg border border-gray-700 bg-gray-800 p-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
@@ -559,7 +637,7 @@ function ProductsView() {
                   onChange={(event) => setPerPage(Number(event.target.value))}
                   className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {[9, 12, 24, 36, 48].map((value) => (
+                  {(viewMode === 'list' ? [10, 25, 50, 100] : [9, 12, 24, 36, 48]).map((value) => (
                     <option key={value} value={value}>
                       {value}
                     </option>
@@ -602,6 +680,33 @@ function ProductsView() {
                   {t.create}
                 </button>
               )}
+              {/* View mode toggle */}
+              <div className="ml-auto flex rounded-lg border border-gray-600 overflow-hidden">
+                <button
+                  onClick={() => { setViewMode('grid'); setPerPage(9); }}
+                  title={t.viewGrid}
+                  className={`px-3 py-2 flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                    viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                  <span className="hidden sm:inline">{t.viewGrid}</span>
+                </button>
+                <button
+                  onClick={() => { setViewMode('list'); setPerPage(10); }}
+                  title={t.viewList}
+                  className={`px-3 py-2 flex items-center gap-1.5 text-sm font-medium transition-colors border-l border-gray-600 ${
+                    viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                  <span className="hidden sm:inline">{t.viewList}</span>
+                </button>
+              </div>
             </div>
           </div>
           {pagination && (
@@ -638,7 +743,7 @@ function ProductsView() {
           </div>
         )}
 
-        {!loading && !error && products.length > 0 && (
+        {!loading && !error && products.length > 0 && viewMode === 'grid' && (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => (
               <div
@@ -675,7 +780,7 @@ function ProductsView() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="mb-4 grow">
                   <p className="text-gray-300 text-sm line-clamp-4">
                     {product.description}
@@ -683,21 +788,36 @@ function ProductsView() {
                 </div>
 
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">{t.priceLabel}</span>
-                    <span className="font-semibold text-green-400">
-                      {formatPrice(product.price)}
-                    </span>
-                  </div>
-
-                  {product.sale_price && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">{t.salePriceLabel}</span>
-                      <span className="font-semibold text-yellow-400">
-                        {formatPrice(product.sale_price)}
-                      </span>
+                  {/* Price block */}
+                  <div className="rounded-lg bg-gray-900/60 px-3 py-2.5 flex items-center justify-between gap-2">
+                    <div className="flex flex-col">
+                      {product.sale_price ? (
+                        <>
+                          <span className="text-xs text-gray-500 line-through">
+                            {product.tax_rate != null ? formatGrossPrice(product.price, product.tax_rate) : formatPrice(product.price)}
+                          </span>
+                          <span className="text-lg font-bold text-yellow-400">
+                            {product.tax_rate != null ? formatGrossPrice(product.sale_price, product.tax_rate) : formatPrice(product.sale_price)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-lg font-bold text-green-400">
+                          {product.tax_rate != null ? formatGrossPrice(product.price, product.tax_rate) : formatPrice(product.price)}
+                        </span>
+                      )}
+                      {product.tax_rate != null && (
+                        <span className="text-xs text-gray-500 mt-0.5">
+                          excl. {t.vatLabel} {formatTaxPct(product.tax_rate)}{product.tax_code && product.tax_code !== 'ZERO' ? ` · ${product.tax_code}` : ''}:
+                          {' '}{product.sale_price ? formatPrice(product.sale_price) : formatPrice(product.price)}
+                        </span>
+                      )}
                     </div>
-                  )}
+                    {product.sale_price && (
+                      <span className="shrink-0 rounded-full bg-yellow-500/15 px-2 py-0.5 text-xs font-semibold text-yellow-400 border border-yellow-500/30">
+                        SALE
+                      </span>
+                    )}
+                  </div>
 
                   <div className="flex justify-between">
                     <span className="text-gray-400">{t.quantityLabel}</span>
@@ -705,6 +825,13 @@ function ProductsView() {
                       {product.quantity}
                     </span>
                   </div>
+
+                  {!product.tax_rate && product.tax_code && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">{t.taxLabel}</span>
+                      <span className="text-gray-300">{product.tax_code}</span>
+                    </div>
+                  )}
 
                   <div className="pt-3 mt-3 border-t border-gray-700">
                     <div className="flex justify-between text-xs">
@@ -728,6 +855,96 @@ function ProductsView() {
                   </svg>
                   {product.quantity === 0 ? t.outOfStock : t.addToCart}
                 </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && !error && products.length > 0 && viewMode === 'list' && (
+          <div className="space-y-3">
+            {products.map((product) => (
+              <div
+                key={product.id}
+                className="bg-gray-800 rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors flex gap-4"
+              >
+                {/* Thumbnail */}
+                <div className="shrink-0 h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-lg border border-white/10 bg-gray-900/40">
+                  <img
+                    src={buildStorageUrl(product.featured_image)}
+                    alt={product.title}
+                    className="h-full w-full object-contain"
+                    loading="lazy"
+                  />
+                </div>
+
+                {/* Main content */}
+                <div className="flex flex-1 min-w-0 flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <h2 className="font-bold text-white truncate">{product.title}</h2>
+                      <div className="flex shrink-0 gap-1.5">
+                        <button
+                          onClick={() => openDetailsModal(product)}
+                          className="rounded border border-gray-600 px-2 py-0.5 text-xs text-gray-200 hover:bg-gray-700"
+                        >
+                          {t.details}
+                        </button>
+                        {canManageProducts && (
+                          <button
+                            onClick={() => openEditModal(product)}
+                            className="rounded border border-blue-500/60 px-2 py-0.5 text-xs text-blue-200 hover:bg-blue-600/20"
+                          >
+                            {t.edit}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-400 line-clamp-2">{product.description}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
+                      <span>{t.quantityLabel} <span className={product.quantity > 0 ? 'text-white' : 'text-red-400'}>{product.quantity}</span></span>
+                      <span>{t.createdLabel} <span className="text-gray-300">{formatDate(product.created_at)}</span></span>
+                    </div>
+                  </div>
+
+                  {/* Price + cart */}
+                  <div className="flex sm:flex-col items-center sm:items-end gap-3 sm:gap-2 shrink-0">
+                    <div className="text-right">
+                      {product.sale_price ? (
+                        <>
+                          <div className="text-xs text-gray-500 line-through">
+                            {product.tax_rate != null ? formatGrossPrice(product.price, product.tax_rate) : formatPrice(product.price)}
+                          </div>
+                          <div className="text-base font-bold text-yellow-400">
+                            {product.tax_rate != null ? formatGrossPrice(product.sale_price, product.tax_rate) : formatPrice(product.sale_price)}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-base font-bold text-green-400">
+                          {product.tax_rate != null ? formatGrossPrice(product.price, product.tax_rate) : formatPrice(product.price)}
+                        </div>
+                      )}
+                      {product.tax_rate != null && (
+                        <div className="text-xs text-gray-500">
+                          excl. {t.vatLabel} {formatTaxPct(product.tax_rate)}{product.tax_code && product.tax_code !== 'ZERO' ? ` · ${product.tax_code}` : ''}:
+                          {' '}{product.sale_price ? formatPrice(product.sale_price) : formatPrice(product.price)}
+                        </div>
+                      )}
+                      {product.sale_price && (
+                        <span className="inline-block rounded-full bg-yellow-500/15 px-2 py-0.5 text-xs font-semibold text-yellow-400 border border-yellow-500/30">SALE</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      disabled={product.quantity === 0}
+                      className="shrink-0 flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span className="hidden sm:inline">{product.quantity === 0 ? t.outOfStock : t.addToCart}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -833,14 +1050,37 @@ function ProductsView() {
                       </div>
                     )}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <div className="text-sm text-gray-300">
-                        <span className="text-gray-400">{t.priceLabel}</span> {formatPrice(activeProduct.price)}
-                      </div>
-                      {activeProduct.sale_price && (
-                        <div className="text-sm text-gray-300">
-                          <span className="text-gray-400">{t.salePriceLabel}</span> {formatPrice(activeProduct.sale_price)}
+                      {/* Price card */}
+                      <div className="sm:col-span-2 rounded-xl border border-white/10 bg-gray-900/50 px-4 py-3 flex items-center gap-4">
+                        <div className="flex-1">
+                          {activeProduct.sale_price ? (
+                            <div className="flex items-baseline gap-3 flex-wrap">
+                              <span className="text-2xl font-bold text-yellow-400">
+                                {activeProduct.tax_rate != null ? formatGrossPrice(activeProduct.sale_price, activeProduct.tax_rate) : formatPrice(activeProduct.sale_price)}
+                              </span>
+                              <span className="text-sm text-gray-500 line-through">
+                                {activeProduct.tax_rate != null ? formatGrossPrice(activeProduct.price, activeProduct.tax_rate) : formatPrice(activeProduct.price)}
+                              </span>
+                              <span className="rounded-full bg-yellow-500/15 px-2.5 py-0.5 text-xs font-semibold text-yellow-400 border border-yellow-500/30">SALE</span>
+                            </div>
+                          ) : (
+                            <span className="text-2xl font-bold text-green-400">
+                              {activeProduct.tax_rate != null ? formatGrossPrice(activeProduct.price, activeProduct.tax_rate) : formatPrice(activeProduct.price)}
+                            </span>
+                          )}
+                          {activeProduct.tax_rate != null && (
+                            <p className="mt-1 text-xs text-gray-500">
+                              excl. {t.vatLabel} {formatTaxPct(activeProduct.tax_rate)}{activeProduct.tax_code && activeProduct.tax_code !== 'ZERO' ? ` · ${activeProduct.tax_code}` : ''}:
+                              {' '}{activeProduct.sale_price ? (
+                                <><span className="line-through text-gray-600">{formatPrice(activeProduct.price)}</span>{' → '}{formatPrice(activeProduct.sale_price)}</>
+                              ) : formatPrice(activeProduct.price)}
+                            </p>
+                          )}
+                          {!activeProduct.tax_rate && activeProduct.tax_code && (
+                            <p className="mt-1 text-xs text-gray-500">{t.taxLabel} {activeProduct.tax_code}</p>
+                          )}
                         </div>
-                      )}
+                      </div>
                       <div className="text-sm text-gray-300">
                         <span className="text-gray-400">{t.quantityLabel}</span> {activeProduct.quantity}
                       </div>
@@ -962,6 +1202,98 @@ function ProductsView() {
                         <p className="mt-1 text-xs text-red-400">{formErrors.salePrice}</p>
                       )}
                     </div>
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-white/80">{t.formTaxCode}</label>
+                      <input
+                        type="text"
+                        value={taxSearch}
+                        onChange={(e) => {
+                          setTaxSearch(e.target.value);
+                          setTaxDropdownOpen(true);
+                          // If user clears or types freely, unset the selected code
+                          if (!e.target.value.trim()) {
+                            setFormValues(cur => ({ ...cur, taxCode: '', taxRate: '' }));
+                          }
+                        }}
+                        onFocus={() => setTaxDropdownOpen(true)}
+                        onBlur={() => setTimeout(() => setTaxDropdownOpen(false), 150)}
+                        placeholder={taxRates.length ? t.formTaxCode + '...' : 'Loading...'}
+                        autoComplete="off"
+                        className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      {formValues.taxCode && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormValues(cur => ({ ...cur, taxCode: '', taxRate: '' }));
+                            setTaxSearch('');
+                          }}
+                          className="absolute right-2 top-9.5 text-gray-500 hover:text-white"
+                          aria-label="Clear tax code"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      )}
+                      {taxDropdownOpen && taxRates.length > 0 && (() => {
+                        const q = taxSearch.toLowerCase();
+                        const filtered = taxRates.filter(tr =>
+                          !q ||
+                          tr.code.toLowerCase().includes(q) ||
+                          (tr.name ?? '').toLowerCase().includes(q) ||
+                          (tr.label ?? '').toLowerCase().includes(q)
+                        );
+                        if (!filtered.length) return null;
+                        return (
+                          <ul className="absolute z-50 mt-1 max-h-52 w-full overflow-y-auto rounded-lg border border-white/10 bg-gray-800 shadow-xl">
+                            {filtered.map(tr => (
+                              <li
+                                key={tr.code}
+                                onMouseDown={() => {
+                                  setFormValues(cur => ({
+                                    ...cur,
+                                    taxCode: tr.code,
+                                    taxRate: String(tr.rate),
+                                  }));
+                                  setTaxSearch(tr.label ?? (tr.name ? `${tr.name} (${tr.code})` : tr.code));
+                                  setTaxDropdownOpen(false);
+                                }}
+                                className={`flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-gray-700 ${
+                                  formValues.taxCode === tr.code ? 'bg-blue-600/20 text-blue-300' : 'text-white'
+                                }`}
+                              >
+                                <span className="flex flex-col min-w-0">
+                                  <span className="font-medium truncate">
+                                    {tr.label ?? tr.name ?? tr.code}
+                                  </span>
+                                  {(tr.label || tr.name) && (
+                                    <span className="text-xs text-gray-400">{tr.code}</span>
+                                  )}
+                                </span>
+                                <span className="ml-3 shrink-0 rounded-full bg-gray-700 px-2 py-0.5 text-xs text-gray-300">{formatTaxPct(tr.rate)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        );
+                      })()}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-white/80">{t.formTaxRate} <span className="text-xs text-gray-500">{t.formTaxRateHint}</span></label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={formValues.taxRate}
+                        onChange={(event) =>
+                          setFormValues((current) => ({ ...current, taxRate: event.target.value }))
+                        }
+                        readOnly={taxRates.some(tr => tr.code === formValues.taxCode)}
+                        placeholder="0.24"
+                        className={`mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500${
+                          taxRates.some(tr => tr.code === formValues.taxCode) ? ' opacity-60 cursor-not-allowed' : ''
+                        }`}
+                      />
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-white/80">{t.formQuantity}</label>
                       <input
@@ -993,6 +1325,54 @@ function ProductsView() {
                     </div>
                   </div>
 
+                  {/* Price summary */}
+                  {formValues.price.trim() && (
+                    (() => {
+                      const net = parseFloat(formValues.price);
+                      const saleNet = formValues.salePrice.trim() ? parseFloat(formValues.salePrice) : null;
+                      const rate = formValues.taxRate.trim() ? parseFloat(formValues.taxRate) : null;
+                      const effectiveRate = rate != null && !isNaN(rate) ? (rate > 1 ? rate / 100 : rate) : null;
+                      const grossPrice = !isNaN(net) && effectiveRate != null ? net * (1 + effectiveRate) : null;
+                      const grossSale = saleNet != null && !isNaN(saleNet) && effectiveRate != null ? saleNet * (1 + effectiveRate) : null;
+                      if (isNaN(net)) return null;
+                      return (
+                        <div className="rounded-lg border border-white/10 bg-gray-900/50 px-4 py-3 text-sm space-y-1.5">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t.pricePreview}</p>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">{t.netPrice}</span>
+                            <span className="text-white font-medium">{formatPrice(net)}</span>
+                          </div>
+                          {saleNet != null && !isNaN(saleNet) && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">{t.netSalePrice}</span>
+                              <span className="text-yellow-400 font-medium">{formatPrice(saleNet)}</span>
+                            </div>
+                          )}
+                          {effectiveRate != null && (
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">
+                                  {t.vatLabel}{formValues.taxCode ? ` (${formValues.taxCode})` : ''} {formatTaxPct(rate!)}
+                                </span>
+                                <span className="text-gray-300">{formatPrice(net * effectiveRate)}</span>
+                              </div>
+                              <div className="flex justify-between border-t border-white/10 pt-1.5">
+                                <span className="text-gray-400">{t.grossPrice.replace('%vat%', t.vatLabel)}</span>
+                                <span className="text-green-400 font-semibold">{formatPrice(grossPrice!)}</span>
+                              </div>
+                              {grossSale != null && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">{t.grossSalePrice.replace('%vat%', t.vatLabel)}</span>
+                                  <span className="text-yellow-400 font-semibold">{formatPrice(grossSale)}</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()
+                  )}
+
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium text-white/80">
@@ -1009,7 +1389,7 @@ function ProductsView() {
                       {formErrors.featured_image && (
                         <p className="mt-1 text-xs text-red-400">{formErrors.featured_image}</p>
                       )}
-                      
+
                       {/* Show existing featured image in edit mode */}
                       {activeModal === 'edit' && existingFeaturedImage && !deleteFeaturedImage && (
                         <div className="mt-3">
@@ -1033,7 +1413,7 @@ function ProductsView() {
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Show new preview */}
                       {featuredPreview && (
                         <div className="mt-3">
@@ -1062,7 +1442,7 @@ function ProductsView() {
                       {formErrors.images && (
                         <p className="mt-1 text-xs text-red-400">{formErrors.images}</p>
                       )}
-                      
+
                       {/* Show existing images in edit mode */}
                       {activeModal === 'edit' && existingImages.length > 0 && (
                         <div className="mt-3">
@@ -1090,7 +1470,7 @@ function ProductsView() {
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Show new previews */}
                       {imagePreviews.length > 0 && (
                         <div className="mt-3">

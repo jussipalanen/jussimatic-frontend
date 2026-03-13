@@ -7,6 +7,7 @@ import { fetchProductById } from '../../../api/productsApi';
 import { getCart } from '../../../utils/cartUtils';
 import type { Order } from '../../../api/ordersApi';
 import EcommerceHeader from '../components/EcommerceHeader';
+import CountrySelect from '../../../components/CountrySelect';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -75,6 +76,33 @@ function calculateOrderTotal(order: Order): number {
   }, 0);
 }
 
+function formatTaxPct(rate: number): string {
+  const pct = parseFloat((rate * 100).toPrecision(10));
+  return `${pct.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
+}
+
+interface TaxGroup { code: string | null; rate: number; amount: number }
+
+function calcOrderTaxBreakdown(items: import('../../../api/ordersApi').OrderItem[]): TaxGroup[] {
+  const groups: TaxGroup[] = [];
+  for (const item of items) {
+    const rawRate = item.tax_rate;
+    if (rawRate == null) continue;
+    const rate = typeof rawRate === 'string' ? parseFloat(rawRate) : Number(rawRate);
+    if (!rate || isNaN(rate)) continue;
+    const effectiveRate = rate > 1 ? rate / 100 : rate;
+    const lineTotal = item.subtotal != null
+      ? (typeof item.subtotal === 'string' ? parseFloat(item.subtotal) : Number(item.subtotal))
+      : getEffectivePrice(item) * item.quantity;
+    const taxAmount = lineTotal * effectiveRate;
+    const code = (item.tax_code as string | null | undefined) ?? null;
+    const existing = groups.find(g => g.code === code && g.rate === effectiveRate);
+    if (existing) existing.amount += taxAmount;
+    else groups.push({ code, rate: effectiveRate, amount: taxAmount });
+  }
+  return groups;
+}
+
 function AdminOrdersView() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -98,6 +126,14 @@ function AdminOrdersView() {
     notes: '',
     status: 'pending',
   });
+  const [editItems, setEditItems] = useState<Array<{
+    product_id: number;
+    quantity: number;
+    tax_code: string;
+    tax_rate: string;
+    product_title?: string;
+    featured_image?: string | null;
+  }>>([]);
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -202,6 +238,18 @@ function AdminOrdersView() {
       notes: selectedOrder.notes ?? '',
       status: selectedOrder.status ?? 'pending',
     });
+    setEditItems(
+      Array.isArray(selectedOrder.items)
+        ? selectedOrder.items.map((item) => ({
+            product_id: item.product_id,
+            quantity: item.quantity,
+            tax_code: (item.tax_code as string | null | undefined) ?? '',
+            tax_rate: item.tax_rate != null ? String(item.tax_rate) : '',
+            product_title: item.product_title,
+            featured_image: item.featured_image,
+          }))
+        : []
+    );
     setEditError(null);
     setIsEditModalOpen(true);
   };
@@ -254,9 +302,11 @@ function AdminOrdersView() {
           status: editFormValues.status,
           notes: editFormValues.notes.trim() || undefined,
           items: Array.isArray(selectedOrder.items)
-            ? selectedOrder.items.map((item) => ({
+            ? editItems.map((item) => ({
                 product_id: item.product_id,
                 quantity: item.quantity,
+                tax_code: item.tax_code.trim() || null,
+                tax_rate: item.tax_rate.trim() ? parseFloat(item.tax_rate) : null,
               }))
             : undefined,
         },
@@ -529,6 +579,11 @@ function AdminOrdersView() {
                             )}
                             {' × '}{item.quantity}
                           </p>
+                          {item.tax_code && (
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {item.tax_code}{item.tax_rate != null ? ` (${formatTaxPct(typeof item.tax_rate === 'string' ? parseFloat(item.tax_rate) : Number(item.tax_rate))})` : ''}
+                            </p>
+                          )}
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-semibold text-green-400">
@@ -547,6 +602,35 @@ function AdminOrdersView() {
                   <p className="text-sm text-gray-300">{selectedOrder.notes}</p>
                 </div>
               )}
+
+              {/* Tax breakdown */}
+              {(() => {
+                const breakdown = calcOrderTaxBreakdown(selectedOrder.items ?? []);
+                if (!breakdown.length) return null;
+                const itemsTotal = calculateOrderTotal(selectedOrder);
+                const taxTotal = breakdown.reduce((s, g) => s + g.amount, 0);
+                return (
+                  <div className="border-t border-gray-700 pt-4">
+                    <h3 className="text-sm font-semibold text-gray-400 mb-3">Invoice Summary</h3>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between text-gray-300">
+                        <span>Subtotal (excl. VAT)</span>
+                        <span>{formatPrice(itemsTotal - taxTotal)}</span>
+                      </div>
+                      {breakdown.map(g => (
+                        <div key={`${g.code}-${g.rate}`} className="flex justify-between text-gray-400">
+                          <span>{g.code ?? 'VAT'} ({formatTaxPct(g.rate)})</span>
+                          <span>{formatPrice(g.amount)}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between font-semibold text-green-400 border-t border-gray-700 pt-1.5">
+                        <span>Total (incl. VAT)</span>
+                        <span>{formatPrice(itemsTotal)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="sticky bottom-0 bg-gray-800 border-t border-gray-700 px-6 py-4 flex items-center justify-between">
@@ -666,7 +750,7 @@ function AdminOrdersView() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-white/80">Country</label>
-                  <input
+                  <CountrySelect
                     name="country"
                     required
                     value={editFormValues.country}
@@ -727,6 +811,52 @@ function AdminOrdersView() {
                   className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
+              {editItems.length > 0 && (
+                <div className="border-t border-gray-700 pt-4">
+                  <h3 className="text-base font-semibold text-white mb-3">Line Item Tax</h3>
+                  <div className="space-y-3">
+                    {editItems.map((item, idx) => (
+                      <div key={item.product_id} className="flex items-center gap-3 bg-gray-900/40 rounded-lg px-3 py-2">
+                        <div className="h-9 w-9 shrink-0 overflow-hidden rounded border border-white/10 bg-gray-900">
+                          <img
+                            src={buildStorageUrl(item.featured_image)}
+                            alt={item.product_title}
+                            className="h-full w-full object-contain"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0 text-sm text-white/80 truncate">
+                          {item.product_title ?? `Product #${item.product_id}`}
+                          <span className="text-gray-500 ml-2">×{item.quantity}</span>
+                        </div>
+                        <input
+                          type="text"
+                          value={item.tax_code}
+                          onChange={(e) =>
+                            setEditItems(prev => prev.map((it, i) => i === idx ? { ...it, tax_code: e.target.value } : it))
+                          }
+                          placeholder="VAT code"
+                          className="w-28 rounded border border-white/10 bg-gray-900 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={item.tax_rate}
+                          onChange={(e) =>
+                            setEditItems(prev => prev.map((it, i) => i === idx ? { ...it, tax_rate: e.target.value } : it))
+                          }
+                          placeholder="0.24"
+                          className="w-20 rounded border border-white/10 bg-gray-900 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-1.5 text-xs text-gray-500">Tax rate is a decimal, e.g. <code className="text-gray-400">0.24</code> = 24%</p>
+                </div>
+              )}
 
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button

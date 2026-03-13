@@ -33,6 +33,7 @@ export default function NavBar({ onLoginClick }: NavBarProps) {
   const [userData, setUserData] = useState<NavUserData | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const projectsMenuRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +55,7 @@ export default function NavBar({ onLoginClick }: NavBarProps) {
       if (projectsMenuRef.current && !projectsMenuRef.current.contains(e.target as Node)) {
         setShowProjects(false);
       }
+      setShowMobileMenu(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -122,7 +124,18 @@ export default function NavBar({ onLoginClick }: NavBarProps) {
 
           {/* Right-side items */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Projects dropdown — hidden on mobile */}
+            {/* Mobile demos button — visible only below sm */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowMobileMenu((v) => !v); }}
+              className={`sm:hidden flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                showMobileMenu ? 'text-white bg-white/15' : 'text-white/80 hover:text-white hover:bg-white/10'
+              }`}
+              aria-label="Projects & demos"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
             <div className="relative hidden sm:block" ref={projectsMenuRef}>
               <button
                 onClick={() => setShowProjects((v) => !v)}
@@ -188,6 +201,15 @@ export default function NavBar({ onLoginClick }: NavBarProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     {t.landing.resumeBuilderCta}
+                  </button>
+                  <button
+                    onClick={() => { navigate('/demo/invoice-tool'); setShowProjects(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                  >
+                    <svg className="w-4 h-4 text-yellow-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                    {t.landing.invoiceToolCta}
                   </button>
                 </div>
               )}
@@ -260,6 +282,17 @@ export default function NavBar({ onLoginClick }: NavBarProps) {
                         </svg>
                         {t.landing.myResumes}
                       </button>
+
+                      {/* Invoices */}
+                      <button
+                        onClick={() => { navigate('/profile/invoices'); setShowUserMenu(false); }}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                      >
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                        </svg>
+                        {t.landing.myInvoices}
+                      </button>
                     </div>
 
                     <div className="border-t border-gray-700 py-1">
@@ -290,6 +323,71 @@ export default function NavBar({ onLoginClick }: NavBarProps) {
           </div>
         </div>
       </div>
+
+      {/* Mobile demos panel — visible only below sm */}
+      {showMobileMenu && (
+        <div className="sm:hidden border-t border-white/10 bg-gray-900/98" onClick={(e) => e.stopPropagation()}>
+          <div className="max-w-7xl mx-auto px-4 py-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-white/40 px-2 pt-1 pb-2">{t.landing.projectsCta}</p>
+            <div className="grid grid-cols-2 gap-1">
+              <button
+                onClick={() => { navigate('/chat'); setShowMobileMenu(false); }}
+                className="flex items-center gap-2 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors text-left"
+              >
+                <svg className="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                {t.landing.chatCta}
+              </button>
+              <button
+                onClick={() => { navigate('/demo/browse-jobs'); setShowMobileMenu(false); }}
+                className="flex items-center gap-2 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors text-left"
+              >
+                <svg className="w-4 h-4 text-green-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                {t.landing.jobsCta}
+              </button>
+              <button
+                onClick={() => { navigate('/demo/ecommerce/products'); setShowMobileMenu(false); }}
+                className="flex items-center gap-2 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors text-left"
+              >
+                <svg className="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                {t.landing.ecommerceCta}
+              </button>
+              <button
+                onClick={() => { navigate('/demo/ai-cv-review'); setShowMobileMenu(false); }}
+                className="flex items-center gap-2 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors text-left"
+              >
+                <svg className="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {t.landing.aiCvCta}
+              </button>
+              <button
+                onClick={() => { navigate('/demo/resume-tool'); setShowMobileMenu(false); }}
+                className="flex items-center gap-2 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors text-left"
+              >
+                <svg className="w-4 h-4 text-teal-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {t.landing.resumeBuilderCta}
+              </button>
+              <button
+                onClick={() => { navigate('/demo/invoice-tool'); setShowMobileMenu(false); }}
+                className="flex items-center gap-2 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors text-left"
+              >
+                <svg className="w-4 h-4 text-yellow-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                {t.landing.invoiceToolCta}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

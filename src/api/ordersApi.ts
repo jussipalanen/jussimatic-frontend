@@ -78,6 +78,8 @@ export interface UpdateOrderData {
   items?: Array<{
     product_id: number;
     quantity: number;
+    tax_code?: string | null;
+    tax_rate?: string | number | null;
   }>;
 }
 
@@ -87,6 +89,8 @@ export interface OrderItem {
   price?: string | number;
   unit_price?: string | number;
   sale_price?: string | number;
+  tax_code?: string | null;
+  tax_rate?: string | number | null;
   product_title?: string;
   featured_image?: string | null;
   subtotal?: string | number;

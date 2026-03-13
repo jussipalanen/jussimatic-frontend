@@ -734,6 +734,7 @@ function ResumeToolView() {
                     <div><label className={LABEL_CLS}>{t.fieldTitle}</label><input type="text" value={it.title ?? ''} onChange={(e) => upd({ title: e.target.value })} placeholder={t.fieldTitlePlaceholder} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldCompany}</label><input type="text" value={it.company ?? ''} onChange={(e) => upd({ company: e.target.value })} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldEmail}</label><input type="email" value={it.email ?? ''} onChange={(e) => upd({ email: e.target.value })} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldPhone}</label><input type="tel" value={it.phone ?? ''} onChange={(e) => upd({ phone: e.target.value })} placeholder={t.fieldPhonePlaceholder} className={INPUT_CLS} /></div>
                     <div className="sm:col-span-2"><label className={LABEL_CLS}>{t.fieldRecommendation} *</label><textarea value={it.recommendation} onChange={(e) => upd({ recommendation: e.target.value })} rows={4} className={INPUT_CLS + ' resize-y'} /></div>
                   </div>
                 )}

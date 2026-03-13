@@ -87,7 +87,7 @@ const EMPTY_AWARD: WithId<Award> = {
   _id: '', title: '', issuer: '', date: '', description: '', sort_order: 0,
 };
 const EMPTY_RECOMMENDATION: WithId<Recommendation> = {
-  _id: '', full_name: '', title: '', company: '', email: '', recommendation: '', sort_order: 0,
+  _id: '', full_name: '', title: '', company: '', email: '', phone: '', recommendation: '', sort_order: 0,
 };
 
 function newItem<T extends { _id: string }>(template: T): T {
@@ -1229,6 +1229,10 @@ function ResumeFormView() {
                       <label className={LABEL_CLS}>{t.fieldEmail}</label>
                       <input type="email" value={it.email ?? ''} onChange={(e) => upd({ email: e.target.value })} className={INPUT_CLS} />
                     </div>
+                    <div>
+                      <label className={LABEL_CLS}>{t.fieldPhone}</label>
+                      <input type="tel" value={it.phone ?? ''} onChange={(e) => upd({ phone: e.target.value })} className={INPUT_CLS} placeholder={t.fieldPhonePlaceholder} />
+                    </div>
                     <div className="sm:col-span-2">
                       <label className={LABEL_CLS}>{t.fieldRecommendation} *</label>
                       <textarea
@@ -1285,7 +1289,7 @@ function ResumeFormView() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             {isEditing && (
               <button
                 type="button"
@@ -1300,14 +1304,14 @@ function ResumeFormView() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
-                    {t.copying2}
+                    <span className="hidden sm:inline">{t.copying2}</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    {t.copy}
+                    <span className="hidden sm:inline">{t.copy}</span>
                   </>
                 )}
               </button>
@@ -1330,14 +1334,14 @@ function ResumeFormView() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                       </svg>
-                      {t.exporting}
+                      <span className="hidden sm:inline">{t.exporting}</span>
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      {t.export}
+                      <span className="hidden sm:inline">{t.export}</span>
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
@@ -1382,7 +1386,7 @@ function ResumeFormView() {
               <svg className="w-4 h-4" fill={form.is_primary ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
               </svg>
-              {t.setPrimary}
+              <span className="hidden sm:inline">{t.setPrimary}</span>
             </button>
             <button
               type="button"
@@ -1396,14 +1400,14 @@ function ResumeFormView() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
-                  {t.exporting}
+                  <span className="hidden sm:inline">{t.exporting}</span>
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  {t.saveResume}
+                  <span className="hidden sm:inline">{t.saveResume}</span>
                 </>
               )}
             </button>

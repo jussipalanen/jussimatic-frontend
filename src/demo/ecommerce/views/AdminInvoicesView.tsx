@@ -1,20 +1,37 @@
-import { useEffect, useMemo, useState, type FormEvent, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchAllInvoices, updateInvoice, deleteInvoice, createInvoice } from '../../../api/invoicesApi';
-import type { Invoice, UpdateInvoiceData, CreateInvoiceData } from '../../../api/invoicesApi';
+import { fetchAllInvoices, updateInvoice, deleteInvoice, createInvoice, fetchInvoiceOptions } from '../../../api/invoicesApi';
+import type { Invoice, UpdateInvoiceData, CreateInvoiceData, InvoiceStatusOption, InvoiceItemTypeOption } from '../../../api/invoicesApi';
 import { fetchOrderById, fetchAllOrders } from '../../../api/ordersApi';
 import type { Order } from '../../../api/ordersApi';
 import { getMe } from '../../../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
 import { getCart } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
+import CountrySelect from '../../../components/CountrySelect';
+import { getStoredLanguage, type Language } from '../../../i18n';
+import { fetchTaxRates } from '../../../api/productsApi';
+import type { TaxRate } from '../../../api/productsApi';
 
 const ITEMS_PER_PAGE = 10;
 
-const STATUS_OPTIONS = ['draft', 'issued', 'paid', 'cancelled'] as const;
-const LINE_TYPE_OPTIONS = ['product', 'shipping', 'discount', 'fee', 'other'] as const;
+const DEFAULT_STATUS_OPTIONS: InvoiceStatusOption[] = [
+  { value: 'draft',     label: 'Draft',     color: 'gray' },
+  { value: 'issued',    label: 'Issued',    color: 'blue' },
+  { value: 'paid',      label: 'Paid',      color: 'green' },
+  { value: 'cancelled', label: 'Cancelled', color: 'red' },
+];
+
+const DEFAULT_ITEM_TYPE_OPTIONS: InvoiceItemTypeOption[] = [
+  { value: 'product',  label: 'Product' },
+  { value: 'shipping', label: 'Shipping' },
+  { value: 'discount', label: 'Discount' },
+  { value: 'fee',      label: 'Fee' },
+  { value: 'other',    label: 'Other' },
+];
 
 type EditFormData = {
+  invoice_number: string;
   status: string;
   customer_first_name: string;
   customer_last_name: string;
@@ -46,6 +63,7 @@ function newLineKey() { return `line-${++_lineKeyCounter}`; }
 
 function invoiceToFormData(invoice: Invoice): EditFormData {
   return {
+    invoice_number: invoice.invoice_number ?? '',
     status: invoice.status ?? 'draft',
     customer_first_name: invoice.customer_first_name ?? '',
     customer_last_name: invoice.customer_last_name ?? '',
@@ -63,6 +81,7 @@ function invoiceToFormData(invoice: Invoice): EditFormData {
 
 function emptyFormData(): EditFormData {
   return {
+    invoice_number: '',
     status: 'draft',
     customer_first_name: '',
     customer_last_name: '',
@@ -76,6 +95,12 @@ function emptyFormData(): EditFormData {
     total: '',
     notes: '',
   };
+}
+
+function generateInvoiceNumber(): string {
+  const year = new Date().getFullYear();
+  const num = String(Math.floor(Math.random() * 90000) + 10000);
+  return `INV-${year}-${num}`;
 }
 
 function invoiceToEditItems(invoice: Invoice): EditLineItem[] {
@@ -103,16 +128,23 @@ function formatPrice(value: string | number | null | undefined) {
   return `€${num.toFixed(2)}`;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    draft: 'bg-gray-600 text-gray-200',
-    issued: 'bg-blue-600 text-blue-100',
-    paid: 'bg-green-600 text-green-100',
+function StatusBadge({ status, label, color }: { status: string; label?: string; color?: string }) {
+  const colorMap: Record<string, string> = {
+    gray:  'bg-gray-600 text-gray-200',
+    blue:  'bg-blue-600 text-blue-100',
+    green: 'bg-green-600 text-green-100',
+    red:   'bg-red-700 text-red-100',
+  };
+  const legacyColors: Record<string, string> = {
+    draft:     'bg-gray-600 text-gray-200',
+    issued:    'bg-blue-600 text-blue-100',
+    paid:      'bg-green-600 text-green-100',
     cancelled: 'bg-red-700 text-red-100',
   };
+  const cls = (color ? colorMap[color] : legacyColors[status]) ?? 'bg-gray-600 text-gray-200';
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${colors[status] ?? 'bg-gray-600 text-gray-200'}`}>
-      {status}
+    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${cls}`}>
+      {label ?? status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
 }
@@ -126,6 +158,144 @@ function AdminInvoicesView() {
   const [searchInvoiceId, setSearchInvoiceId] = useState('');
   const [searchOrderId, setSearchOrderId] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const [statusOptions, setStatusOptions] = useState<InvoiceStatusOption[]>(DEFAULT_STATUS_OPTIONS);
+  const [itemTypeOptions, setItemTypeOptions] = useState<InvoiceItemTypeOption[]>(DEFAULT_ITEM_TYPE_OPTIONS);
+
+  useEffect(() => {
+    const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
+
+  useEffect(() => {
+    fetchInvoiceOptions(language).then((opts) => {
+      setStatusOptions(opts.statuses);
+      setItemTypeOptions(opts.item_types);
+    }).catch(() => { /* keep defaults */ });
+  }, [language]);
+
+  const getStatusOption = (value: string) => statusOptions.find((o) => o.value === value);
+
+  // Tax rate combobox state (shared across edit + create)
+  const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
+  const [taxSearches, setTaxSearches] = useState<Record<string, string>>({});
+  const [taxDropdownOpen, setTaxDropdownOpen] = useState<Record<string, boolean>>({});
+  const taxRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    fetchTaxRates(language).then(setTaxRates).catch(() => setTaxRates([]));
+  }, [language]);
+
+  const setTaxForItem = (key: string, rate: string, label: string) => {
+    setTaxSearches((prev) => ({ ...prev, [key]: label }));
+    setTaxDropdownOpen((prev) => ({ ...prev, [key]: false }));
+    return rate;
+  };
+
+  const clearTaxForItem = (key: string) => {
+    setTaxSearches((prev) => { const n = { ...prev }; delete n[key]; return n; });
+    setTaxDropdownOpen((prev) => ({ ...prev, [key]: false }));
+  };
+
+  function TaxRateCombobox({
+    itemKey,
+    value,
+    onChange,
+    inputCls,
+  }: {
+    itemKey: string;
+    value: string;
+    onChange: (val: string) => void;
+    inputCls: string;
+  }) {
+    const effectiveRate = (r: number | string) => {
+      const n = typeof r === 'string' ? parseFloat(r) : r;
+      return n > 1 ? n / 100 : n;
+    };
+    const pctLabel = (r: number | string) => `${parseFloat((effectiveRate(r) * 100).toPrecision(10))}%`;
+
+    if (taxRates.length === 0) {
+      return (
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          step="0.01" min="0" max="1"
+          className={inputCls}
+        />
+      );
+    }
+
+    const searchVal = taxSearches[itemKey] ?? (() => {
+      if (!value || value === '0') return '';
+      const itemR = parseFloat(value);
+      const eff = itemR > 1 ? itemR / 100 : itemR;
+      const match = taxRates.find((tr) => Math.abs(effectiveRate(tr.rate) - eff) < 0.0001);
+      return match ? (match.label ?? match.name ?? match.code) : value;
+    })();
+
+    const q = (taxSearches[itemKey] ?? '').toLowerCase();
+    const filtered = taxRates.filter((tr) =>
+      (tr.label ?? tr.name ?? tr.code).toLowerCase().includes(q) ||
+      String(tr.rate).includes(q) ||
+      tr.code.toLowerCase().includes(q)
+    );
+
+    const hasClear = !!(taxSearches[itemKey] || (value && value !== '0'));
+
+    return (
+      <div className="relative" ref={(el) => { taxRefs.current[itemKey] = el; }}>
+        <input
+          type="text"
+          value={searchVal}
+          onChange={(e) => {
+            setTaxSearches((prev) => ({ ...prev, [itemKey]: e.target.value }));
+            setTaxDropdownOpen((prev) => ({ ...prev, [itemKey]: true }));
+          }}
+          onFocus={() => setTaxDropdownOpen((prev) => ({ ...prev, [itemKey]: true }))}
+          onBlur={() => setTimeout(() => setTaxDropdownOpen((prev) => ({ ...prev, [itemKey]: false })), 150)}
+          placeholder="Search or enter…"
+          className={inputCls + ' pr-6'}
+        />
+        {taxDropdownOpen[itemKey] && filtered.length > 0 && (
+          <ul className="absolute z-30 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-600 bg-gray-800 shadow-lg">
+            {filtered.map((tr) => (
+              <li
+                key={tr.code}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  const r = String(effectiveRate(tr.rate));
+                  const lbl = tr.label ?? tr.name ?? tr.code;
+                  onChange(setTaxForItem(itemKey, r, lbl));
+                }}
+                className="flex items-center justify-between gap-2 cursor-pointer px-3 py-2 text-xs text-white hover:bg-gray-700"
+              >
+                <span>{tr.label ?? tr.name ?? tr.code}</span>
+                <span className="text-gray-400">
+                  {tr.code !== 'ZERO' ? pctLabel(tr.rate) : '0%'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {hasClear && (
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onChange('0');
+              clearTaxForItem(itemKey);
+            }}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs"
+            aria-label="Clear tax"
+          >
+            ×
+          </button>
+        )}
+      </div>
+    );
+  }
 
   // Invoice modal state
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -333,6 +503,7 @@ function AdminInvoicesView() {
     setSaveError(null);
     const token = localStorage.getItem('auth_token') ?? undefined;
     const payload: UpdateInvoiceData = {
+      invoice_number: editForm.invoice_number || undefined,
       status: editForm.status,
       customer_first_name: editForm.customer_first_name,
       customer_last_name: editForm.customer_last_name,
@@ -443,6 +614,7 @@ function AdminInvoicesView() {
     const total = parseFloat(String(order.total_amount ?? order.total ?? subtotal)) || subtotal;
 
     setCreateForm({
+      invoice_number: '',
       status: 'draft',
       customer_first_name: order.customer_first_name ?? '',
       customer_last_name: order.customer_last_name ?? '',
@@ -496,6 +668,7 @@ function AdminInvoicesView() {
     const orderId = createSelectedOrderId ? parseInt(createSelectedOrderId, 10) : undefined;
     const payload: CreateInvoiceData = {
       ...(orderId !== undefined ? { order_id: orderId } : {}),
+      ...(createForm.invoice_number ? { invoice_number: createForm.invoice_number } : {}),
       status: createForm.status,
       customer_first_name: createForm.customer_first_name,
       customer_last_name: createForm.customer_last_name,
@@ -670,7 +843,7 @@ function AdminInvoicesView() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-mono text-sm font-semibold text-blue-300">{invoice.invoice_number}</span>
-                        <StatusBadge status={invoice.status} />
+                        <StatusBadge status={invoice.status} label={getStatusOption(invoice.status)?.label} color={getStatusOption(invoice.status)?.color} />
                       </div>
                       <p className="mt-1 text-sm text-gray-200">
                         {invoice.customer_first_name} {invoice.customer_last_name}
@@ -712,7 +885,7 @@ function AdminInvoicesView() {
                               {invoice.customer_first_name} {invoice.customer_last_name}
                             </td>
                             <td className="px-5 py-4">
-                              <StatusBadge status={invoice.status} />
+                              <StatusBadge status={invoice.status} label={getStatusOption(invoice.status)?.label} color={getStatusOption(invoice.status)?.color} />
                             </td>
                             <td className="px-5 py-4 text-gray-400 text-sm">
                               {invoice.issued_at ? new Date(invoice.issued_at).toLocaleDateString() : <span className="text-gray-600">—</span>}
@@ -832,7 +1005,7 @@ function AdminInvoicesView() {
                           {orderData.status && (
                             <p className="flex items-center gap-1.5 text-gray-300">
                               <span className="text-gray-500">Status: </span>
-                              <StatusBadge status={orderData.status} />
+                              <StatusBadge status={orderData.status} label={getStatusOption(orderData.status)?.label} color={getStatusOption(orderData.status)?.color} />
                             </p>
                           )}
                           <p className="text-gray-300 col-span-2">
@@ -930,6 +1103,31 @@ function AdminInvoicesView() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+                  {/* Invoice Number */}
+                  <fieldset>
+                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Invoice Number</legend>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        name="invoice_number"
+                        value={editForm.invoice_number}
+                        onChange={handleEditChange}
+                        placeholder="e.g. INV-2026-47832"
+                        className="flex-1 rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white font-mono text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setEditForm(prev => prev ? { ...prev, invoice_number: generateInvoiceNumber() } : prev)}
+                        className="shrink-0 rounded-lg border border-gray-600 px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                        title="Generate invoice number"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      </button>
+                    </div>
+                  </fieldset>
+
                   {/* Status */}
                   <fieldset>
                     <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Status</legend>
@@ -939,8 +1137,8 @@ function AdminInvoicesView() {
                       onChange={handleEditChange}
                       className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      {STATUS_OPTIONS.map((s) => (
-                        <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                      {statusOptions.map((s) => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
                       ))}
                     </select>
                   </fieldset>
@@ -992,10 +1190,9 @@ function AdminInvoicesView() {
                           className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs text-gray-400">Country (2-letter, e.g. FI)</label>
-                        <input type="text" name="billing_address_country" value={editForm.billing_address_country} onChange={handleEditChange}
-                          maxLength={2}
-                          className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white uppercase placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        <label className="mb-1 block text-xs text-gray-400">Country</label>
+                        <CountrySelect name="billing_address_country" value={editForm.billing_address_country} onChange={handleEditChange}
+                          className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                     </div>
                   </fieldset>
@@ -1030,8 +1227,8 @@ function AdminInvoicesView() {
                                 onChange={(e) => handleItemChange(index, 'type', e.target.value)}
                                 className="w-28 shrink-0 rounded border border-gray-600 bg-gray-800 px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none"
                               >
-                                {LINE_TYPE_OPTIONS.map((t) => (
-                                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                                {itemTypeOptions.map((t) => (
+                                  <option key={t.value} value={t.value}>{t.label}</option>
                                 ))}
                               </select>
                               <input
@@ -1076,14 +1273,11 @@ function AdminInvoicesView() {
                               </div>
                               <div>
                                 <label className="mb-0.5 block text-xs text-gray-500">Tax rate</label>
-                                <input
-                                  type="number"
+                                <TaxRateCombobox
+                                  itemKey={item._key}
                                   value={item.tax_rate}
-                                  onChange={(e) => handleItemChange(index, 'tax_rate', e.target.value)}
-                                  step="0.01"
-                                  min="0"
-                                  max="1"
-                                  className="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+                                  onChange={(val) => handleItemChange(index, 'tax_rate', val)}
+                                  inputCls="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none"
                                 />
                               </div>
                               <div>
@@ -1149,7 +1343,7 @@ function AdminInvoicesView() {
                 <div className="flex shrink-0 items-center justify-between border-b border-gray-700 px-5 py-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="font-mono text-base font-bold text-blue-300 truncate">{selectedInvoice.invoice_number}</span>
-                    <StatusBadge status={selectedInvoice.status} />
+                    <StatusBadge status={selectedInvoice.status} label={getStatusOption(selectedInvoice.status)?.label} color={getStatusOption(selectedInvoice.status)?.color} />
                   </div>
                   <button
                     onClick={closeModal}
@@ -1355,6 +1549,31 @@ function AdminInvoicesView() {
                   )}
                 </fieldset>
 
+                {/* Invoice Number */}
+                <fieldset>
+                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Invoice Number</legend>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="invoice_number"
+                      value={createForm.invoice_number}
+                      onChange={handleCreateFormChange}
+                      placeholder="e.g. INV-2026-47832"
+                      className="flex-1 rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white font-mono text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setCreateForm(prev => ({ ...prev, invoice_number: generateInvoiceNumber() }))}
+                      className="shrink-0 rounded-lg border border-gray-600 px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                      title="Generate invoice number"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                  </div>
+                </fieldset>
+
                 {/* Status */}
                 <fieldset>
                   <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Status</legend>
@@ -1364,8 +1583,8 @@ function AdminInvoicesView() {
                     onChange={handleCreateFormChange}
                     className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
-                    {STATUS_OPTIONS.map((s) => (
-                      <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                    {statusOptions.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </select>
                 </fieldset>
@@ -1417,10 +1636,9 @@ function AdminInvoicesView() {
                         className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs text-gray-400">Country (2-letter, e.g. FI)</label>
-                      <input type="text" name="billing_address_country" value={createForm.billing_address_country} onChange={handleCreateFormChange}
-                        maxLength={2}
-                        className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white uppercase placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      <label className="mb-1 block text-xs text-gray-400">Country</label>
+                      <CountrySelect name="billing_address_country" value={createForm.billing_address_country} onChange={handleCreateFormChange}
+                        className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                   </div>
                 </fieldset>
@@ -1454,8 +1672,8 @@ function AdminInvoicesView() {
                               onChange={(e) => handleCreateItemChange(index, 'type', e.target.value)}
                               className="w-28 shrink-0 rounded border border-gray-600 bg-gray-800 px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none"
                             >
-                              {LINE_TYPE_OPTIONS.map((t) => (
-                                <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                              {itemTypeOptions.map((t) => (
+                                <option key={t.value} value={t.value}>{t.label}</option>
                               ))}
                             </select>
                             <input
@@ -1491,9 +1709,12 @@ function AdminInvoicesView() {
                             </div>
                             <div>
                               <label className="mb-0.5 block text-xs text-gray-500">Tax rate</label>
-                              <input type="number" value={item.tax_rate} onChange={(e) => handleCreateItemChange(index, 'tax_rate', e.target.value)}
-                                step="0.01" min="0" max="1"
-                                className="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none" />
+                              <TaxRateCombobox
+                                itemKey={item._key}
+                                value={item.tax_rate}
+                                onChange={(val) => handleCreateItemChange(index, 'tax_rate', val)}
+                                inputCls="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+                              />
                             </div>
                             <div>
                               <label className="mb-0.5 block text-xs text-gray-500">Total (auto)</label>
