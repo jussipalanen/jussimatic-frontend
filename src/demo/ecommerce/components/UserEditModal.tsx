@@ -272,8 +272,8 @@ function UserEditModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-      <div className="w-full max-w-xl rounded-lg border border-gray-700 bg-gray-900 p-6 shadow-lg" role="dialog" aria-modal="true">
-        <div className="flex items-center justify-between gap-3">
+      <div className="w-full max-w-xl rounded-lg border border-gray-700 bg-gray-900 shadow-lg flex flex-col max-h-[90vh]" role="dialog" aria-modal="true">
+        <div className="flex items-center justify-between gap-3 p-6 pb-0">
           <h2 className="text-xl font-semibold text-white">Edit user</h2>
           <button
             type="button"
@@ -285,7 +285,7 @@ function UserEditModal({
           </button>
         </div>
 
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 flex items-center gap-2 px-6">
           <button
             type="button"
             onClick={() => {
@@ -319,19 +319,19 @@ function UserEditModal({
         </div>
 
         {editError && (
-          <div className="mt-4 rounded-lg border border-red-500/30 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+          <div className="mt-4 mx-6 rounded-lg border border-red-500/30 bg-red-900/20 px-4 py-3 text-sm text-red-300">
             {editError}
           </div>
         )}
 
         {editSuccess && (
-          <div className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-900/20 px-4 py-3 text-sm text-emerald-300">
+          <div className="mt-4 mx-6 rounded-lg border border-emerald-500/30 bg-emerald-900/20 px-4 py-3 text-sm text-emerald-300">
             {editSuccess}
           </div>
         )}
 
         {editMode === 'profile' && (
-          <div className="mt-5 space-y-4">
+          <div className="mt-5 space-y-4 overflow-y-auto px-6 pb-6">
             <div>
               <label className="mb-1 block text-sm text-gray-300" htmlFor="edit-username">
                 Username (readonly)
@@ -490,7 +490,7 @@ function UserEditModal({
         )}
 
         {editMode === 'password' && (
-          <div className="mt-5 space-y-4">
+          <div className="mt-5 space-y-4 overflow-y-auto px-6 pb-6">
             <div>
               <label className="mb-1 block text-sm text-gray-300" htmlFor="edit-current-password">
                 Current password

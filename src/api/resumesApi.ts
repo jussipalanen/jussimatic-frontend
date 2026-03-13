@@ -105,6 +105,9 @@ export interface Resume {
   github_url?: string;
   photo?: string;
   language?: string;
+  is_primary?: boolean;
+  theme?: string;
+  template?: string;
   summary?: string;
   work_experiences?: WorkExperience[];
   educations?: Education[];
@@ -118,20 +121,21 @@ export interface Resume {
   updated_at?: string;
 }
 
-export type ResumePayload = Omit<Resume, 'id' | 'created_at' | 'updated_at' | 'photo'>;
+export type ResumePayload = Omit<Resume, 'id' | 'created_at' | 'updated_at' | 'photo'> & { photo?: string | null };
 
-function buildMultipartFormData(payload: object, photo: File): FormData {
-  const fd = new FormData();
-  fd.append('photo', photo);
-  for (const [key, value] of Object.entries(payload)) {
-    if (value === undefined || value === null) continue;
-    if (typeof value === 'object') {
-      fd.append(key, JSON.stringify(value));
-    } else {
-      fd.append(key, String(value));
-    }
-  }
-  return fd;
+export interface ExportOption { value: string; label: string; }
+export interface ExportOptions { themes: ExportOption[]; templates: ExportOption[]; languages: ExportOption[]; }
+
+export async function getExportOptions(lang?: string): Promise<ExportOptions> {
+  const base = buildUrl('resumes/export/options');
+  const url = lang ? `${base}?lang=${encodeURIComponent(lang)}` : base;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(`Failed to fetch export options: ${response.status}`);
+  return data as ExportOptions;
 }
 
 export async function getResumes(): Promise<Resume[]> {
@@ -158,11 +162,11 @@ export async function getResume(id: number): Promise<Resume> {
   return data as Resume;
 }
 
-export async function createResume(payload: ResumePayload, photo?: File): Promise<Resume> {
+export async function createResume(payload: ResumePayload): Promise<Resume> {
   const response = await fetch(buildUrl('resumes'), {
     method: 'POST',
-    headers: photo ? getAuthHeaders(false) : getAuthHeaders(),
-    body: photo ? buildMultipartFormData(payload, photo) : JSON.stringify(payload),
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
   });
   const data = await response.json().catch(() => null);
   if (!response.ok) {
@@ -171,15 +175,31 @@ export async function createResume(payload: ResumePayload, photo?: File): Promis
   return data as Resume;
 }
 
-export async function updateResume(id: number, payload: Partial<ResumePayload>, photo?: File): Promise<Resume> {
+export async function updateResume(id: number, payload: Partial<ResumePayload>): Promise<Resume> {
   const response = await fetch(buildUrl(`resumes/${id}`), {
     method: 'PUT',
-    headers: photo ? getAuthHeaders(false) : getAuthHeaders(),
-    body: photo ? buildMultipartFormData(payload, photo) : JSON.stringify(payload),
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
   });
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(`Failed to update resume: ${response.status}`);
+  }
+  return data as Resume;
+}
+
+export async function uploadResumePhoto(id: number, photo: File): Promise<Resume> {
+  const fd = new FormData();
+  fd.append('_method', 'PUT'); // Laravel method spoofing for file uploads
+  fd.append('photo', photo);
+  const response = await fetch(buildUrl(`resumes/${id}`), {
+    method: 'POST',
+    headers: getAuthHeaders(false),
+    body: fd,
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(`Failed to upload photo: ${response.status}`);
   }
   return data as Resume;
 }
@@ -202,6 +222,36 @@ export async function copyResume(id: number): Promise<Resume> {
     title: `${source.title || 'Resume'} (Copy)`,
   };
   return createResume(payload);
+}
+
+export async function exportResumePdfPublic(payload: ResumePayload): Promise<void> {
+  const response = await fetch(buildUrl('resumes/export/pdf'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/pdf' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to export PDF: ${response.status}`);
+  }
+  const blob = new Blob([await response.blob()], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank', 'noopener,noreferrer');
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+export async function exportResumeHtmlPublic(payload: ResumePayload): Promise<void> {
+  const response = await fetch(buildUrl('resumes/export/html'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'text/html' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to export HTML: ${response.status}`);
+  }
+  const blob = new Blob([await response.blob()], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank', 'noopener,noreferrer');
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
 export async function exportResumePdf(id: number): Promise<void> {

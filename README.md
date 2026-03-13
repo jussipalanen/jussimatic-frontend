@@ -6,9 +6,11 @@ A modern frontend portfolio application powered by React, TypeScript, and Vite. 
 
 - 🛒 **E-commerce Demo**: Integrated with Laravel PHP backend for product management, cart functionality, and order processing
 - 🤖 **AI-Powered Chat**: Real-time chat interface powered by Node.js backend
+- 📄 **Resume Builder Demo**: Create and export resumes (PDF/HTML) without an account; choose template and theme, fill in all sections, and export directly from the browser
+- 👤 **Resume Management**: Authenticated users can create, edit, and manage multiple resumes from their profile (`/profile/resumes`)
 - ⚡ **Modern Stack**: Built with React 18, TypeScript, and Vite for optimal development experience and performance
 - 📱 **Responsive Design**: Fully responsive UI with Tailwind CSS
-- 🌍 **Multi-language Support**: Internationalization (i18n) ready
+- 🌍 **Multi-language Support**: Internationalization (i18n) with English and Finnish
 
 ## Technology Stack
 
@@ -21,12 +23,12 @@ A modern frontend portfolio application powered by React, TypeScript, and Vite. 
 
 ## Development
 
-This project includes a `dev-tool` script to simplify common development tasks.
+This project includes a `dev` script to simplify common development tasks.
 
 ### Usage
 
 ```bash
-./dev-tool [COMMAND]
+./dev [COMMAND]
 ```
 
 ### Available Commands
@@ -43,16 +45,16 @@ This project includes a `dev-tool` script to simplify common development tasks.
 
 ```bash
 # Start local development server
-./dev-tool
+./dev
 
 # Start with Docker Compose
-./dev-tool up
+./dev up
 
 # Rebuild containers with latest changes
-./dev-tool rebuild
+./dev rebuild
 
 # View logs
-./dev-tool logs
+./dev logs
 ```
 
 ## Environment Variables

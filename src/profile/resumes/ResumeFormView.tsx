@@ -1,17 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
+import type { Language } from '../../i18n';
 import {
   copyResume,
   createResume,
   exportResumePdf,
   exportResumeHtml,
+  getExportOptions,
   getResume,
   updateResume,
+  uploadResumePhoto,
 } from '../../api/resumesApi';
 import type {
   Award,
   Certification,
   Education,
+  ExportOption,
+  ExportOptions,
   Project,
   Recommendation,
   ResumeLanguage,
@@ -39,6 +45,9 @@ interface FormData {
   github_url: string;
   photo: string;
   language: string;
+  is_primary: boolean;
+  theme: string;
+  template: string;
   // summary
   summary: string;
   // repeatable sections
@@ -101,18 +110,7 @@ type SectionKey =
   | 'awards'
   | 'recommendations';
 
-const SECTIONS: { key: SectionKey; label: string }[] = [
-  { key: 'personal', label: 'Personal Information' },
-  { key: 'summary', label: 'Professional Summary' },
-  { key: 'work_experiences', label: 'Work Experience' },
-  { key: 'educations', label: 'Education' },
-  { key: 'skills', label: 'Skills' },
-  { key: 'projects', label: 'Projects' },
-  { key: 'certifications', label: 'Certifications' },
-  { key: 'languages', label: 'Languages' },
-  { key: 'awards', label: 'Awards & Achievements' },
-  { key: 'recommendations', label: 'Recommendations' },
-];
+// SECTIONS is built inside the component to use translations
 
 // ---------------------------------------------------------------------------
 // Shared input classes
@@ -290,13 +288,22 @@ function PersonalSection({
   photoFile,
   onChange,
   onPhotoChange,
+  onRemovePhoto,
+  themes,
+  templates,
+  t,
 }: {
   data: FormData;
   photoFile: File | null;
   onChange: (partial: Partial<FormData>) => void;
   onPhotoChange: (file: File | null) => void;
+  onRemovePhoto: () => void;
+  themes: ExportOption[];
+  templates: ExportOption[];
+  t: (typeof translations)[typeof DEFAULT_LANGUAGE]['resumes'];
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!photoFile) {
@@ -311,7 +318,7 @@ function PersonalSection({
   const existingPhotoUrl = data.photo
     ? data.photo.startsWith('http')
       ? data.photo
-      : `${(import.meta.env.VITE_JUSSILOG_BACKEND_API_BASE_URL as string)?.replace(/\/+$/, '')}/${data.photo.replace(/^\/+/, '')}`
+      : `${(import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL as string)?.replace(/\/+$/, '')}/${data.photo.replace(/^\/+/, '')}`
     : null;
 
   const thumbnailSrc = previewUrl ?? existingPhotoUrl;
@@ -332,25 +339,25 @@ function PersonalSection({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="sm:col-span-2">
-        {field('title', 'Resume Title *', 'text', 'e.g. Software Engineer CV')}
+        {field('title', t.fieldResumeTitle, 'text', t.fieldResumeTitlePlaceholder)}
       </div>
-      {field('full_name', 'Full Name *', 'text', 'Jussi Palanen')}
-      {field('email', 'Email *', 'email', 'jussi@example.com')}
-      {field('phone', 'Phone', 'text', '+358401234567')}
-      {field('location', 'Location', 'text', 'Helsinki, Finland')}
-      {field('linkedin_url', 'LinkedIn URL', 'url', 'https://linkedin.com/in/username')}
-      {field('portfolio_url', 'Portfolio / Website', 'url', 'https://yoursite.com')}
-      {field('github_url', 'GitHub URL', 'url', 'https://github.com/username')}
+      {field('full_name', t.fieldFullName, 'text', t.fieldFullNamePlaceholder)}
+      {field('email', t.fieldEmail, 'email', t.fieldEmailPlaceholder)}
+      {field('phone', t.fieldPhone, 'text', t.fieldPhonePlaceholder)}
+      {field('location', t.fieldLocation, 'text', t.fieldLocationPlaceholder)}
+      {field('linkedin_url', t.fieldLinkedIn, 'url', 'https://linkedin.com/in/username')}
+      {field('portfolio_url', t.fieldPortfolio, 'url', 'https://yoursite.com')}
+      {field('github_url', t.fieldGitHub, 'url', 'https://github.com/username')}
 
       {/* Resume language */}
       <div>
-        <label className={LABEL_CLS}>Resume Language</label>
+        <label className={LABEL_CLS}>{t.fieldResumeLanguage}</label>
         <select
           value={data.language}
           onChange={(e) => onChange({ language: e.target.value })}
           className={INPUT_CLS}
         >
-          <option value="">Select language</option>
+          <option value="">{t.fieldResumeLanguagePlaceholder}</option>
           <option value="en">English</option>
           <option value="fi">Finnish (Suomi)</option>
           <option value="sv">Swedish (Svenska)</option>
@@ -360,26 +367,66 @@ function PersonalSection({
         </select>
       </div>
 
+      {/* Template */}
+      <div>
+        <label className={LABEL_CLS}>{t.fieldTemplate}</label>
+        <select value={data.template} onChange={(e) => onChange({ template: e.target.value })} className={INPUT_CLS}>
+          <option value="">{t.fieldTemplatePlaceholder}</option>
+          {templates.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Theme color */}
+      <div>
+        <label className={LABEL_CLS}>{t.fieldTheme}</label>
+        <select value={data.theme} onChange={(e) => onChange({ theme: e.target.value })} className={INPUT_CLS}>
+          <option value="">{t.fieldThemePlaceholder}</option>
+          {themes.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Photo upload */}
       <div className="sm:col-span-2">
-        <label className={LABEL_CLS}>Profile Photo</label>
+        <label className={LABEL_CLS}>{t.fieldPhoto}</label>
         <div className="flex items-start gap-4">
           {thumbnailSrc && (
-            <img
-              src={thumbnailSrc}
-              alt="Profile photo preview"
-              className="w-20 h-20 rounded-xl object-cover border border-gray-600 shrink-0"
-            />
+            <div className="relative shrink-0">
+              <img
+                src={thumbnailSrc}
+                alt="Profile photo preview"
+                className="w-20 h-20 rounded-xl object-cover border border-gray-600"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  onPhotoChange(null);
+                  onChange({ photo: '' });
+                  onRemovePhoto();
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}
+                className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 hover:bg-red-500 rounded-full flex items-center justify-center text-white transition-colors"
+                aria-label="Remove photo"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           )}
           <div className="flex-1 min-w-0">
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={(e) => onPhotoChange(e.target.files?.[0] ?? null)}
               className="block w-full text-sm text-white/60 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:text-white file:bg-gray-700 hover:file:bg-gray-600 file:cursor-pointer"
             />
             {photoFile && (
-              <p className="text-xs text-green-400 mt-1">Selected: {photoFile.name}</p>
+              <p className="text-xs text-green-400 mt-1">{t.fieldPhotoSelected}: {photoFile.name}</p>
             )}
           </div>
         </div>
@@ -391,17 +438,19 @@ function PersonalSection({
 function SummarySection({
   data,
   onChange,
+  t,
 }: {
   data: FormData;
   onChange: (partial: Partial<FormData>) => void;
+  t: (typeof translations)[typeof DEFAULT_LANGUAGE]['resumes'];
 }) {
   return (
     <div>
-      <label className={LABEL_CLS}>Summary</label>
+      <label className={LABEL_CLS}>{t.fieldSummary}</label>
       <textarea
         value={data.summary}
         onChange={(e) => onChange({ summary: e.target.value })}
-        placeholder="A short bio or objective paragraph..."
+        placeholder={t.fieldSummaryPlaceholder}
         rows={6}
         className={INPUT_CLS + ' resize-y'}
       />
@@ -418,7 +467,33 @@ function ResumeFormView() {
   const { id } = useParams<{ id?: string }>();
   const isEditing = !!id;
 
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).resumes;
+
+  const SECTIONS: { key: SectionKey; label: string }[] = [
+    { key: 'personal', label: t.sectionPersonal },
+    { key: 'summary', label: t.sectionSummary },
+    { key: 'work_experiences', label: t.sectionWork },
+    { key: 'educations', label: t.sectionEducation },
+    { key: 'skills', label: t.sectionSkills },
+    { key: 'projects', label: t.sectionProjects },
+    { key: 'certifications', label: t.sectionCertifications },
+    { key: 'languages', label: t.sectionLanguages },
+    { key: 'awards', label: t.sectionAwards },
+    { key: 'recommendations', label: t.sectionRecommendations },
+  ];
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const lang = (e as CustomEvent<Language>).detail;
+      setLanguage(lang);
+    };
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
+
   const [activeSection, setActiveSection] = useState<SectionKey>('personal');
+  const [exportOptions, setExportOptions] = useState<ExportOptions>({ themes: [], templates: [], languages: [] });
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -427,6 +502,13 @@ function ResumeFormView() {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [removePhoto, setRemovePhoto] = useState(false);
+
+  useEffect(() => {
+    getExportOptions(language)
+      .then((opts) => setExportOptions(opts))
+      .catch(() => { /* options unavailable, dropdowns will be empty */ });
+  }, [language]);
 
   const [form, setForm] = useState<FormData>({
     title: '',
@@ -439,6 +521,9 @@ function ResumeFormView() {
     github_url: '',
     photo: '',
     language: '',
+    is_primary: false,
+    theme: '',
+    template: '',
     summary: '',
     work_experiences: [],
     educations: [],
@@ -475,6 +560,9 @@ function ResumeFormView() {
           github_url: resume.github_url ?? '',
           photo: resume.photo ?? '',
           language: resume.language ?? '',
+          is_primary: resume.is_primary ?? false,
+          theme: resume.theme ?? '',
+          template: resume.template ?? '',
           summary: resume.summary ?? '',
           work_experiences: (resume.work_experiences ?? []).map((e) => ({ ...e, _id: uid() })),
           educations: (resume.educations ?? []).map((e) => ({ ...e, _id: uid() })),
@@ -489,16 +577,18 @@ function ResumeFormView() {
           awards: (resume.awards ?? []).map((e) => ({ ...e, _id: uid() })),
           recommendations: (resume.recommendations ?? []).map((e) => ({ ...e, _id: uid() })),
         });
+        setRemovePhoto(false);
+        setPhotoFile(null);
       } catch (err) {
         console.error('Failed to load resume:', err);
-        setError('Failed to load resume data.');
+        setError(t.errLoadResume);
       } finally {
         setLoading(false);
       }
     };
 
     load();
-  }, [id, isEditing, navigate]);
+  }, [id, isEditing, navigate, t.errLoadResume]);
 
   const patch = (partial: Partial<FormData>) => setForm((prev) => ({ ...prev, ...partial }));
 
@@ -552,7 +642,7 @@ function ResumeFormView() {
       else await exportResumeHtml(Number(id));
     } catch (err) {
       console.error(`Failed to export ${format.toUpperCase()}:`, err);
-      setError(`Failed to export ${format.toUpperCase()}. Please try again.`);
+      setError(t.errExportResume);
     } finally {
       setExporting(false);
     }
@@ -567,7 +657,7 @@ function ResumeFormView() {
       navigate(`/profile/resumes/${created.id}`);
     } catch (err) {
       console.error('Failed to copy resume:', err);
-      setError('Failed to copy resume. Please try again.');
+      setError(t.errCopyResume);
     } finally {
       setCopying(false);
     }
@@ -590,7 +680,11 @@ function ResumeFormView() {
         portfolio_url: form.portfolio_url || undefined,
         github_url: form.github_url || undefined,
         language: form.language || undefined,
+        is_primary: form.is_primary,
+        theme: form.theme || undefined,
+        template: form.template || undefined,
         summary: form.summary || undefined,
+        ...(removePhoto && !photoFile ? { photo: null } : {}),
         work_experiences: form.work_experiences.map(({ _id, ...rest }, i) => ({
           ...rest,
           sort_order: i,
@@ -626,16 +720,27 @@ function ResumeFormView() {
       };
 
       if (isEditing) {
-        await updateResume(Number(id), payload, photoFile ?? undefined);
-        setSuccessMsg('Resume saved.');
+        const saved = await updateResume(Number(id), payload);
+        if (photoFile) {
+          const withPhoto = await uploadResumePhoto(Number(id), photoFile);
+          patch({ photo: withPhoto.photo ?? '' });
+          setPhotoFile(null);
+        } else {
+          patch({ photo: saved.photo ?? '' });
+        }
+        setRemovePhoto(false);
+        setSuccessMsg(t.saved);
       } else {
-        const created = await createResume(payload, photoFile ?? undefined);
-        setSuccessMsg('Resume created.');
+        const created = await createResume(payload);
+        if (photoFile) {
+          await uploadResumePhoto(created.id, photoFile);
+        }
+        setSuccessMsg(t.created);
         navigate(`/profile/resumes/${created.id}`, { replace: true });
       }
     } catch (err) {
       console.error('Failed to save resume:', err);
-      setError('Failed to save resume. Please check the fields and try again.');
+      setError(t.errSaveResume);
     } finally {
       setSaving(false);
     }
@@ -651,11 +756,15 @@ function ResumeFormView() {
             photoFile={photoFile}
             onChange={patch}
             onPhotoChange={setPhotoFile}
+            onRemovePhoto={() => setRemovePhoto(true)}
+            themes={exportOptions.themes}
+            templates={exportOptions.templates}
+            t={t}
           />
         );
 
       case 'summary':
-        return <SummarySection data={form} onChange={patch} />;
+        return <SummarySection data={form} onChange={patch} t={t} />;
 
       case 'work_experiences':
         return (
@@ -673,19 +782,19 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>Job Title *</label>
+                      <label className={LABEL_CLS}>{t.fieldJobTitle} *</label>
                       <input type="text" value={it.job_title} onChange={(e) => upd({ job_title: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Company Name *</label>
+                      <label className={LABEL_CLS}>{t.fieldCompanyName} *</label>
                       <input type="text" value={it.company_name} onChange={(e) => upd({ company_name: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={LABEL_CLS}>Location</label>
+                      <label className={LABEL_CLS}>{t.fieldLocation}</label>
                       <input type="text" value={it.location ?? ''} onChange={(e) => upd({ location: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Start Date *</label>
+                      <label className={LABEL_CLS}>{t.fieldStartDate} *</label>
                       <input type="date" value={it.start_date} onChange={(e) => upd({ start_date: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div className="flex flex-col justify-end gap-2">
@@ -696,11 +805,11 @@ function ResumeFormView() {
                           onChange={(e) => upd({ is_current: e.target.checked, end_date: e.target.checked ? '' : it.end_date })}
                           className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500"
                         />
-                        Currently working here
+                        {t.fieldCurrentlyWorking}
                       </label>
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>End Date</label>
+                      <label className={LABEL_CLS}>{t.fieldEndDate}</label>
                       <input
                         type="date"
                         value={it.end_date ?? ''}
@@ -710,11 +819,11 @@ function ResumeFormView() {
                       />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={LABEL_CLS}>Description</label>
+                      <label className={LABEL_CLS}>{t.fieldDescription}</label>
                       <textarea
                         value={it.description ?? ''}
                         onChange={(e) => upd({ description: e.target.value })}
-                        placeholder="Responsibilities, achievements..."
+                        placeholder={t.fieldDescriptionPlaceholder}
                         rows={3}
                         className={INPUT_CLS + ' resize-y'}
                       />
@@ -731,7 +840,7 @@ function ResumeFormView() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Work Experience
+              {t.addWorkExperience}
             </button>
           </div>
         );
@@ -752,23 +861,23 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>Degree *</label>
+                      <label className={LABEL_CLS}>{t.fieldDegree} *</label>
                       <input type="text" value={it.degree} onChange={(e) => upd({ degree: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Field of Study *</label>
+                      <label className={LABEL_CLS}>{t.fieldFieldOfStudy} *</label>
                       <input type="text" value={it.field_of_study} onChange={(e) => upd({ field_of_study: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Institution *</label>
+                      <label className={LABEL_CLS}>{t.fieldInstitution} *</label>
                       <input type="text" value={it.institution_name} onChange={(e) => upd({ institution_name: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Location</label>
+                      <label className={LABEL_CLS}>{t.fieldLocation}</label>
                       <input type="text" value={it.location ?? ''} onChange={(e) => upd({ location: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Graduation Year</label>
+                      <label className={LABEL_CLS}>{t.fieldGraduationYear}</label>
                       <input
                         type="number"
                         value={it.graduation_year ?? ''}
@@ -779,7 +888,7 @@ function ResumeFormView() {
                       />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>GPA</label>
+                      <label className={LABEL_CLS}>{t.fieldGPA}</label>
                       <input
                         type="number"
                         value={it.gpa ?? ''}
@@ -802,7 +911,7 @@ function ResumeFormView() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Education
+              {t.addEducation}
             </button>
           </div>
         );
@@ -823,35 +932,35 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>Category *</label>
+                      <label className={LABEL_CLS}>{t.fieldCategory} *</label>
                       <input
                         type="text"
                         value={it.category}
                         onChange={(e) => upd({ category: e.target.value })}
-                        placeholder="e.g. Languages, Frameworks"
+                        placeholder={t.fieldCategoryPlaceholder}
                         className={INPUT_CLS}
                       />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Skill Name *</label>
+                      <label className={LABEL_CLS}>{t.fieldSkillName} *</label>
                       <input
                         type="text"
                         value={it.name}
                         onChange={(e) => upd({ name: e.target.value })}
-                        placeholder="e.g. PHP, React, Docker"
+                        placeholder={t.fieldSkillNamePlaceholder}
                         className={INPUT_CLS}
                       />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Proficiency *</label>
+                      <label className={LABEL_CLS}>{t.fieldProficiency} *</label>
                       <select
                         value={it.proficiency}
                         onChange={(e) => upd({ proficiency: e.target.value as ResumeSkill['proficiency'] })}
                         className={INPUT_CLS}
                       >
-                        <option value="beginner">Beginner</option>
-                        <option value="intermediate">Intermediate</option>
-                        <option value="expert">Expert</option>
+                        <option value="beginner">{t.proficiencyBeginner}</option>
+                        <option value="intermediate">{t.proficiencyIntermediate}</option>
+                        <option value="expert">{t.proficiencyExpert}</option>
                       </select>
                     </div>
                   </div>
@@ -866,7 +975,7 @@ function ResumeFormView() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Skill
+              {t.addSkill}
             </button>
           </div>
         );
@@ -887,11 +996,11 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="sm:col-span-2">
-                      <label className={LABEL_CLS}>Project Name *</label>
+                      <label className={LABEL_CLS}>{t.fieldProjectName} *</label>
                       <input type="text" value={it.name} onChange={(e) => upd({ name: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={LABEL_CLS}>Description</label>
+                      <label className={LABEL_CLS}>{t.fieldDescription}</label>
                       <textarea
                         value={it.description ?? ''}
                         onChange={(e) => upd({ description: e.target.value })}
@@ -900,19 +1009,19 @@ function ResumeFormView() {
                       />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={LABEL_CLS}>Technologies Used</label>
+                      <label className={LABEL_CLS}>{t.fieldTechnologies}</label>
                       <TagInput
                         value={it.technologies}
                         onChange={(tags) => upd({ technologies: tags })}
-                        placeholder="Add a technology and press Enter"
+                        placeholder={t.fieldTechnologiesPlaceholder}
                       />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Live URL</label>
+                      <label className={LABEL_CLS}>{t.fieldLiveURL}</label>
                       <input type="url" value={it.live_url ?? ''} onChange={(e) => upd({ live_url: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>GitHub URL</label>
+                      <label className={LABEL_CLS}>{t.fieldGitHub}</label>
                       <input type="url" value={it.github_url ?? ''} onChange={(e) => upd({ github_url: e.target.value })} className={INPUT_CLS} />
                     </div>
                   </div>
@@ -927,7 +1036,7 @@ function ResumeFormView() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Project
+              {t.addProject}
             </button>
           </div>
         );
@@ -948,15 +1057,15 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>Certificate Name *</label>
+                      <label className={LABEL_CLS}>{t.fieldCertName} *</label>
                       <input type="text" value={it.name} onChange={(e) => upd({ name: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Issuing Organization *</label>
+                      <label className={LABEL_CLS}>{t.fieldIssuingOrg} *</label>
                       <input type="text" value={it.issuing_organization} onChange={(e) => upd({ issuing_organization: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Issue Date</label>
+                      <label className={LABEL_CLS}>{t.fieldIssueDate}</label>
                       <input type="date" value={it.issue_date ?? ''} onChange={(e) => upd({ issue_date: e.target.value })} className={INPUT_CLS} />
                     </div>
                   </div>
@@ -971,7 +1080,7 @@ function ResumeFormView() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Certification
+              {t.addCertification}
             </button>
           </div>
         );
@@ -992,26 +1101,26 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>Language *</label>
+                      <label className={LABEL_CLS}>{t.fieldLanguage} *</label>
                       <input
                         type="text"
                         value={it.language}
                         onChange={(e) => upd({ language: e.target.value })}
-                        placeholder="e.g. Finnish"
+                        placeholder={t.fieldLanguagePlaceholder}
                         className={INPUT_CLS}
                       />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Proficiency *</label>
+                      <label className={LABEL_CLS}>{t.fieldProficiency} *</label>
                       <select
                         value={it.proficiency}
                         onChange={(e) => upd({ proficiency: e.target.value as ResumeLanguage['proficiency'] })}
                         className={INPUT_CLS}
                       >
-                        <option value="native">Native</option>
-                        <option value="fluent">Fluent</option>
-                        <option value="conversational">Conversational</option>
-                        <option value="basic">Basic</option>
+                        <option value="native">{t.langNative}</option>
+                        <option value="fluent">{t.langFluent}</option>
+                        <option value="conversational">{t.langConversational}</option>
+                        <option value="basic">{t.langBasic}</option>
                       </select>
                     </div>
                   </div>
@@ -1026,7 +1135,7 @@ function ResumeFormView() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Language
+              {t.addLanguage}
             </button>
           </div>
         );
@@ -1047,19 +1156,19 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>Title *</label>
+                      <label className={LABEL_CLS}>{t.fieldAwardTitle} *</label>
                       <input type="text" value={it.title} onChange={(e) => upd({ title: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Issuer</label>
+                      <label className={LABEL_CLS}>{t.fieldIssuer}</label>
                       <input type="text" value={it.issuer ?? ''} onChange={(e) => upd({ issuer: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Date</label>
+                      <label className={LABEL_CLS}>{t.fieldDate}</label>
                       <input type="date" value={it.date ?? ''} onChange={(e) => upd({ date: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={LABEL_CLS}>Description</label>
+                      <label className={LABEL_CLS}>{t.fieldDescription}</label>
                       <textarea
                         value={it.description ?? ''}
                         onChange={(e) => upd({ description: e.target.value })}
@@ -1079,7 +1188,7 @@ function ResumeFormView() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Award
+              {t.addAward}
             </button>
           </div>
         );
@@ -1100,23 +1209,23 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>Full Name *</label>
+                      <label className={LABEL_CLS}>{t.fieldRecFullName} *</label>
                       <input type="text" value={it.full_name} onChange={(e) => upd({ full_name: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Title</label>
-                      <input type="text" value={it.title ?? ''} onChange={(e) => upd({ title: e.target.value })} className={INPUT_CLS} placeholder="e.g. CTO" />
+                      <label className={LABEL_CLS}>{t.fieldTitle}</label>
+                      <input type="text" value={it.title ?? ''} onChange={(e) => upd({ title: e.target.value })} className={INPUT_CLS} placeholder={t.fieldTitlePlaceholder} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Company</label>
+                      <label className={LABEL_CLS}>{t.fieldCompany}</label>
                       <input type="text" value={it.company ?? ''} onChange={(e) => upd({ company: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Email</label>
+                      <label className={LABEL_CLS}>{t.fieldEmail}</label>
                       <input type="email" value={it.email ?? ''} onChange={(e) => upd({ email: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={LABEL_CLS}>Recommendation *</label>
+                      <label className={LABEL_CLS}>{t.fieldRecommendation} *</label>
                       <textarea
                         value={it.recommendation}
                         onChange={(e) => upd({ recommendation: e.target.value })}
@@ -1136,7 +1245,7 @@ function ResumeFormView() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Recommendation
+              {t.addRecommendation}
             </button>
           </div>
         );
@@ -1163,11 +1272,11 @@ function ResumeFormView() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Resumes
+              {t.backToResumes}
             </button>
             <span className="text-white/30">/</span>
             <h1 className="text-lg font-semibold text-white">
-              {isEditing ? (form.title || 'Edit Resume') : 'New Resume'}
+              {isEditing ? (form.title || t.editResume) : t.newResumeTitle}
             </h1>
           </div>
 
@@ -1186,14 +1295,14 @@ function ResumeFormView() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
-                    Copying…
+                    {t.copying2}
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    Copy
+                    {t.copy}
                   </>
                 )}
               </button>
@@ -1216,14 +1325,14 @@ function ResumeFormView() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                       </svg>
-                      Exporting…
+                      {t.exporting}
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      Export
+                      {t.export}
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
@@ -1254,6 +1363,22 @@ function ResumeFormView() {
                 )}
               </div>
             )}
+            {/* Primary toggle */}
+            <button
+              type="button"
+              onClick={() => patch({ is_primary: !form.is_primary })}
+              className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border transition-colors ${
+                form.is_primary
+                  ? 'bg-amber-500/20 border-amber-500/60 text-amber-400'
+                  : 'border-gray-600 text-white/50 hover:text-white hover:border-gray-500'
+              }`}
+              title={t.fieldIsPrimary}
+            >
+              <svg className="w-4 h-4" fill={form.is_primary ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+              {t.setPrimary}
+            </button>
             <button
               type="button"
               onClick={handleSubmit}
@@ -1266,14 +1391,14 @@ function ResumeFormView() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
-                  Saving…
+                  {t.exporting}
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Save Resume
+                  {t.saveResume}
                 </>
               )}
             </button>

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteResume, copyResume, exportResumePdf, exportResumeHtml, getResumes } from '../../api/resumesApi';
+import { deleteResume, copyResume, exportResumePdf, exportResumeHtml, getResumes, updateResume } from '../../api/resumesApi';
 import type { Resume } from '../../api/resumesApi';
 import NavBar from '../../components/NavBar';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
+import type { Language } from '../../i18n';
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return '';
@@ -13,6 +15,8 @@ function formatDate(dateStr?: string) {
 
 function ResumesView() {
   const navigate = useNavigate();
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).resumes;
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +26,13 @@ function ResumesView() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [openExportMenuId, setOpenExportMenuId] = useState<number | null>(null);
   const [copyingId, setCopyingId] = useState<number | null>(null);
+  const [settingPrimaryId, setSettingPrimaryId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
@@ -40,7 +51,7 @@ function ResumesView() {
       setResumes(data);
     } catch (err) {
       console.error('Failed to load resumes:', err);
-      setError('Failed to load resumes. Please try again.');
+      setError(t.errLoadResumes);
     } finally {
       setLoading(false);
     }
@@ -54,7 +65,7 @@ function ResumesView() {
       setResumes((prev) => [...prev, created]);
     } catch (err) {
       console.error('Failed to copy resume:', err);
-      setError('Failed to copy resume. Please try again.');
+      setError(t.errCopyResume);
     } finally {
       setCopyingId(null);
     }
@@ -69,9 +80,23 @@ function ResumesView() {
       else await exportResumeHtml(id);
     } catch (err) {
       console.error(`Failed to export ${format.toUpperCase()}:`, err);
-      setExportError(`Failed to export ${format.toUpperCase()}. Please try again.`);
+      setExportError(`${t.errExportResume}`);
     } finally {
       setExportingId(null);
+    }
+  };
+
+  const handleSetPrimary = async (id: number) => {
+    setSettingPrimaryId(id);
+    setError(null);
+    try {
+      await updateResume(id, { is_primary: true });
+      setResumes((prev) => prev.map((r) => ({ ...r, is_primary: r.id === id })));
+    } catch (err) {
+      console.error('Failed to set primary resume:', err);
+      setError(t.errSetPrimary);
+    } finally {
+      setSettingPrimaryId(null);
     }
   };
 
@@ -82,7 +107,7 @@ function ResumesView() {
       setResumes((prev) => prev.filter((r) => r.id !== id));
     } catch (err) {
       console.error('Failed to delete resume:', err);
-      setError('Failed to delete resume. Please try again.');
+      setError(t.errDeleteResume);
     } finally {
       setDeletingId(null);
       setConfirmDeleteId(null);
@@ -97,8 +122,8 @@ function ResumesView() {
         {/* Page header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-white">My Resumes</h1>
-            <p className="text-sm text-white/50 mt-1">Manage your resume profiles</p>
+            <h1 className="text-2xl font-bold text-white">{t.pageTitle}</h1>
+            <p className="text-sm text-white/50 mt-1">{t.pageSubtitle}</p>
           </div>
           <button
             onClick={() => navigate('/profile/resumes/new')}
@@ -107,7 +132,7 @@ function ResumesView() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            New Resume
+            {t.newResume}
           </button>
         </div>
 
@@ -134,12 +159,12 @@ function ResumesView() {
             <svg className="w-14 h-14 text-white/20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <p className="text-white/40 mb-4">No resumes yet</p>
+            <p className="text-white/40 mb-4">{t.emptyState}</p>
             <button
               onClick={() => navigate('/profile/resumes/new')}
               className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
             >
-              Create your first resume →
+              {t.createFirst}
             </button>
           </div>
         )}
@@ -153,35 +178,41 @@ function ResumesView() {
                 className="bg-gray-800 border border-gray-700 rounded-xl px-5 py-4 flex items-start sm:items-center justify-between gap-4"
               >
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-white font-medium truncate">{resume.title || '(Untitled)'}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-white font-medium truncate">{resume.title || t.untitled}</p>
                     {resume.language && (
                       <span className="shrink-0 text-xs font-medium uppercase tracking-wide bg-gray-700 text-white/60 px-1.5 py-0.5 rounded">
                         {resume.language}
                       </span>
                     )}
+                    {resume.is_primary && (
+                      <span className="shrink-0 flex items-center gap-1 text-xs font-medium bg-amber-500/20 border border-amber-500/40 text-amber-400 px-1.5 py-0.5 rounded">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                        {t.primaryBadge}
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-white/50 mt-0.5 truncate">{resume.full_name}</p>
                   {resume.updated_at && (
-                    <p className="text-xs text-white/30 mt-1">Updated {formatDate(resume.updated_at)}</p>
+                    <p className="text-xs text-white/30 mt-1">{t.updated} {formatDate(resume.updated_at)}</p>
                   )}
                 </div>
 
                 {confirmDeleteId === resume.id ? (
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-sm text-white/60">Delete?</span>
+                    <span className="text-sm text-white/60">{t.deleteConfirm}</span>
                     <button
                       onClick={() => handleDelete(resume.id)}
                       disabled={deletingId === resume.id}
                       className="text-sm bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg transition-colors disabled:opacity-50"
                     >
-                      {deletingId === resume.id ? 'Deleting…' : 'Yes'}
+                      {deletingId === resume.id ? t.deleting : t.yes}
                     </button>
                     <button
                       onClick={() => setConfirmDeleteId(null)}
                       className="text-sm bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg transition-colors"
                     >
-                      Cancel
+                      {t.cancel}
                     </button>
                   </div>
                 ) : (
@@ -206,7 +237,7 @@ function ResumesView() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         )}
-                        Export
+                        {exportingId === resume.id ? t.exporting : t.export}
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -250,16 +281,34 @@ function ResumesView() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                       )}
-                      Copy
+                      {copyingId === resume.id ? t.copying : t.copy}
                     </button>
+                    {!resume.is_primary && (
+                      <button
+                        onClick={() => handleSetPrimary(resume.id)}
+                        disabled={settingPrimaryId === resume.id}
+                        className="flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 bg-amber-900/20 hover:bg-amber-900/40 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                        title={t.setPrimary}
+                      >
+                        {settingPrimaryId === resume.id ? (
+                          <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                        )}
+                        {t.setPrimary}
+                      </button>
+                    )}
                     <button
-                      onClick={() => navigate(`/profile/resumes/${resume.id}`)}
+                      onClick={() => navigate(`/profile/resumes/${resume.id}/edit`)}
                       className="flex items-center gap-1.5 text-sm text-white bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg transition-colors"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                      Edit
+                      {t.edit}
                     </button>
                     <button
                       onClick={() => setConfirmDeleteId(resume.id)}
@@ -268,7 +317,7 @@ function ResumesView() {
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
-                      Delete
+                      {t.delete}
                     </button>
                   </div>
                 )}
