@@ -437,6 +437,7 @@ export const translations = {
       errThemeRequired: 'Please select a theme color before exporting.',
       errTemplateRequired: 'Please select a template before exporting.',
     },
+    footer: 'Built by Jussi Alanen. Source code available on GitHub.',
   },
   fi: {
     landing: {
