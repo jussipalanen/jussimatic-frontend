@@ -1,24 +1,33 @@
 steps:
   # Build and push Docker image with Kaniko (with layer caching)
+  # VITE_GOOGLE_CLIENT_ID and VITE_JUSSI_AIBOT_API_KEY are injected from Secret Manager via secretEnv.
   - name: 'gcr.io/kaniko-project/executor:latest'
+    entrypoint: '/busybox/sh'
     args:
-      - '--dockerfile=Dockerfile'
-      - '--context=dir:///workspace'
-      - '--destination=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/jussimatic-frontend/jussimatic-frontend:$TAG_NAME'
-      - '--destination=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/jussimatic-frontend/jussimatic-frontend:latest'
-      - '--cache=true'
-      - '--cache-ttl=336h'
-      - '--cache-repo=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/jussimatic-frontend/cache'
-      - '--build-arg=VITE_JUSSIMATIC_BACKEND_API_BASE_URL=$_VITE_JUSSIMATIC_BACKEND_API_BASE_URL'
-      - '--build-arg=VITE_JUSSILOG_BACKEND_API_BASE_URL=$_VITE_JUSSILOG_BACKEND_API_BASE_URL'
-      - '--build-arg=VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL=$_VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL'
-      - '--build-arg=VITE_JUSSI_AIBOT_API_URL=$_VITE_JUSSI_AIBOT_API_URL'
-      - '--build-arg=VITE_JUSSI_AIBOT_API_KEY=$_VITE_JUSSI_AIBOT_API_KEY'
-      - '--build-arg=VITE_GOOGLE_CLIENT_ID=$_VITE_GOOGLE_CLIENT_ID'
-      - '--build-arg=VITE_APP_TITLE=$_VITE_APP_TITLE'
-      - '--build-arg=VITE_APP_DESCRIPTION=$_VITE_APP_DESCRIPTION'
+      - '-c'
+      - |
+        /kaniko/executor \
+          --dockerfile=Dockerfile \
+          --context=dir:///workspace \
+          --destination=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/jussimatic-frontend/jussimatic-frontend:$TAG_NAME \
+          --destination=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/jussimatic-frontend/jussimatic-frontend:latest \
+          --cache=true \
+          --cache-ttl=336h \
+          --cache-repo=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/jussimatic-frontend/cache \
+          --build-arg=VITE_JUSSIMATIC_BACKEND_API_BASE_URL=$_VITE_JUSSIMATIC_BACKEND_API_BASE_URL \
+          --build-arg=VITE_JUSSILOG_BACKEND_API_BASE_URL=$_VITE_JUSSILOG_BACKEND_API_BASE_URL \
+          --build-arg=VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL=$_VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL \
+          --build-arg=VITE_JUSSI_AIBOT_API_URL=$_VITE_JUSSI_AIBOT_API_URL \
+          --build-arg=VITE_JUSSI_AIBOT_API_KEY=$$VITE_JUSSI_AIBOT_API_KEY \
+          --build-arg=VITE_GOOGLE_CLIENT_ID=$$VITE_GOOGLE_CLIENT_ID \
+          --build-arg=VITE_APP_TITLE=$_VITE_APP_TITLE \
+          --build-arg=VITE_APP_DESCRIPTION=$_VITE_APP_DESCRIPTION
+    secretEnv:
+      - 'VITE_GOOGLE_CLIENT_ID'
+      - 'VITE_JUSSI_AIBOT_API_KEY'
 
-  # Deploy to Cloud Run
+  # Deploy to Cloud Run — also stamps the build-time URL vars onto the revision
+  # so they are visible via `gcloud run services describe` / get-cloud-run-env.sh
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -32,6 +41,12 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - >-
+        VITE_JUSSIMATIC_BACKEND_API_BASE_URL=$_VITE_JUSSIMATIC_BACKEND_API_BASE_URL,
+        VITE_JUSSILOG_BACKEND_API_BASE_URL=$_VITE_JUSSILOG_BACKEND_API_BASE_URL,
+        VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL=$_VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL,
+        VITE_JUSSI_AIBOT_API_URL=$_VITE_JUSSI_AIBOT_API_URL
 
 options:
   machineType: E2_MEDIUM
@@ -45,9 +60,15 @@ substitutions:
   _VITE_JUSSILOG_BACKEND_API_BASE_URL: ''
   _VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL: ''
   _VITE_JUSSI_AIBOT_API_URL: ''
-  _VITE_JUSSI_AIBOT_API_KEY: ''
-  _VITE_GOOGLE_CLIENT_ID: ''
   _VITE_APP_TITLE: ''
   _VITE_APP_DESCRIPTION: ''
+
+# Secrets injected from Secret Manager at build time
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/JUSSIMATIC_FRONTEND_VITE_GOOGLE_CLIENT_ID/versions/latest
+      env: 'VITE_GOOGLE_CLIENT_ID'
+    - versionName: projects/$PROJECT_ID/secrets/JUSSIMATIC_FRONTEND_VITE_JUSSI_AIBOT_API_KEY/versions/latest
+      env: 'VITE_JUSSI_AIBOT_API_KEY'
 
 timeout: '300s'

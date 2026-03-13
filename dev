@@ -80,11 +80,24 @@ case $COMMAND in
 _VITE_JUSSILOG_BACKEND_API_BASE_URL=${VITE_JUSSILOG_BACKEND_API_BASE_URL:-},\
 _VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL=${VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL:-},\
 _VITE_JUSSI_AIBOT_API_URL=${VITE_JUSSI_AIBOT_API_URL:-},\
-_VITE_JUSSI_AIBOT_API_KEY=${VITE_JUSSI_AIBOT_API_KEY:-},\
-_VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID:-},\
 _VITE_APP_TITLE=${VITE_APP_TITLE:-},\
 _VITE_APP_DESCRIPTION=${VITE_APP_DESCRIPTION:-},\
 TAG_NAME=$TAG_NAME"
+    ;;
+
+  get-env)
+    # Fetch current env vars from the live Cloud Run revision
+    bash scripts/get-cloud-run-env.sh "${@:2}"
+    ;;
+
+  set-env)
+    # Push env vars from .env.production to the live Cloud Run revision (no rebuild)
+    ENV_FILE="${2:-.env.production}" bash scripts/set-cloud-run-env.sh "${@:3}"
+    ;;
+
+  secrets)
+    # Sync secrets to GCP Secret Manager from .env.production
+    ENV_FILE="${2:-.env.production}" bash scripts/update-secret-manager-frontend.sh "${@:3}"
     ;;
 
   *)
@@ -101,6 +114,11 @@ TAG_NAME=$TAG_NAME"
     echo "  deploy [env-file]       - Submit a Cloud Build using variables from .env.production"
     echo "                            Optionally pass a custom env file path as second argument."
     echo "                            TAG_NAME must be set in the env file or exported beforehand."
+    echo "  get-env [--yaml|--json] - Print env vars of the live Cloud Run revision"
+    echo "  set-env [env-file]      - Update Cloud Run revision env vars from .env.production (no rebuild)"
+    echo "                            Optionally pass a custom env file path as second argument."
+    echo "  secrets [env-file] [KEY] - Sync secrets to GCP Secret Manager from .env.production"
+    echo "                            Optionally pass a custom env file and/or a single KEY to sync."
     echo ""
     exit 1
     ;;
