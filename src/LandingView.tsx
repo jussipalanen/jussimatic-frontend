@@ -17,6 +17,7 @@ function LandingView() {
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
+  const [demosViewMode, setDemosViewMode] = useState<'list' | 'grid'>('list');
   const [visitorsCount, setVisitorsCount] = useState<number | null>(null);
   const [visitorsTotalCount, setVisitorsTotalCount] = useState<number | null>(null);
   const [visitorsError, setVisitorsError] = useState<string | null>(null);
@@ -284,51 +285,107 @@ function LandingView() {
       {/* Projects & Demos modal */}
       {showProjectsModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          onMouseDown={(e) => { if (e.target === e.currentTarget) setShowProjectsModal(false); }}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/70 backdrop-blur-sm"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowProjectsModal(false); }}
         >
-          <div className="relative w-full max-w-2xl max-h-[85vh] bg-gray-800 border border-gray-700 rounded-xl shadow-2xl flex flex-col overflow-hidden">
+          <div className="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-gray-800 border border-gray-700 rounded-t-2xl sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
             {/* Modal header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 shrink-0">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-700 shrink-0">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <svg className="w-5 h-5 text-green-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
                 {t.landing.projectsCta}
               </h2>
-              <button
-                onClick={() => setShowProjectsModal(false)}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                aria-label="Close"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-1">
+                {/* View mode toggle */}
+                <div className="flex items-center rounded-lg border border-white/10 overflow-hidden mr-2">
+                  <button
+                    onClick={() => setDemosViewMode('list')}
+                    className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer ${
+                      demosViewMode === 'list' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
+                    }`}
+                    aria-label="List view"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                  </button>
+                  <button
+                    onClick={() => setDemosViewMode('grid')}
+                    className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer ${
+                      demosViewMode === 'grid' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
+                    }`}
+                    aria-label="Grid view"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                  </button>
+                </div>
+                <button
+                  onClick={() => setShowProjectsModal(false)}
+                  className="flex items-center justify-center w-9 h-9 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  aria-label="Close"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
             {/* Modal body */}
-            <div className="overflow-y-auto flex-1 divide-y divide-gray-700">
-              {DEMOS.map((demo) => (
-                <button
-                  key={demo.id}
-                  onClick={() => { navigate(demo.path); setShowProjectsModal(false); }}
-                  className="w-full text-left px-6 py-4 text-sm text-white hover:bg-gray-700/60 flex flex-col gap-2 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <svg className={`w-5 h-5 shrink-0 ${demo.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={demo.iconPath} />
-                    </svg>
-                    <span className="font-semibold text-base">{t.landing[demo.labelKey]}</span>
-                    <svg className="w-4 h-4 ml-auto text-white/30 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 pl-8">
-                    {demo.badges.map((badge) => (
-                      <span key={badge.label} className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${badge.colorClass}`}>
-                        {badge.label}
-                      </span>
-                    ))}
-                  </div>
-                </button>
-              ))}
-            </div>
+            {demosViewMode === 'list' ? (
+              <div className="overflow-y-auto flex-1 divide-y divide-gray-700">
+                {DEMOS.map((demo) => (
+                  <button
+                    key={demo.id}
+                    onClick={() => { navigate(demo.path); setShowProjectsModal(false); }}
+                    className="w-full text-left px-4 sm:px-6 py-4 text-sm text-white hover:bg-gray-700/60 flex flex-col gap-2 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className={`w-5 h-5 shrink-0 ${demo.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={demo.iconPath} />
+                      </svg>
+                      <span className="font-semibold text-base">{t.landing[demo.labelKey]}</span>
+                      <svg className="w-4 h-4 ml-auto text-white/30 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 pl-8">
+                      {demo.badges.map((badge) => (
+                        <span key={badge.label} className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${badge.colorClass}`}>
+                          {badge.label}
+                        </span>
+                      ))}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-y-auto flex-1 p-4 sm:p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {DEMOS.map((demo) => (
+                    <button
+                      key={demo.id}
+                      onClick={() => { navigate(demo.path); setShowProjectsModal(false); }}
+                      className="flex flex-col items-start gap-3 p-4 bg-gray-700/40 hover:bg-gray-700/80 border border-white/5 hover:border-white/15 rounded-xl transition-colors cursor-pointer text-left"
+                    >
+                      <div className={`w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0 ${demo.iconColor}`}>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={demo.iconPath} />
+                        </svg>
+                      </div>
+                      <span className="font-semibold text-sm text-white leading-tight">{t.landing[demo.labelKey]}</span>
+                      <div className="flex flex-wrap gap-1">
+                        {demo.badges.slice(0, 2).map((badge) => (
+                          <span key={badge.label} className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-xs ${badge.colorClass}`}>
+                            {badge.label}
+                          </span>
+                        ))}
+                        {demo.badges.length > 2 && (
+                          <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs bg-white/10 text-white/40">
+                            +{demo.badges.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
