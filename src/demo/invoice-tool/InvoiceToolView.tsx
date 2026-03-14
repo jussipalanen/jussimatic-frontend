@@ -22,6 +22,8 @@ const FALLBACK_STATUS_OPTIONS: InvoiceStatusOption[] = [
   { value: 'issued',    label: 'Issued',    color: 'blue' },
   { value: 'paid',      label: 'Paid',      color: 'green' },
   { value: 'cancelled', label: 'Cancelled', color: 'red' },
+  { value: 'unpaid',    label: 'Unpaid',    color: 'orange' },
+  { value: 'overdue',   label: 'Overdue',   color: 'rose' },
 ];
 const FALLBACK_ITEM_TYPES: InvoiceItemTypeOption[] = [
   { value: 'product',  label: 'Product' },
@@ -54,6 +56,7 @@ interface FormData {
   lang: string;
   invoice_number: string;
   status: string;
+  due_date: string;
   customer_first_name: string;
   customer_last_name: string;
   customer_email: string;
@@ -72,6 +75,7 @@ const EMPTY_FORM: FormData = {
   lang: 'en',
   invoice_number: '',
   status: 'issued',
+  due_date: '',
   customer_first_name: '',
   customer_last_name: '',
   customer_email: '',
@@ -239,6 +243,7 @@ export default function InvoiceToolView() {
     subtotal: parseFloat(form.subtotal) || 0,
     total: parseFloat(form.total) || 0,
     status: form.status,
+    due_date: form.due_date || undefined,
     notes: form.notes || undefined,
     items: form.items.map((it) => ({
       type: it.type,
@@ -453,6 +458,15 @@ export default function InvoiceToolView() {
                 <select value={form.status} onChange={(e) => patch({ status: e.target.value })} className={INPUT_CLS}>
                   {statusOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
+              </div>
+              <div>
+                <label className={LABEL_CLS}>{tInv.fieldDueDate}</label>
+                <input
+                  type="date"
+                  value={form.due_date}
+                  onChange={(e) => patch({ due_date: e.target.value })}
+                  className={INPUT_CLS}
+                />
               </div>
               <div>
                 <label className={LABEL_CLS}>{tInv.fieldLang}</label>

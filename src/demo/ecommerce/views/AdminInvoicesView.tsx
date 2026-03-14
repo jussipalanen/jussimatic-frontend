@@ -20,6 +20,8 @@ const DEFAULT_STATUS_OPTIONS: InvoiceStatusOption[] = [
   { value: 'issued',    label: 'Issued',    color: 'blue' },
   { value: 'paid',      label: 'Paid',      color: 'green' },
   { value: 'cancelled', label: 'Cancelled', color: 'red' },
+  { value: 'unpaid',    label: 'Unpaid',    color: 'orange' },
+  { value: 'overdue',   label: 'Overdue',   color: 'rose' },
 ];
 
 const DEFAULT_ITEM_TYPE_OPTIONS: InvoiceItemTypeOption[] = [
@@ -33,6 +35,7 @@ const DEFAULT_ITEM_TYPE_OPTIONS: InvoiceItemTypeOption[] = [
 type EditFormData = {
   invoice_number: string;
   status: string;
+  due_date: string;
   customer_first_name: string;
   customer_last_name: string;
   customer_email: string;
@@ -65,6 +68,7 @@ function invoiceToFormData(invoice: Invoice): EditFormData {
   return {
     invoice_number: invoice.invoice_number ?? '',
     status: invoice.status ?? 'draft',
+    due_date: invoice.due_date ?? '',
     customer_first_name: invoice.customer_first_name ?? '',
     customer_last_name: invoice.customer_last_name ?? '',
     customer_email: invoice.customer_email ?? '',
@@ -83,6 +87,7 @@ function emptyFormData(): EditFormData {
   return {
     invoice_number: '',
     status: 'draft',
+    due_date: '',
     customer_first_name: '',
     customer_last_name: '',
     customer_email: '',
@@ -175,6 +180,8 @@ function buildInvoiceHTML(invoice: Invoice): string {
     .status-issued { background: #dbeafe; color: #1e40af; }
     .status-paid { background: #d1fae5; color: #065f46; }
     .status-cancelled { background: #fee2e2; color: #991b1b; }
+    .status-unpaid { background: #ffedd5; color: #9a3412; }
+    .status-overdue { background: #ffe4e6; color: #9f1239; }
     .section { margin-bottom: 28px; }
     .section h2 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #555; margin: 0 0 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
     .label { color: #555; }
@@ -251,16 +258,20 @@ function buildInvoiceHTML(invoice: Invoice): string {
 
 function StatusBadge({ status, label, color }: { status: string; label?: string; color?: string }) {
   const colorMap: Record<string, string> = {
-    gray:  'bg-gray-600 text-gray-200',
-    blue:  'bg-blue-600 text-blue-100',
-    green: 'bg-green-600 text-green-100',
-    red:   'bg-red-700 text-red-100',
+    gray:   'bg-gray-600 text-gray-200',
+    blue:   'bg-blue-600 text-blue-100',
+    green:  'bg-green-600 text-green-100',
+    red:    'bg-red-700 text-red-100',
+    orange: 'bg-orange-500 text-orange-100',
+    rose:   'bg-rose-700 text-rose-100',
   };
   const legacyColors: Record<string, string> = {
     draft:     'bg-gray-600 text-gray-200',
     issued:    'bg-blue-600 text-blue-100',
     paid:      'bg-green-600 text-green-100',
     cancelled: 'bg-red-700 text-red-100',
+    unpaid:    'bg-orange-500 text-orange-100',
+    overdue:   'bg-rose-700 text-rose-100',
   };
   const cls = (color ? colorMap[color] : legacyColors[status]) ?? 'bg-gray-600 text-gray-200';
   return (
@@ -628,6 +639,7 @@ function AdminInvoicesView() {
     const payload: UpdateInvoiceData = {
       invoice_number: editForm.invoice_number || undefined,
       status: editForm.status,
+      due_date: editForm.due_date || null,
       customer_first_name: editForm.customer_first_name,
       customer_last_name: editForm.customer_last_name,
       customer_email: editForm.customer_email,
@@ -739,6 +751,7 @@ function AdminInvoicesView() {
     setCreateForm({
       invoice_number: '',
       status: 'draft',
+      due_date: '',
       customer_first_name: order.customer_first_name ?? '',
       customer_last_name: order.customer_last_name ?? '',
       customer_email: order.customer_email ?? '',
@@ -793,6 +806,7 @@ function AdminInvoicesView() {
       ...(orderId !== undefined ? { order_id: orderId } : {}),
       ...(createForm.invoice_number ? { invoice_number: createForm.invoice_number } : {}),
       status: createForm.status,
+      due_date: createForm.due_date || null,
       customer_first_name: createForm.customer_first_name,
       customer_last_name: createForm.customer_last_name,
       customer_email: createForm.customer_email,
@@ -1295,6 +1309,18 @@ function AdminInvoicesView() {
                     </select>
                   </fieldset>
 
+                  {/* Due Date */}
+                  <fieldset>
+                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.labelDueDateEdit}</legend>
+                    <input
+                      type="date"
+                      name="due_date"
+                      value={editForm.due_date}
+                      onChange={handleEditChange}
+                      className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </fieldset>
+
                   {/* Customer */}
                   <fieldset>
                     <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionCustomerEdit}</legend>
@@ -1600,6 +1626,9 @@ function AdminInvoicesView() {
                       {selectedInvoice.paid_at && (
                         <p className="text-gray-300"><span className="text-gray-500">{t.labelPaid} </span>{new Date(selectedInvoice.paid_at).toLocaleDateString()}</p>
                       )}
+                      {selectedInvoice.due_date && (
+                        <p className="text-gray-300"><span className="text-gray-500">{t.labelDueDate} </span>{new Date(selectedInvoice.due_date).toLocaleDateString()}</p>
+                      )}
                     </div>
                   </section>
 
@@ -1781,6 +1810,18 @@ function AdminInvoicesView() {
                       <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </select>
+                </fieldset>
+
+                {/* Due Date */}
+                <fieldset>
+                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.labelDueDateEdit}</legend>
+                  <input
+                    type="date"
+                    name="due_date"
+                    value={createForm.due_date}
+                    onChange={handleCreateFormChange}
+                    className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
                 </fieldset>
 
                 {/* Customer */}
