@@ -23,7 +23,7 @@ steps:
           --build-arg=VITE_GOOGLE_CLIENT_ID=$$VITE_GOOGLE_CLIENT_ID \
           --build-arg=VITE_APP_TITLE=$_VITE_APP_TITLE \
           --build-arg=VITE_APP_DESCRIPTION=$_VITE_APP_DESCRIPTION \
-          --build-arg=VITE_CV_ENDPOINT=$_VITE_CV_ENDPOINT
+          --build-arg="VITE_CV_ENDPOINT=$_VITE_CV_ENDPOINT"
     secretEnv:
       - 'VITE_GOOGLE_CLIENT_ID'
       - 'VITE_JUSSI_AIBOT_API_KEY'
