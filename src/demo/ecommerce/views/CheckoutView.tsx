@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createOrder } from '../../../api/ordersApi';
 import { getMe } from '../../../api/authApi';
-import { clearCart, getCart } from '../../../utils/cartUtils';
+import { clearCart, getCart, calcCartTaxBreakdown, calcCartTotals } from '../../../utils/cartUtils';
 import type { CartItem } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
+import CountrySelect from '../../../components/CountrySelect';
+import { getStoredLanguage, translations, type Language } from '../../../i18n';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -32,14 +34,36 @@ function CheckoutView() {
   const [useBillingForShipping, setUseBillingForShipping] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
 
   useEffect(() => {
     setCartItems(getCart());
   }, []);
 
-  const formatPrice = (price: string | null) => {
-    if (!price) return 'N/A';
-    return `€${parseFloat(price).toFixed(2)}`;
+  useEffect(() => {
+    const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
+
+  const t = translations[language].checkout;
+
+  const formatPrice = (price: string | number | null | undefined) => {
+    if (price == null || price === '') return 'N/A';
+    const n = typeof price === 'string' ? parseFloat(price) : price;
+    if (isNaN(n)) return 'N/A';
+    return `€${n.toFixed(2)}`;
+  };
+
+  const formatTaxPct = (rate: number) => {
+    const pct = parseFloat((rate * 100).toPrecision(10));
+    return `${pct.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
+  };
+
+  const calcGross = (net: string | number, taxRate: number): number => {
+    const n = typeof net === 'string' ? parseFloat(net) : net;
+    const r = taxRate > 1 ? taxRate / 100 : taxRate;
+    return n * (1 + r);
   };
 
   const buildStorageUrl = (path: string | null | undefined) => {
@@ -50,14 +74,7 @@ function CheckoutView() {
     return `${base}/${endpoint}`;
   };
 
-  const calculateTotal = () => {
-    return cartItems.reduce((total, item) => {
-      const price = parseFloat(item.price);
-      return total + price * item.quantity;
-    }, 0);
-  };
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
     setFormValues((current) => {
       const next = { ...current, [name]: value };
@@ -138,7 +155,7 @@ function CheckoutView() {
           quantity: item.quantity,
         })),
         notes: formValues.notes.trim() || undefined,
-      });
+      }, language);
 
       clearCart();
       setCartItems([]);
@@ -153,6 +170,8 @@ function CheckoutView() {
   };
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const taxBreakdown = calcCartTaxBreakdown(cartItems);
+  const totals = calcCartTotals(cartItems);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -180,12 +199,12 @@ function CheckoutView() {
                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
               />
             </svg>
-            <p className="text-xl text-gray-400 mb-6">No products added</p>
+            <p className="text-xl text-gray-400 mb-6">{t.empty}</p>
             <button
               onClick={() => navigate('/demo/ecommerce/products')}
               className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
             >
-              Browse Products
+              {t.browseProducts}
             </button>
           </div>
         ) : (
@@ -193,7 +212,7 @@ function CheckoutView() {
             <div>
               <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-700">
-                  <h2 className="text-lg font-semibold">Order Summary</h2>
+                  <h2 className="text-lg font-semibold">{t.orderSummary}</h2>
                 </div>
                 <div className="divide-y divide-gray-700">
                   {cartItems.map((item) => (
@@ -209,27 +228,51 @@ function CheckoutView() {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-white truncate">{item.title}</h3>
                         <p className="text-sm text-gray-400 mt-1">
-                          {formatPrice(item.price)} x {item.quantity}
+                          {item.taxRate ? (
+                            <>
+                              <span className="text-green-300">{formatPrice(calcGross(item.price, item.taxRate))}</span>
+                              <span className="ml-1 text-xs text-gray-500">
+                                {t.exclVat} {formatTaxPct(item.taxRate)}{item.taxCode && item.taxCode !== 'ZERO' ? ` · ${item.taxCode}` : ''}: {formatPrice(item.price)}
+                              </span>
+                            </>
+                          ) : formatPrice(item.price)} × {item.quantity}
                         </p>
                       </div>
                       <div className="text-right font-semibold text-green-400">
-                        {formatPrice((parseFloat(item.price) * item.quantity).toFixed(2))}
+                        {item.taxRate
+                          ? formatPrice(calcGross(item.price, item.taxRate) * item.quantity)
+                          : formatPrice(parseFloat(item.price) * item.quantity)
+                        }
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="px-6 py-4 border-t border-gray-700 flex items-center justify-between">
-                  <span className="text-lg font-semibold">Subtotal</span>
-                  <span className="text-2xl font-bold text-green-400">
-                    {formatPrice(calculateTotal().toFixed(2))}
-                  </span>
+                <div className="px-6 py-4 border-t border-gray-700 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">{t.subtotalExclVat}</span>
+                    <span className="font-medium text-white">{formatPrice(totals.subtotal.toFixed(2))}</span>
+                  </div>
+                  {taxBreakdown.map(g => (
+                    <div key={`${g.code}-${g.rate}`} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400">
+                        VAT{g.code && g.code !== 'ZERO' ? ` (${g.code})` : ''} {formatTaxPct(g.rate)}
+                      </span>
+                      <span className="text-gray-300">{formatPrice(g.amount.toFixed(2))}</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between border-t border-gray-700 pt-2">
+                    <span className="text-lg font-semibold">{t.totalInclVat}</span>
+                    <span className="text-2xl font-bold text-green-400">
+                      {formatPrice(totals.grandTotal.toFixed(2))}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div>
               <form onSubmit={handleSubmit} className="bg-gray-800 rounded-lg border border-gray-700 p-6 space-y-4">
-                <h2 className="text-lg font-semibold">Customer Details</h2>
+                <h2 className="text-lg font-semibold">{t.customerDetails}</h2>
                 {submitError && (
                   <div className="rounded-lg border border-red-500/30 bg-red-900/20 px-3 py-2 text-sm text-red-300">
                     {submitError}
@@ -237,7 +280,7 @@ function CheckoutView() {
                 )}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-white/80">Firstname</label>
+                    <label className="block text-sm font-medium text-white/80">{t.firstname}</label>
                     <input
                       name="firstname"
                       required
@@ -247,7 +290,7 @@ function CheckoutView() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/80">Lastname</label>
+                    <label className="block text-sm font-medium text-white/80">{t.lastname}</label>
                     <input
                       name="lastname"
                       required
@@ -258,10 +301,10 @@ function CheckoutView() {
                   </div>
                 </div>
                 <div className="pt-2">
-                  <h3 className="text-base font-semibold text-white">Billing Address</h3>
+                  <h3 className="text-base font-semibold text-white">{t.billingAddress}</h3>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/80">Street address</label>
+                  <label className="block text-sm font-medium text-white/80">{t.streetAddress}</label>
                   <input
                     name="billingStreet"
                     required
@@ -272,7 +315,7 @@ function CheckoutView() {
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-white/80">Post code</label>
+                    <label className="block text-sm font-medium text-white/80">{t.postCode}</label>
                     <input
                       name="billingPostCode"
                       required
@@ -282,7 +325,7 @@ function CheckoutView() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/80">State</label>
+                    <label className="block text-sm font-medium text-white/80">{t.state}</label>
                     <input
                       name="billingState"
                       required
@@ -294,7 +337,7 @@ function CheckoutView() {
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-white/80">City</label>
+                    <label className="block text-sm font-medium text-white/80">{t.city}</label>
                     <input
                       name="billingCity"
                       required
@@ -304,8 +347,8 @@ function CheckoutView() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/80">Country</label>
-                    <input
+                    <label className="block text-sm font-medium text-white/80">{t.country}</label>
+                    <CountrySelect
                       name="billingCountry"
                       required
                       value={formValues.billingCountry}
@@ -323,14 +366,14 @@ function CheckoutView() {
                     className="h-4 w-4 rounded border-white/20 bg-gray-900 text-blue-600 focus:ring-blue-500"
                   />
                   <label htmlFor="useBillingForShipping" className="text-sm text-white/80">
-                    Use the same information for shipping
+                    {t.useSameForShipping}
                   </label>
                 </div>
                 <div className="pt-2">
-                  <h3 className="text-base font-semibold text-white">Shipping Address</h3>
+                  <h3 className="text-base font-semibold text-white">{t.shippingAddress}</h3>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/80">Street address</label>
+                  <label className="block text-sm font-medium text-white/80">{t.streetAddress}</label>
                   <input
                     name="shippingStreet"
                     required={!useBillingForShipping}
@@ -342,7 +385,7 @@ function CheckoutView() {
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-white/80">Post code</label>
+                    <label className="block text-sm font-medium text-white/80">{t.postCode}</label>
                     <input
                       name="shippingPostCode"
                       required={!useBillingForShipping}
@@ -353,7 +396,7 @@ function CheckoutView() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/80">State</label>
+                    <label className="block text-sm font-medium text-white/80">{t.state}</label>
                     <input
                       name="shippingState"
                       required={!useBillingForShipping}
@@ -366,7 +409,7 @@ function CheckoutView() {
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-white/80">City</label>
+                    <label className="block text-sm font-medium text-white/80">{t.city}</label>
                     <input
                       name="shippingCity"
                       required={!useBillingForShipping}
@@ -377,8 +420,8 @@ function CheckoutView() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/80">Country</label>
-                    <input
+                    <label className="block text-sm font-medium text-white/80">{t.country}</label>
+                    <CountrySelect
                       name="shippingCountry"
                       required={!useBillingForShipping}
                       disabled={useBillingForShipping}
@@ -390,7 +433,7 @@ function CheckoutView() {
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-white/80">Email</label>
+                    <label className="block text-sm font-medium text-white/80">{t.email}</label>
                     <input
                       name="email"
                       type="email"
@@ -401,7 +444,7 @@ function CheckoutView() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/80">Phone</label>
+                    <label className="block text-sm font-medium text-white/80">{t.phone}</label>
                     <input
                       name="phone"
                       required
@@ -412,7 +455,7 @@ function CheckoutView() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/80">Additional information for order</label>
+                  <label className="block text-sm font-medium text-white/80">{t.orderNotes}</label>
                   <textarea
                     name="notes"
                     rows={4}
@@ -426,7 +469,7 @@ function CheckoutView() {
                   disabled={submitting}
                   className="w-full rounded-lg bg-green-600 px-6 py-3 font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {submitting ? 'Submitting...' : 'Submit Order'}
+                  {submitting ? t.submitting : t.submitOrder}
                 </button>
               </form>
             </div>

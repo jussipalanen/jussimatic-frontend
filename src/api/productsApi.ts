@@ -21,6 +21,8 @@ export interface Product {
   visibility: boolean;
   created_at: string;
   updated_at: string;
+  tax_code?: string | null;
+  tax_rate?: string | number | null;
 }
 
 export interface ProductsResponse {
@@ -115,6 +117,8 @@ export interface CreateProductData {
   description: string;
   price: string;
   sale_price?: string;
+  tax_code?: string;
+  tax_rate?: number;
   quantity: string;
   visibility: string;
   user_id?: number;
@@ -136,11 +140,11 @@ export async function createProduct(data: CreateProductData): Promise<Product> {
     if (typeof data.user_id === 'number') {
       formData.append('user_id', String(data.user_id));
     }
-    
+
     if (data.featured_image) {
       formData.append('featured_image', data.featured_image);
     }
-    
+
     if (data.images && data.images.length > 0) {
       data.images.forEach((image) => {
         formData.append('images[]', image);
@@ -170,6 +174,8 @@ export interface UpdateProductData {
   description: string;
   price: string;
   sale_price?: string;
+  tax_code?: string;
+  tax_rate?: number;
   quantity: string;
   visibility: string;
   user_id?: number;
@@ -194,11 +200,11 @@ export async function updateProduct(id: number, data: UpdateProductData): Promis
     if (typeof data.user_id === 'number') {
       formData.append('user_id', String(data.user_id));
     }
-    
+
     if (data.featured_image) {
       formData.append('featured_image', data.featured_image);
     }
-    
+
     if (data.images && data.images.length > 0) {
       data.images.forEach((image) => {
         formData.append('images[]', image);
@@ -250,4 +256,31 @@ export async function deleteProduct(id: number): Promise<void> {
     console.error('Error deleting product:', error);
     throw error;
   }
+}
+
+export interface TaxRate {
+  id?: number;
+  code: string;
+  name?: string;
+  label?: string;
+  rate: number | string;
+  [key: string]: unknown;
+}
+
+export async function fetchTaxRates(lang?: string): Promise<TaxRate[]> {
+  const params = new URLSearchParams();
+  if (lang) params.set('lang', lang);
+  const query = params.toString();
+  const url = buildUrl('settings/taxrates') + (query ? `?${query}` : '');
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json() as unknown;
+  if (Array.isArray(data)) return data as TaxRate[];
+  if (data && typeof data === 'object' && Array.isArray((data as { data?: unknown }).data)) {
+    return (data as { data: TaxRate[] }).data;
+  }
+  return [];
 }

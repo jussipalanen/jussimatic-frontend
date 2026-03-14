@@ -46,9 +46,30 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleReady, setGoogleReady] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterRepassword, setShowRegisterRepassword] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+
+  const generatePassword = () => {
+    const lower = 'abcdefghijklmnopqrstuvwxyz';
+    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const digits = '0123456789';
+    const special = '!@#$%^&*()-_=+[]{}';
+    const all = lower + upper + digits + special;
+    const guaranteed = [
+      lower[Math.floor(Math.random() * lower.length)],
+      upper[Math.floor(Math.random() * upper.length)],
+      digits[Math.floor(Math.random() * digits.length)],
+      special[Math.floor(Math.random() * special.length)],
+    ];
+    const rest = Array.from({ length: 12 }, () => all[Math.floor(Math.random() * all.length)]);
+    const pwd = [...guaranteed, ...rest].sort(() => Math.random() - 0.5).join('');
+    setRegisterForm((current) => ({ ...current, password: pwd, repassword: pwd }));
+    setShowRegisterPassword(true);
+    setShowRegisterRepassword(true);
+  };
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -298,7 +319,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
         last_name: registerForm.lastname.trim(),
         password: registerForm.password,
         password_confirmation: registerForm.repassword,
-      });
+      }, language);
       if (data && typeof data === 'object' && 'token' in data) {
         localStorage.setItem('auth_token', (data as { token: string }).token);
         setRegisterSuccess(true);
@@ -348,7 +369,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70" onClick={onClose}>
       <div className="flex min-h-full items-center justify-center px-4 py-6">
       <div
-        className="w-full max-w-lg rounded-2xl bg-gray-800 text-white shadow-2xl border border-white/10"
+        className="w-full max-w-xl rounded-2xl bg-gray-800 text-white shadow-2xl border border-white/10"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
@@ -484,38 +505,43 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                 void handleRegister();
               }}
             >
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-white/80">{t.labelUsername}</label>
-                  <input
-                    value={registerForm.username}
-                    onChange={(event) =>
-                      setRegisterForm((current) => ({ ...current, username: event.target.value }))
-                    }
-                    onBlur={() => setRegisterTouched((current) => ({ ...current, username: true }))}
-                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={t.placeholderUsername}
-                  />
-                  {shouldShowRegisterError('username') && (
-                    <p className="mt-1 text-sm text-red-400">{registerErrors.username}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-white/80">{t.labelEmail}</label>
-                  <input
-                    type="email"
-                    value={registerForm.email}
-                    onChange={(event) =>
-                      setRegisterForm((current) => ({ ...current, email: event.target.value }))
-                    }
-                    onBlur={() => setRegisterTouched((current) => ({ ...current, email: true }))}
-                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={t.placeholderEmail}
-                  />
-                  {shouldShowRegisterError('email') && (
-                    <p className="mt-1 text-sm text-red-400">{registerErrors.email}</p>
-                  )}
-                </div>
+              {/* Username */}
+              <div>
+                <label className="block text-sm font-medium text-white/80">{t.labelUsername}</label>
+                <input
+                  value={registerForm.username}
+                  onChange={(event) =>
+                    setRegisterForm((current) => ({ ...current, username: event.target.value }))
+                  }
+                  onBlur={() => setRegisterTouched((current) => ({ ...current, username: true }))}
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={t.placeholderUsername}
+                />
+                {shouldShowRegisterError('username') && (
+                  <p className="mt-1 text-sm text-red-400">{registerErrors.username}</p>
+                )}
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-white/80">{t.labelEmail}</label>
+                <input
+                  type="email"
+                  value={registerForm.email}
+                  onChange={(event) =>
+                    setRegisterForm((current) => ({ ...current, email: event.target.value }))
+                  }
+                  onBlur={() => setRegisterTouched((current) => ({ ...current, email: true }))}
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={t.placeholderEmail}
+                />
+                {shouldShowRegisterError('email') && (
+                  <p className="mt-1 text-sm text-red-400">{registerErrors.email}</p>
+                )}
+              </div>
+
+              {/* First name + Last name — natural pair */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-white/80">{t.labelFirstname}</label>
                   <input
@@ -547,39 +573,78 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
+
+              {/* Password */}
+              <div>
+                <div className="flex items-center justify-between">
                   <label className="block text-sm font-medium text-white/80">{t.labelPassword}</label>
+                  <button
+                    type="button"
+                    onClick={generatePassword}
+                    className="text-xs font-semibold text-blue-300 hover:text-blue-200"
+                  >
+                    {t.btnGeneratePassword}
+                  </button>
+                </div>
+                <div className="relative mt-2">
                   <input
-                    type="password"
+                    type={showRegisterPassword ? 'text' : 'password'}
                     value={registerForm.password}
                     onChange={(event) =>
                       setRegisterForm((current) => ({ ...current, password: event.target.value }))
                     }
                     onBlur={() => setRegisterTouched((current) => ({ ...current, password: true }))}
-                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 pr-10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder={t.placeholderPassword}
                   />
-                  {shouldShowRegisterError('password') && (
-                    <p className="mt-1 text-sm text-red-400">{registerErrors.password}</p>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterPassword((v) => !v)}
+                    aria-label={showRegisterPassword ? t.btnHidePassword : t.btnShowPassword}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                  >
+                    {showRegisterPassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    )}
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-white/80">{t.labelRepassword}</label>
+                {shouldShowRegisterError('password') && (
+                  <p className="mt-1 text-sm text-red-400">{registerErrors.password}</p>
+                )}
+              </div>
+
+              {/* Confirm password */}
+              <div>
+                <label className="block text-sm font-medium text-white/80">{t.labelRepassword}</label>
+                <div className="relative mt-2">
                   <input
-                    type="password"
+                    type={showRegisterRepassword ? 'text' : 'password'}
                     value={registerForm.repassword}
                     onChange={(event) =>
                       setRegisterForm((current) => ({ ...current, repassword: event.target.value }))
                     }
                     onBlur={() => setRegisterTouched((current) => ({ ...current, repassword: true }))}
-                    className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 pr-10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder={t.placeholderRepassword}
                   />
-                  {shouldShowRegisterError('repassword') && (
-                    <p className="mt-1 text-sm text-red-400">{registerErrors.repassword}</p>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterRepassword((v) => !v)}
+                    aria-label={showRegisterRepassword ? t.btnHidePassword : t.btnShowPassword}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                  >
+                    {showRegisterRepassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    )}
+                  </button>
                 </div>
+                {shouldShowRegisterError('repassword') && (
+                  <p className="mt-1 text-sm text-red-400">{registerErrors.repassword}</p>
+                )}
               </div>
               <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
                 <button
@@ -587,10 +652,12 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   onClick={() => {
                     setActiveTab('login');
                     setLoginSubmitted(false);
+                    setLoginResponse(null);
+                    setLoginTouched({ identifier: false, password: false });
                   }}
                   className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5 sm:w-auto"
                 >
-                  {t.btnLogin}
+                  ← {t.btnBackToLogin}
                 </button>
                 <button
                   type="button"
@@ -613,6 +680,8 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                     });
                     setRegisterSubmitted(false);
                     setRegisterResponse(null);
+                    setShowRegisterPassword(false);
+                    setShowRegisterRepassword(false);
                   }}
                   className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5 sm:w-auto"
                 >
@@ -669,9 +738,12 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
                   {forgotLoading ? t.btnSending : t.btnSendResetLink}
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setActiveTab('login');
                     setLoginSubmitted(false);
+                    setLoginResponse(null);
+                    setLoginTouched({ identifier: false, password: false });
                   }}
                   className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5"
                 >

@@ -7,16 +7,12 @@ import EcommerceHeader from '../components/EcommerceHeader';
 import { getMe } from '../../../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
 import UserEditModal from '../components/UserEditModal';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
+import type { Language } from '../../../i18n';
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Admin',
-  vendor: 'Vendor',
-  customer: 'Customer',
-};
-
-function normalizeRoleLabel(role: string) {
+function normalizeRoleLabel(role: string, labels: Record<string, string>) {
   const key = role.trim().toLowerCase();
-  return ROLE_LABELS[key] ?? role;
+  return labels[key] ?? role;
 }
 
 function getUserNameValue(user: UserSummary, key: 'first' | 'last') {
@@ -71,6 +67,20 @@ function AdminUsersView() {
     email: string;
     role: string;
   } | null>(null);
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminUsers;
+
+  useEffect(() => {
+    const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
+
+  const roleLabels: Record<string, string> = {
+    admin: t.roleAdmin,
+    vendor: t.roleVendor,
+    customer: t.roleCustomer,
+  };
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -96,11 +106,11 @@ function AdminUsersView() {
           setUsers(data);
         } catch (fetchError) {
           console.error('Failed to load users:', fetchError);
-          setError('Failed to load users. Please try again.');
+          setError(t.errLoadUsers);
         }
       } catch (err) {
         console.error('Authentication failed:', err);
-        setAuthError('Authentication required. Please log in to view the user list.');
+        setAuthError(t.authErrLogin);
       } finally {
         setLoading(false);
       }
@@ -120,7 +130,7 @@ function AdminUsersView() {
       const email = user.email ?? 'N/A';
       const username = user.username ?? 'N/A';
       const roles = getUserRoles(user);
-      const roleLabel = roles.map(normalizeRoleLabel).join(', ') || 'N/A';
+      const roleLabel = roles.map((r) => normalizeRoleLabel(r, roleLabels)).join(', ') || 'N/A';
       const role = roles.length > 0 ? roles[0].toLowerCase() : '';
       const numericId = user.id ?? user.user_id;
       return {
@@ -135,7 +145,7 @@ function AdminUsersView() {
         roleLabel,
       };
     });
-  }, [users]);
+  }, [users, language]);
 
   const closeEditModal = () => {
     setShowEditModal(false);
@@ -181,7 +191,7 @@ function AdminUsersView() {
     if (!canManageUsers) return;
     if (row.numericId === null || row.numericId === currentUserId) return;
     const name = `${row.firstName} ${row.lastName}`.trim();
-    setUserToDelete({ id: row.numericId, name: name || 'this user' });
+    setUserToDelete({ id: row.numericId, name: name || t.errDelSelf });
     setShowDeleteConfirm(true);
   };
 
@@ -194,7 +204,7 @@ function AdminUsersView() {
   const handleDeleteConfirm = async () => {
     if (!userToDelete || deleting) return;
     if (userToDelete.id === currentUserId) {
-      setError('You cannot delete your own account.');
+      setError(t.errDelSelf);
       setShowDeleteConfirm(false);
       setUserToDelete(null);
       return;
@@ -203,13 +213,13 @@ function AdminUsersView() {
     setDeleting(true);
     setError(null);
     try {
-      await deleteUser(userToDelete.id);
+      await deleteUser(userToDelete.id, language);
       setUsers((prev) => prev.filter((user) => (user.id ?? user.user_id) !== userToDelete.id));
       setShowDeleteConfirm(false);
       setUserToDelete(null);
     } catch (err) {
       console.error('Failed to delete user:', err);
-      setError('Failed to delete user. Please try again.');
+      setError(t.errDelFailed);
     } finally {
       setDeleting(false);
     }
@@ -218,9 +228,9 @@ function AdminUsersView() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <EcommerceHeader
-        title="Admin Users"
+        title={t.title}
         backTo="/demo/ecommerce/admin"
-        backLabel="Admin Dashboard"
+        backLabel={translations[language].adminDashboard.title}
         cartCount={cartCount}
         activeNav="admin-dashboard"
       />
@@ -248,7 +258,7 @@ function AdminUsersView() {
                 onClick={() => navigate('/demo/ecommerce/products')}
                 className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
               >
-                Go to Products
+                {t.goToProducts}
               </button>
             )}
           </div>
@@ -257,7 +267,7 @@ function AdminUsersView() {
         {loading && !authError && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-            <p className="mt-4 text-gray-300">Loading users...</p>
+            <p className="mt-4 text-gray-300">{t.loading}</p>
           </div>
         )}
 
@@ -268,7 +278,7 @@ function AdminUsersView() {
         )}
 
         {!loading && !error && !authError && rows.length === 0 && (
-          <div className="text-center py-10 text-gray-400">No users found.</div>
+          <div className="text-center py-10 text-gray-400">{t.empty}</div>
         )}
 
         {!loading && !error && !authError && rows.length > 0 && (
@@ -276,13 +286,13 @@ function AdminUsersView() {
             <table className="w-full min-w-[700px] text-left bg-gray-800">
               <thead className="bg-gray-850 border-b border-gray-700">
                 <tr className="text-xs uppercase tracking-wider text-gray-400">
-                  <th className="px-6 py-3">ID</th>
-                  <th className="px-6 py-3">Username</th>
-                  <th className="px-6 py-3">First name</th>
-                  <th className="px-6 py-3">Last name</th>
-                  <th className="px-6 py-3">Email</th>
-                  <th className="px-6 py-3">Role</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
+                  <th className="px-6 py-3">{t.colId}</th>
+                  <th className="px-6 py-3">{t.colUsername}</th>
+                  <th className="px-6 py-3">{t.colFirstName}</th>
+                  <th className="px-6 py-3">{t.colLastName}</th>
+                  <th className="px-6 py-3">{t.colEmail}</th>
+                  <th className="px-6 py-3">{t.colRole}</th>
+                  <th className="px-6 py-3 text-right">{t.colActions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
@@ -303,13 +313,13 @@ function AdminUsersView() {
                           className="rounded-lg border border-gray-600 px-3 py-1.5 text-sm font-semibold text-gray-300 hover:bg-gray-700/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                           title={
                             !canManageUsers
-                              ? 'You do not have permission to edit users'
+                              ? t.titleNoPermEdit
                               : row.numericId === null
-                                ? 'User id is missing'
-                                : 'Edit user'
+                                ? t.titleMissingId
+                                : t.titleEditUser
                           }
                         >
-                          Edit
+                          {t.btnEdit}
                         </button>
                         <button
                           type="button"
@@ -318,13 +328,13 @@ function AdminUsersView() {
                           className="rounded-lg border border-red-500/60 px-3 py-1.5 text-sm font-semibold text-red-300 hover:bg-red-600/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                           title={
                             !canManageUsers
-                              ? 'You do not have permission to delete users'
+                              ? t.titleNoPermDel
                               : row.numericId === currentUserId
-                                ? 'You cannot delete your own account'
+                                ? t.titleDelSelf
                                 : undefined
                           }
                         >
-                          Delete
+                          {t.btnDelete}
                         </button>
                       </div>
                     </td>
@@ -342,9 +352,9 @@ function AdminUsersView() {
               role="dialog"
               aria-modal="true"
             >
-              <h2 className="text-xl font-semibold text-white">Delete user</h2>
+              <h2 className="text-xl font-semibold text-white">{t.deleteTitle}</h2>
               <p className="mt-3 text-sm text-gray-300">
-                Are you sure you want to delete {userToDelete.name}? This action cannot be undone.
+                {t.deleteConfirm.replace('{name}', userToDelete.name)}
               </p>
               <div className="mt-6 flex items-center justify-end gap-3">
                 <button
@@ -353,7 +363,7 @@ function AdminUsersView() {
                   className="rounded-lg border border-gray-600 px-4 py-2 text-sm font-semibold text-gray-200 hover:bg-gray-800"
                   disabled={deleting}
                 >
-                  Cancel
+                  {t.btnCancel}
                 </button>
                 <button
                   type="button"
@@ -361,7 +371,7 @@ function AdminUsersView() {
                   className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
                   disabled={deleting}
                 >
-                  {deleting ? 'Deleting...' : 'Yes, delete'}
+                  {deleting ? t.btnDeleting : t.btnConfirmDelete}
                 </button>
               </div>
             </div>

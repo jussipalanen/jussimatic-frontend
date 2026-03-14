@@ -15,24 +15,34 @@ import AdminInvoicesView from './demo/ecommerce/views/AdminInvoicesView'
 import ResetPasswordView from './ResetPasswordView'
 import AICVReviewView from './demo/ai-cv-review'
 import ResumeToolView from './demo/resume-tool'
+import InvoiceToolView from './demo/invoice-tool'
 import LogoutView from './profile/LogoutView'
 import ResumesView from './profile/resumes/ResumesView'
 import ResumeFormView from './profile/resumes/ResumeFormView'
+import MyInvoicesView from './profile/invoices/MyInvoicesView'
+import CVView from './CVView'
 
 function App() {
   return (
     <Router>
-      <Routes>
+      <>
+        <div className="stars-layer-1" aria-hidden="true" />
+        <div className="stars-layer-2" aria-hidden="true" />
+        <div className="stars-layer-3" aria-hidden="true" />
+        <Routes>
         <Route path="/" element={<LandingView />} />
+        <Route path="/cv" element={<CVView />} />
         <Route path="/chat" element={<ChatView />} />
         <Route path="/logout" element={<LogoutView />} />
         <Route path="/profile/resumes" element={<ResumesView />} />
         <Route path="/profile/resumes/new" element={<ResumeFormView />} />
         <Route path="/profile/resumes/:id" element={<ResumeFormView />} />
         <Route path="/profile/resumes/:id/edit" element={<ResumeFormView />} />
+        <Route path="/profile/invoices" element={<MyInvoicesView />} />
         <Route path="/demo/browse-jobs" element={<BrowseJobsView />} />
         <Route path="/demo/ai-cv-review" element={<AICVReviewView />} />
         <Route path="/demo/resume-tool" element={<ResumeToolView />} />
+        <Route path="/demo/invoice-tool" element={<InvoiceToolView />} />
         <Route path="/demo/ecommerce/products" element={<ProductsView />} />
         <Route path="/demo/ecommerce/cart" element={<CartView />} />
         <Route path="/demo/ecommerce/checkout" element={<CheckoutView />} />
@@ -43,7 +53,8 @@ function App() {
         <Route path="/demo/ecommerce/admin/users" element={<AdminUsersView />} />
         <Route path="/demo/ecommerce/admin/invoices" element={<AdminInvoicesView />} />
         <Route path="/reset-password" element={<ResetPasswordView />} />
-      </Routes>
+        </Routes>
+      </>
     </Router>
   )
 }

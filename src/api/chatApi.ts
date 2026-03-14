@@ -11,7 +11,7 @@ interface AskRequest {
 interface AskResponse {
   // Add response fields based on your API response structure
   response?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -22,7 +22,7 @@ interface AskResponse {
  */
 export async function ask(lang: string, search: string): Promise<AskResponse> {
   const url = `${API_BASE_URL}api/cv/ask`;
-  
+
   const requestBody: AskRequest = {
     lang,
     search,

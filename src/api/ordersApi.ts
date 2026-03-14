@@ -37,8 +37,8 @@ export interface CreateOrderData {
   notes?: string;
 }
 
-export async function createOrder(data: CreateOrderData): Promise<unknown> {
-  const url = buildUrl('orders');
+export async function createOrder(data: CreateOrderData, lang?: string): Promise<unknown> {
+  const url = lang ? buildUrl(`orders?lang=${encodeURIComponent(lang)}`) : buildUrl('orders');
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -78,6 +78,8 @@ export interface UpdateOrderData {
   items?: Array<{
     product_id: number;
     quantity: number;
+    tax_code?: string | null;
+    tax_rate?: string | number | null;
   }>;
 }
 
@@ -87,6 +89,8 @@ export interface OrderItem {
   price?: string | number;
   unit_price?: string | number;
   sale_price?: string | number;
+  tax_code?: string | null;
+  tax_rate?: string | number | null;
   product_title?: string;
   featured_image?: string | null;
   subtotal?: string | number;

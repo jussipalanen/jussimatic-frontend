@@ -1,5 +1,256 @@
+/* ================================================ */
+/* SPACE BACKGROUND                                 */
+/* ================================================ */
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% -5%,  rgba(12, 25,  80, 0.45) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 85% 105%, rgba(35,  6,  60, 0.30) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 35% at 50%  50%, rgba( 3,  8,  30, 0.20) 0%, transparent 70%),
+    linear-gradient(to bottom, #000005 0%, #010008 45%, #030005 100%);
+  background-color: #000005;
+}
+
+/* Vignette darken — edges fade to deeper black */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.72) 100%);
+}
+
 #root {
-  background-color: #000;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+/* ---- Star layer 1: tiny & dense, very slow drift ---- */
+.stars-layer-1 {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1px 1px at  5%  8%,  rgba(255,255,255,0.90) 0%, transparent 100%),
+    radial-gradient(1px 1px at 12% 35%,  rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 18% 62%,  rgba(255,255,255,0.75) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 15%,  rgba(255,255,255,0.40) 0%, transparent 100%),
+    radial-gradient(1px 1px at 31% 88%,  rgba(255,255,255,0.65) 0%, transparent 100%),
+    radial-gradient(1px 1px at 38% 45%,  rgba(255,255,255,0.80) 0%, transparent 100%),
+    radial-gradient(1px 1px at 44%  2%,  rgba(255,255,255,0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 51% 72%,  rgba(255,255,255,0.70) 0%, transparent 100%),
+    radial-gradient(1px 1px at 57% 28%,  rgba(255,255,255,0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 64% 55%,  rgba(255,255,255,0.85) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 18%,  rgba(255,255,255,0.60) 0%, transparent 100%),
+    radial-gradient(1px 1px at 77% 82%,  rgba(255,255,255,0.75) 0%, transparent 100%),
+    radial-gradient(1px 1px at 83% 40%,  rgba(255,255,255,0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 89% 68%,  rgba(255,255,255,0.90) 0%, transparent 100%),
+    radial-gradient(1px 1px at 96% 25%,  rgba(255,255,255,0.65) 0%, transparent 100%),
+    radial-gradient(1px 1px at  8% 78%,  rgba(255,255,255,0.70) 0%, transparent 100%),
+    radial-gradient(1px 1px at 22% 52%,  rgba(255,255,255,0.40) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35%  7%,  rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 48% 95%,  rgba(255,255,255,0.75) 0%, transparent 100%),
+    radial-gradient(1px 1px at 61% 42%,  rgba(255,255,255,0.60) 0%, transparent 100%);
+  background-size: 200px 200px;
+  opacity: 0.48;
+  animation: starDrift1 140s linear infinite;
+}
+
+/* ---- Star layer 2: medium & scattered, mid-speed ---- */
+.stars-layer-2 {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 10% 20%,  rgba(255,255,255,1.00) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 25% 65%,  rgba(200,220,255,0.85) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 40% 10%,  rgba(255,255,255,0.90) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 55% 80%,  rgba(220,200,255,0.80) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 70% 35%,  rgba(255,255,255,0.95) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 82% 55%,  rgba(200,230,255,0.75) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 92%  8%,  rgba(255,255,255,0.85) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 48% 48%,  rgba(255,230,200,0.70) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 15% 90%,  rgba(255,255,255,0.80) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 62% 22%,  rgba(210,220,255,0.90) 0%, transparent 100%);
+  background-size: 380px 380px;
+  opacity: 0.52;
+  animation: starDrift2 90s linear infinite;
+}
+
+/* ---- Star layer 3: bright accent stars, gentle twinkle ---- */
+.stars-layer-3 {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(2px   2px   at 15% 25%,  rgba(255,255,255,1.00) 0%, transparent 100%),
+    radial-gradient(2px   2px   at 45% 60%,  rgba(210,225,255,1.00) 0%, transparent 100%),
+    radial-gradient(2px   2px   at 72% 18%,  rgba(255,255,255,1.00) 0%, transparent 100%),
+    radial-gradient(2.5px 2.5px at 88% 75%,  rgba(255,240,210,0.95) 0%, transparent 100%),
+    radial-gradient(2px   2px   at 30% 82%,  rgba(255,255,255,0.90) 0%, transparent 100%),
+    radial-gradient(2px   2px   at 60% 40%,  rgba(220,210,255,1.00) 0%, transparent 100%);
+  background-size: 650px 650px;
+  opacity: 0.65;
+  animation:
+    starDrift3   65s linear       infinite,
+    starTwinkle   5s ease-in-out  infinite alternate;
+}
+
+@keyframes starDrift1 {
+  from { background-position: 0 0; }
+  to   { background-position: 200px 200px; }
+}
+
+@keyframes starDrift2 {
+  from { background-position: 0 0; }
+  to   { background-position: -380px 380px; }
+}
+
+@keyframes starDrift3 {
+  from { background-position: 0 0; }
+  to   { background-position: 650px -650px; }
+}
+
+@keyframes starTwinkle {
+  0%   { opacity: 0.50; filter: brightness(0.80); }
+  50%  { opacity: 1.00; filter: brightness(1.25); }
+  100% { opacity: 0.55; filter: brightness(0.80); }
+}
+
+/* ================================================ */
+/* SHOOTING STARS & STARLIGHT FLARES                */
+/* ================================================ */
+
+.shooting-stars-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* ---- Shooting Star base ---- */
+.shooting-star {
+  position: absolute;
+  height: 2px;
+  border-radius: 999px;
+  opacity: 0;
+  /* Long comet tail: very faint root → rich blue-white body → bright bright head */
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(150, 195, 255, 0.06) 12%,
+    rgba(175, 215, 255, 0.22) 35%,
+    rgba(210, 235, 255, 0.60) 60%,
+    rgba(245, 252, 255, 0.88) 82%,
+    rgba(255, 255, 255, 0.96) 93%,
+    rgba(255, 255, 255, 0.55) 100%
+  );
+  /* Soft atmospheric glow on the whole tail */
+  filter: drop-shadow(0 0 3px rgba(180, 220, 255, 0.55));
+}
+
+/* Glowing leading tip */
+.shooting-star::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  translate: 0 -50%;
+  width: 5px;
+  height: 5px;
+  background: radial-gradient(circle, #fff 0%, rgba(210, 240, 255, 0.85) 55%, transparent 100%);
+  border-radius: 50%;
+  box-shadow:
+    0 0  4px  2px rgba(255, 255, 255, 1.0),
+    0 0 12px  5px rgba(210, 238, 255, 0.95),
+    0 0 28px 11px rgba(175, 220, 255, 0.55),
+    0 0 55px 20px rgba(155, 210, 255, 0.22);
+}
+
+/* left edge, near top         */ .shooting-star--1 { top:  4%; left:  0;   width: 310px; animation: shootAcross 78s linear  5s infinite; }
+/* top edge, left quarter      */ .shooting-star--2 { top:  0;  left:  8%;  width: 255px; animation: shootAcross 65s linear 23s infinite; }
+/* left edge, slightly lower   */ .shooting-star--3 { top: 17%; left:  0;   width: 390px; animation: shootAcross 94s linear 47s infinite; }
+/* top edge, further right     */ .shooting-star--4 { top:  0;  left: 22%;  width: 275px; animation: shootAcross 72s linear 14s infinite; }
+/* left edge, mid-top          */ .shooting-star--5 { top:  9%; left:  0;   width: 230px; animation: shootAcross 85s linear 61s infinite; }
+
+@keyframes shootAcross {
+  /* Parked off-screen, fully invisible */
+  0%    { transform: rotate(28deg) translateX(-700px); opacity: 0; }
+  2%    { transform: rotate(28deg) translateX(-700px); opacity: 0; }
+
+  /* Still off-screen left — about to cross the edge */
+  3%    { transform: rotate(28deg) translateX(-280px); opacity: 0;
+          animation-timing-function: linear; }
+
+  /* ----  FADE IN: crosses left edge, materialises smoothly  ---- */
+  5.2%  { transform: rotate(28deg) translateX(60px);                opacity: 1; }
+
+  /* ----  CRUISE: full brightness sweep across the sky  ---- */
+  9.5%  { transform: rotate(28deg) translateX(calc(100vw - 80px));  opacity: 1; }
+
+  /* ----  FADE OUT: dissolves as it exits right edge  ---- */
+  11.5% { transform: rotate(28deg) translateX(calc(100vw + 340px)); opacity: 0; }
+
+  /* Reset back to start, stay invisible for the rest of the cycle */
+  12%   { transform: rotate(28deg) translateX(-700px); opacity: 0; }
+  100%  { transform: rotate(28deg) translateX(-700px); opacity: 0; }
+}
+
+/* ---- Starlight Flare (occasional large glowing star burst) ---- */
+.starlight-flare {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.starlight-flare--1 { top: 22%; left: 28%; animation: starlightFlare 90s ease-in-out  8s infinite; }
+.starlight-flare--2 { top: 58%; left: 72%; animation: starlightFlare 72s ease-in-out 38s infinite; }
+.starlight-flare--3 { top: 14%; left: 62%; animation: starlightFlare 85s ease-in-out 55s infinite; }
+
+@keyframes starlightFlare {
+  0%   { opacity: 0; transform: scale(1);   box-shadow: none; }
+  1.5% { opacity: 0; }
+  2%   {
+    opacity: 1;
+    transform: scale(1.8);
+    box-shadow:
+       0    0   8px  3px rgba(255, 255, 255, 1.0),
+       0    0  26px 11px rgba(220, 240, 255, 0.7),
+       0    0  80px 35px rgba(180, 215, 255, 0.28),
+      -65px 0  12px  0   rgba(255, 255, 255, 0.10),
+       65px 0  12px  0   rgba(255, 255, 255, 0.10),
+       0  -65px 12px  0  rgba(255, 255, 255, 0.08),
+       0   65px 12px  0  rgba(255, 255, 255, 0.08);
+  }
+  5%   {
+    opacity: 0.75;
+    transform: scale(1.2);
+    box-shadow:
+       0    0  14px  6px rgba(255, 255, 255, 0.75),
+       0    0  45px 18px rgba(210, 235, 255, 0.45),
+       0    0 120px 55px rgba(170, 210, 255, 0.18),
+      -85px 0  14px  0   rgba(255, 255, 255, 0.07),
+       85px 0  14px  0   rgba(255, 255, 255, 0.07),
+       0  -85px 14px  0  rgba(255, 255, 255, 0.06),
+       0   85px 14px  0  rgba(255, 255, 255, 0.06);
+  }
+  9%   { opacity: 0; transform: scale(0.8); box-shadow: none; }
+  100% { opacity: 0; transform: scale(0.8); box-shadow: none; }
 }
 
 .typing-indicator {
@@ -97,4 +348,179 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ================================================ */
+/* SPINNING COIN                                     */
+/* ================================================ */
+
+.coin-orbit {
+  position: relative;
+  display: inline-block;
+  width: 140px;
+  height: 140px;
+  perspective: 600px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  animation: coinApproach 2.0s cubic-bezier(0.22, 0.68, 0, 1.08) both;
+  filter:
+    drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 22px rgba(251, 191, 36, 0.45));
+  transition: filter 0.25s ease;
+}
+
+.coin-orbit:hover {
+  filter:
+    drop-shadow(0 8px 24px rgba(0, 0, 0, 0.65))
+    drop-shadow(0 0 48px rgba(251, 191, 36, 0.95));
+}
+
+/* Ground shadow cast below the coin */
+.coin-orbit::after {
+  content: '';
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 14px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.45) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.coin-wrapper {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: coinFlip 3.8s linear infinite;
+  animation-delay: 2.0s;
+}
+
+.coin-face {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 45deg,
+    #78350f 0%,
+    #d97706 12%,
+    #fef3c7 22%,
+    #fbbf24 32%,
+    #b45309 44%,
+    #fbbf24 55%,
+    #fef3c7 65%,
+    #d97706 75%,
+    #92400e 86%,
+    #d97706 93%,
+    #78350f 100%
+  );
+  border: 3px solid rgba(251, 191, 36, 0.55);
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.38),
+    inset 0 3px 8px rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+
+.coin-back {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 4px solid rgba(251, 191, 36, 0.80);
+  box-shadow:
+    0 0 0 2px rgba(120, 53, 15, 0.55),
+    inset 0 0 0 3px rgba(251, 191, 36, 0.25),
+    inset 0 0 30px rgba(0, 0, 0, 0.38),
+    inset 0 3px 8px rgba(255, 255, 255, 0.22);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+  transform: rotateY(180deg);
+}
+
+.coin-back-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  filter: sepia(100%) hue-rotate(5deg) saturate(2.2) brightness(0.85) contrast(1.1);
+}
+
+.coin-back-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 45deg,
+    rgba(120, 53, 15, 0.52) 0%,
+    rgba(217, 119, 6, 0.38) 20%,
+    rgba(254, 243, 199, 0.22) 35%,
+    rgba(251, 191, 36, 0.35) 50%,
+    rgba(180, 83, 9, 0.42) 65%,
+    rgba(251, 191, 36, 0.30) 80%,
+    rgba(120, 53, 15, 0.52) 100%
+  );
+  mix-blend-mode: multiply;
+}
+
+/* Decorative rings on coin back, matching front face */
+.coin-back-rings {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 10px rgba(251, 191, 36, 0.13),
+    inset 0 0 0 22px rgba(255, 255, 255, 0.06),
+    inset 0 0 0 36px rgba(251, 191, 36, 0.07);
+}
+
+.coin-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: linear-gradient(
+    120deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.0) 35%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0.0) 65%,
+    transparent 80%
+  );
+  background-size: 300% 300%;
+  background-position: -100% 0;
+  animation: coinShine 4.5s ease-in-out infinite;
+  animation-delay: 3.5s;
+}
+
+@keyframes coinShine {
+  0%   { background-position: -150% 0; opacity: 0; }
+  10%  { opacity: 1; }
+  40%  { background-position: 150% 0;  opacity: 1; }
+  50%  { opacity: 0; }
+  100% { background-position: 150% 0;  opacity: 0; }
+}
+
+@keyframes coinApproach {
+  0%   { transform: scale(0.02); opacity: 0;   filter: blur(8px); }
+  18%  { opacity: 0.6;                         filter: blur(4px); }
+  70%  { transform: scale(1.08);               filter: blur(0px); }
+  100% { transform: scale(1);   opacity: 1;   filter: blur(0px); }
+}
+
+@keyframes coinFlip {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
 }

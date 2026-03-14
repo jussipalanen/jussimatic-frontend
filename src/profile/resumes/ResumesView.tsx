@@ -27,6 +27,10 @@ function ResumesView() {
   const [openExportMenuId, setOpenExportMenuId] = useState<number | null>(null);
   const [copyingId, setCopyingId] = useState<number | null>(null);
   const [settingPrimaryId, setSettingPrimaryId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [perPage, setPerPage] = useState(10);
 
   useEffect(() => {
     const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
@@ -40,15 +44,19 @@ function ResumesView() {
       navigate('/', { replace: true });
       return;
     }
-    loadResumes();
+    loadResumes(1);
   }, [navigate]);
 
-  const loadResumes = async () => {
+  const loadResumes = async (page = 1) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getResumes();
-      setResumes(data);
+      const response = await getResumes(page);
+      setResumes(response.data);
+      setCurrentPage(response.current_page);
+      setLastPage(response.last_page);
+      setTotal(response.total);
+      setPerPage(response.per_page);
     } catch (err) {
       console.error('Failed to load resumes:', err);
       setError(t.errLoadResumes);
@@ -61,8 +69,11 @@ function ResumesView() {
     setCopyingId(id);
     setError(null);
     try {
-      const created = await copyResume(id);
-      setResumes((prev) => [...prev, created]);
+      await copyResume(id);
+      // Reload the last page after copy so pagination is accurate
+      const newTotal = total + 1;
+      const newLastPage = Math.ceil(newTotal / perPage);
+      await loadResumes(newLastPage);
     } catch (err) {
       console.error('Failed to copy resume:', err);
       setError(t.errCopyResume);
@@ -105,6 +116,7 @@ function ResumesView() {
     try {
       await deleteResume(id);
       setResumes((prev) => prev.filter((r) => r.id !== id));
+      setTotal((prev) => Math.max(0, prev - 1));
     } catch (err) {
       console.error('Failed to delete resume:', err);
       setError(t.errDeleteResume);
@@ -127,12 +139,12 @@ function ResumesView() {
           </div>
           <button
             onClick={() => navigate('/profile/resumes/new')}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            {t.newResume}
+            <span className="hidden sm:inline">{t.newResume}</span>
           </button>
         </div>
 
@@ -175,7 +187,7 @@ function ResumesView() {
             {resumes.map((resume) => (
               <li
                 key={resume.id}
-                className="bg-gray-800 border border-gray-700 rounded-xl px-5 py-4 flex items-start sm:items-center justify-between gap-4"
+                className="bg-gray-800 border border-gray-700 rounded-xl px-5 py-4 flex flex-col gap-3"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -199,7 +211,7 @@ function ResumesView() {
                 </div>
 
                 {confirmDeleteId === resume.id ? (
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm text-white/60">{t.deleteConfirm}</span>
                     <button
                       onClick={() => handleDelete(resume.id)}
@@ -216,7 +228,7 @@ function ResumesView() {
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {openExportMenuId !== null && (
                       <div className="fixed inset-0 z-10" onClick={() => setOpenExportMenuId(null)} />
                     )}
@@ -237,7 +249,7 @@ function ResumesView() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         )}
-                        {exportingId === resume.id ? t.exporting : t.export}
+                        <span className="hidden sm:inline">{exportingId === resume.id ? t.exporting : t.export}</span>
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -281,7 +293,7 @@ function ResumesView() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                       )}
-                      {copyingId === resume.id ? t.copying : t.copy}
+                      <span className="hidden sm:inline">{copyingId === resume.id ? t.copying : t.copy}</span>
                     </button>
                     {!resume.is_primary && (
                       <button
@@ -298,7 +310,7 @@ function ResumesView() {
                         ) : (
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
                         )}
-                        {t.setPrimary}
+                        <span className="hidden sm:inline">{t.setPrimary}</span>
                       </button>
                     )}
                     <button
@@ -308,7 +320,7 @@ function ResumesView() {
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                      {t.edit}
+                      <span className="hidden sm:inline">{t.edit}</span>
                     </button>
                     <button
                       onClick={() => setConfirmDeleteId(resume.id)}
@@ -317,13 +329,62 @@ function ResumesView() {
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
-                      {t.delete}
+                      <span className="hidden sm:inline">{t.delete}</span>
                     </button>
                   </div>
                 )}
               </li>
             ))}
           </ul>
+        )}
+
+        {/* Pagination */}
+        {!loading && lastPage > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <button
+              onClick={() => loadResumes(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1.5 text-sm text-white/70 hover:text-white bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-2 rounded-lg transition-colors border border-gray-700"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="hidden sm:inline">{t.pagePrev}</span>
+            </button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: lastPage }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => loadResumes(page)}
+                  className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                    page === currentPage
+                      ? 'bg-blue-600 text-white'
+                      : 'text-white/60 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => loadResumes(currentPage + 1)}
+              disabled={currentPage === lastPage}
+              className="flex items-center gap-1.5 text-sm text-white/70 hover:text-white bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-2 rounded-lg transition-colors border border-gray-700"
+            >
+              <span className="hidden sm:inline">{t.pageNext}</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {!loading && total > 0 && (
+          <p className="text-center text-xs text-white/30 mt-3">
+            {currentPage} / {lastPage} &middot; {total} {total === 1 ? 'resume' : 'resumes'}
+          </p>
         )}
       </main>
     </div>

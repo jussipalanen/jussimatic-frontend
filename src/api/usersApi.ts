@@ -25,6 +25,8 @@ export interface UserSummary {
   user_role?: string;
   type?: string;
   roles?: string[];
+  is_admin?: boolean;
+  user?: UserSummary;
   [key: string]: unknown;
 }
 
@@ -72,13 +74,15 @@ export async function fetchAllUsers(): Promise<UserSummary[]> {
   return [];
 }
 
-export async function deleteUser(userId: number): Promise<void> {
+export async function deleteUser(userId: number, lang?: string): Promise<void> {
   const token = localStorage.getItem('auth_token');
   if (!token) {
     throw new Error('No authentication token found');
   }
 
-  const url = buildUrl(`users/${userId}`);
+  const url = lang
+    ? buildUrl(`users/${userId}?lang=${encodeURIComponent(lang)}`)
+    : buildUrl(`users/${userId}`);
   const response = await fetch(url, {
     method: 'DELETE',
     headers: {

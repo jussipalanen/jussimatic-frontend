@@ -9,6 +9,8 @@ export interface CartItem {
   quantity: number;
   featuredImage: string | null;
   maxQuantity: number;
+  taxCode?: string | null;
+  taxRate?: number | null;
 }
 
 /**
@@ -58,6 +60,10 @@ export function addToCart(product: Product): boolean {
     cart[existingItemIndex].quantity += 1;
   } else {
     // New product - add to cart
+    const rawRate = product.tax_rate;
+    const taxRate = rawRate != null
+      ? (typeof rawRate === 'string' ? parseFloat(rawRate) : rawRate)
+      : null;
     cart.push({
       productId: product.id,
       title: product.title,
@@ -65,6 +71,8 @@ export function addToCart(product: Product): boolean {
       quantity: 1,
       featuredImage: product.featured_image,
       maxQuantity: product.quantity,
+      taxCode: product.tax_code ?? null,
+      taxRate: taxRate != null && !isNaN(taxRate) ? taxRate : null,
     });
   }
 
@@ -115,6 +123,33 @@ export function clearCart(): void {
   } catch (error) {
     console.error('Failed to clear cart:', error);
   }
+}
+
+export interface TaxLineGroup {
+  code: string | null;
+  rate: number; // stored as decimal e.g. 0.24 for 24%
+  amount: number;
+}
+
+export function calcCartTaxBreakdown(items: CartItem[]): TaxLineGroup[] {
+  const groups: TaxLineGroup[] = [];
+  for (const item of items) {
+    const rate = item.taxRate ?? 0;
+    if (rate === 0) continue;
+    const amount = (parseFloat(item.price) || 0) * item.quantity * rate;
+    const code = item.taxCode ?? null;
+    const existing = groups.find(g => g.code === code && g.rate === rate);
+    if (existing) existing.amount += amount;
+    else groups.push({ code, rate, amount });
+  }
+  return groups;
+}
+
+export function calcCartTotals(items: CartItem[]): { subtotal: number; taxTotal: number; grandTotal: number } {
+  const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.price) || 0) * item.quantity, 0);
+  const breakdown = calcCartTaxBreakdown(items);
+  const taxTotal = breakdown.reduce((sum, g) => sum + g.amount, 0);
+  return { subtotal, taxTotal, grandTotal: subtotal + taxTotal };
 }
 
 /**

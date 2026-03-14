@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { getCart, removeFromCart, updateCartItemQuantity, clearCart } from '../../../utils/cartUtils';
+import { getCart, removeFromCart, updateCartItemQuantity, clearCart, calcCartTaxBreakdown, calcCartTotals } from '../../../utils/cartUtils';
 import type { CartItem } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
+import { getStoredLanguage, translations, type Language } from '../../../i18n';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -10,15 +11,37 @@ const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
 function CartView() {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<CartItem[]>(getCart());
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
 
   useEffect(() => {
     // Refresh cart items when component mounts
     setCartItems(getCart());
   }, []);
 
-  const formatPrice = (price: string | null) => {
-    if (!price) return 'N/A';
-    return `€${parseFloat(price).toFixed(2)}`;
+  useEffect(() => {
+    const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
+
+  const t = translations[language].cart;
+
+  const formatPrice = (price: string | number | null | undefined) => {
+    if (price == null || price === '') return 'N/A';
+    const n = typeof price === 'string' ? parseFloat(price) : price;
+    if (isNaN(n)) return 'N/A';
+    return `€${n.toFixed(2)}`;
+  };
+
+  const formatTaxPct = (rate: number) => {
+    const pct = parseFloat((rate * 100).toPrecision(10));
+    return `${pct.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
+  };
+
+  const calcGross = (net: string | number, taxRate: number): number => {
+    const n = typeof net === 'string' ? parseFloat(net) : net;
+    const r = taxRate > 1 ? taxRate / 100 : taxRate;
+    return n * (1 + r);
   };
 
   const buildStorageUrl = (path: string | null | undefined) => {
@@ -40,28 +63,23 @@ function CartView() {
   };
 
   const handleClearCart = () => {
-    if (window.confirm('Are you sure you want to clear your cart?')) {
+    if (window.confirm(t.clearConfirm)) {
       clearCart();
       setCartItems([]);
     }
   };
 
-  const calculateTotal = () => {
-    return cartItems.reduce((total, item) => {
-      const price = parseFloat(item.price);
-      return total + price * item.quantity;
-    }, 0);
-  };
-
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const taxBreakdown = calcCartTaxBreakdown(cartItems);
+  const totals = calcCartTotals(cartItems);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
       <EcommerceHeader
-        title="Shopping Cart"
+        title={t.title}
         backTo="/demo/ecommerce/products"
-        backLabel="Products"
+        backLabel={t.back}
         cartCount={cartCount}
         activeNav="cart"
         actions={
@@ -70,7 +88,7 @@ function CartView() {
               onClick={handleClearCart}
               className="rounded-lg border border-red-500/60 px-3 py-2 text-sm font-semibold text-red-300 hover:bg-red-600/20 transition-colors"
             >
-              Clear Cart
+              {t.clearCart}
             </button>
           ) : null
         }
@@ -94,12 +112,12 @@ function CartView() {
                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
               />
             </svg>
-            <p className="text-xl text-gray-400 mb-6">No products added</p>
+            <p className="text-xl text-gray-400 mb-6">{t.empty}</p>
             <button
               onClick={() => navigate('/demo/ecommerce/products')}
               className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
             >
-              Browse Products
+              {t.browseProducts}
             </button>
           </div>
         ) : (
@@ -110,19 +128,19 @@ function CartView() {
                 <thead className="bg-gray-750 border-b border-gray-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Product
+                      {t.colProduct}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Price
+                      {t.colPrice}
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Quantity
+                      {t.colQuantity}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Subtotal
+                      {t.colSubtotal}
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Remove
+                      {t.colRemove}
                     </th>
                   </tr>
                 </thead>
@@ -142,8 +160,17 @@ function CartView() {
                           <div className="font-medium text-white">{item.title}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right text-gray-300">
-                        {formatPrice(item.price)}
+                      <td className="px-6 py-4 text-right">
+                        {item.taxRate ? (
+                          <>
+                            <div className="font-semibold text-green-400">{formatPrice(calcGross(item.price, item.taxRate))}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              {t.exclVat} {formatTaxPct(item.taxRate)}{item.taxCode && item.taxCode !== 'ZERO' ? ` · ${item.taxCode}` : ''}: {formatPrice(item.price)}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-gray-300">{formatPrice(item.price)}</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
@@ -174,11 +201,14 @@ function CartView() {
                           </button>
                         </div>
                         <div className="mt-1 text-center text-xs text-gray-500">
-                          Max: {item.maxQuantity}
+                          {t.maxQty} {item.maxQuantity}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right font-semibold text-green-400">
-                        {formatPrice((parseFloat(item.price) * item.quantity).toFixed(2))}
+                        {item.taxRate
+                          ? formatPrice(calcGross(item.price, item.taxRate) * item.quantity)
+                          : formatPrice(parseFloat(item.price) * item.quantity)
+                        }
                       </td>
                       <td className="px-6 py-4 text-center">
                         <button
@@ -227,10 +257,21 @@ function CartView() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-white truncate">{item.title}</h3>
                       <p className="text-sm text-gray-400 mt-1">
-                        {formatPrice(item.price)} each
+                        {item.taxRate ? (
+                          <>
+                            <span className="text-green-400 font-semibold">{formatPrice(calcGross(item.price, item.taxRate))}</span>
+                            <span className="ml-1 text-xs text-gray-500">
+                              {t.exclVat} {formatTaxPct(item.taxRate)}{item.taxCode && item.taxCode !== 'ZERO' ? ` · ${item.taxCode}` : ''}: {formatPrice(item.price)}
+                            </span>
+                          </>
+                        ) : formatPrice(item.price)} {t.each}
                       </p>
+                      {item.taxCode && item.taxRate ? null : null}
                       <p className="text-sm font-semibold text-green-400 mt-1">
-                        Subtotal: {formatPrice((parseFloat(item.price) * item.quantity).toFixed(2))}
+                        {t.itemSubtotal} {item.taxRate
+                          ? formatPrice(calcGross(item.price, item.taxRate) * item.quantity)
+                          : formatPrice(parseFloat(item.price) * item.quantity)
+                        }
                       </p>
                     </div>
                   </div>
@@ -262,7 +303,7 @@ function CartView() {
                         +
                       </button>
                       <span className="text-xs text-gray-500 ml-2">
-                        Max: {item.maxQuantity}
+                        {t.maxQty} {item.maxQuantity}
                       </span>
                     </div>
                     <button
@@ -283,7 +324,7 @@ function CartView() {
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                         />
                       </svg>
-                      Remove
+                      {t.remove}
                     </button>
                   </div>
                 </div>
@@ -291,18 +332,30 @@ function CartView() {
             </div>
 
             {/* Total */}
-            <div className="mt-6 bg-gray-800 rounded-lg border border-gray-700 p-6">
-              <div className="flex items-center justify-between text-lg">
-                <span className="font-semibold text-white">Total:</span>
+            <div className="mt-6 bg-gray-800 rounded-lg border border-gray-700 p-6 space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-400">{t.subtotalExclVat}</span>
+                <span className="font-medium text-white">{formatPrice(totals.subtotal.toFixed(2))}</span>
+              </div>
+              {taxBreakdown.map((g) => (
+                <div key={`${g.code}-${g.rate}`} className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400">
+                    VAT{g.code && g.code !== 'ZERO' ? ` (${g.code})` : ''} {formatTaxPct(g.rate)}
+                  </span>
+                  <span className="text-gray-300">{formatPrice(g.amount.toFixed(2))}</span>
+                </div>
+              ))}
+              <div className="flex items-center justify-between text-lg border-t border-gray-700 pt-3">
+                <span className="font-semibold text-white">{t.totalInclVat}</span>
                 <span className="text-2xl font-bold text-green-400">
-                  {formatPrice(calculateTotal().toFixed(2))}
+                  {formatPrice(totals.grandTotal.toFixed(2))}
                 </span>
               </div>
               <button
                 onClick={() => navigate('/demo/ecommerce/checkout')}
-                className="mt-4 w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
+                className="mt-1 w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
               >
-                Proceed to Checkout
+                {t.proceedToCheckout}
               </button>
             </div>
           </div>

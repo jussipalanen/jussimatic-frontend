@@ -45,7 +45,7 @@ export interface ResumeSkill {
   id?: number;
   category: string;
   name: string;
-  proficiency: 'beginner' | 'intermediate' | 'expert';
+  proficiency: string;
   sort_order?: number;
 }
 
@@ -70,7 +70,7 @@ export interface Certification {
 export interface ResumeLanguage {
   id?: number;
   language: string;
-  proficiency: 'native' | 'fluent' | 'conversational' | 'basic';
+  proficiency: string;
   sort_order?: number;
 }
 
@@ -89,6 +89,7 @@ export interface Recommendation {
   title?: string;
   company?: string;
   email?: string;
+  phone?: string;
   recommendation: string;
   sort_order?: number;
 }
@@ -117,6 +118,8 @@ export interface Resume {
   languages?: ResumeLanguage[];
   awards?: Award[];
   recommendations?: Recommendation[];
+  is_public?: boolean;
+  code?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -124,7 +127,7 @@ export interface Resume {
 export type ResumePayload = Omit<Resume, 'id' | 'created_at' | 'updated_at' | 'photo'> & { photo?: string | null };
 
 export interface ExportOption { value: string; label: string; }
-export interface ExportOptions { themes: ExportOption[]; templates: ExportOption[]; languages: ExportOption[]; }
+export interface ExportOptions { themes: ExportOption[]; templates: ExportOption[]; languages: ExportOption[]; skill_categories: ExportOption[]; skill_proficiencies: ExportOption[]; language_proficiencies: ExportOption[]; spoken_languages: ExportOption[]; }
 
 export async function getExportOptions(lang?: string): Promise<ExportOptions> {
   const base = buildUrl('resumes/export/options');
@@ -138,8 +141,18 @@ export async function getExportOptions(lang?: string): Promise<ExportOptions> {
   return data as ExportOptions;
 }
 
-export async function getResumes(): Promise<Resume[]> {
-  const response = await fetch(buildUrl('resumes'), {
+export interface ResumePaginatedResponse {
+  data: Resume[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  next_page_url: string | null;
+  prev_page_url: string | null;
+}
+
+export async function getResumes(page = 1): Promise<ResumePaginatedResponse> {
+  const response = await fetch(buildUrl(`resumes?page=${page}`), {
     method: 'GET',
     headers: getAuthHeaders(false),
   });
@@ -147,7 +160,10 @@ export async function getResumes(): Promise<Resume[]> {
   if (!response.ok) {
     throw new Error(`Failed to fetch resumes: ${response.status}`);
   }
-  return (Array.isArray(data) ? data : (data?.data ?? [])) as Resume[];
+  if (Array.isArray(data)) {
+    return { data, current_page: 1, last_page: 1, per_page: data.length, total: data.length, next_page_url: null, prev_page_url: null };
+  }
+  return data as ResumePaginatedResponse;
 }
 
 export async function getResume(id: number): Promise<Resume> {
