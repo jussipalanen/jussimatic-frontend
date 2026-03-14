@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { deleteUser, updateUser } from '../../../api/usersApi';
+import { getStoredLanguage } from '../../../i18n';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -120,7 +121,7 @@ function UserEditModal({
     if (!passwordForm.current_password.trim()) {
       errors.current_password = 'Current password is required.';
     }
-    
+
     if (!passwordForm.password.trim()) {
       errors.password = 'New password is required.';
     } else {
@@ -130,13 +131,13 @@ function UserEditModal({
         errors.password = strengthError;
       }
     }
-    
+
     if (!passwordForm.password_confirmation.trim()) {
       errors.password_confirmation = 'Please re-enter the new password.';
     } else if (passwordForm.password && passwordForm.password !== passwordForm.password_confirmation) {
       errors.password_confirmation = 'Passwords do not match.';
     }
-    
+
     if (
       passwordForm.current_password.trim() &&
       passwordForm.password.trim() &&
@@ -257,7 +258,7 @@ function UserEditModal({
     setDeletingAccount(true);
 
     try {
-      await deleteUser(userId);
+      await deleteUser(userId, getStoredLanguage());
       localStorage.removeItem('auth_token');
       window.location.href = '/';
     } catch (err) {

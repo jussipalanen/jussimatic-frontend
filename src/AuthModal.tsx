@@ -319,7 +319,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
         last_name: registerForm.lastname.trim(),
         password: registerForm.password,
         password_confirmation: registerForm.repassword,
-      });
+      }, language);
       if (data && typeof data === 'object' && 'token' in data) {
         localStorage.setItem('auth_token', (data as { token: string }).token);
         setRegisterSuccess(true);

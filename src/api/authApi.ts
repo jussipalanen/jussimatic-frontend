@@ -61,8 +61,9 @@ export async function loginWithGoogle(idToken: string) {
   return postJson<unknown>('auth/google', { id_token: idToken });
 }
 
-export async function registerUser(payload: RegisterPayload) {
-  return postJson<unknown>('register', payload);
+export async function registerUser(payload: RegisterPayload, lang?: string) {
+  const path = lang ? `register?lang=${encodeURIComponent(lang)}` : 'register';
+  return postJson<unknown>(path, payload);
 }
 
 export async function logoutUser(token: string) {

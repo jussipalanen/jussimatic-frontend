@@ -128,6 +128,127 @@ function formatPrice(value: string | number | null | undefined) {
   return `€${num.toFixed(2)}`;
 }
 
+function escapeHtml(str: string | null | undefined): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildInvoiceHTML(invoice: Invoice): string {
+  const addr = invoice.billing_address;
+  const addrHtml = addr
+    ? `${escapeHtml(addr.street)}<br>${escapeHtml(addr.postal_code)} ${escapeHtml(addr.city)}<br>${escapeHtml(addr.country)}`
+    : '—';
+
+  const itemsHtml = (invoice.items ?? []).map((item) => `
+    <tr>
+      <td>${escapeHtml(item.description)} <span style="color:#888;font-size:0.8em">(${escapeHtml(item.type)})</span></td>
+      <td class="right">${item.quantity}</td>
+      <td class="right">${formatPrice(item.unit_price)}</td>
+      <td class="right"><strong>${formatPrice(item.total)}</strong></td>
+    </tr>`).join('');
+
+  const issuedDate = invoice.issued_at ? new Date(invoice.issued_at).toLocaleDateString() : '—';
+  const paidDate = invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString() : null;
+  const statusClass = `status-${escapeHtml(invoice.status)}`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice ${escapeHtml(invoice.invoice_number)}</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; padding: 0; background: #fff; }
+    .page { max-width: 700px; margin: 40px auto; padding: 40px; }
+    h1 { font-size: 2rem; margin: 0 0 4px; }
+    .subtitle { color: #555; font-size: 0.9rem; margin: 0; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; border-bottom: 2px solid #111; padding-bottom: 20px; }
+    .invoice-meta { text-align: right; }
+    .invoice-meta p { margin: 3px 0; font-size: 0.9rem; }
+    .status { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+    .status-draft { background: #e5e7eb; color: #374151; }
+    .status-issued { background: #dbeafe; color: #1e40af; }
+    .status-paid { background: #d1fae5; color: #065f46; }
+    .status-cancelled { background: #fee2e2; color: #991b1b; }
+    .section { margin-bottom: 28px; }
+    .section h2 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #555; margin: 0 0 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+    .label { color: #555; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead tr { background: #f3f4f6; }
+    th { padding: 8px 10px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #555; }
+    td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+    .right { text-align: right; }
+    .totals { text-align: right; font-size: 0.9rem; margin-top: 12px; }
+    .totals p { margin: 4px 0; }
+    .total-row { font-size: 1.05rem; font-weight: bold; border-top: 2px solid #111; padding-top: 8px; margin-top: 4px; }
+    .notes { color: #555; font-size: 0.85rem; white-space: pre-wrap; margin: 0; }
+    @media print {
+      body { margin: 0; }
+      .page { margin: 0; padding: 24px; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <h1>INVOICE</h1>
+        <p class="subtitle">${escapeHtml(invoice.invoice_number)}</p>
+      </div>
+      <div class="invoice-meta">
+        <p><span class="${statusClass}">${escapeHtml(invoice.status)}</span></p>
+        <p><span class="label">Issued:</span> ${escapeHtml(issuedDate)}</p>
+        ${paidDate ? `<p><span class="label">Paid:</span> ${escapeHtml(paidDate)}</p>` : ''}
+        ${invoice.order_id ? `<p><span class="label">Order:</span> #${invoice.order_id}</p>` : ''}
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Bill To</h2>
+      <p style="margin:0;font-size:0.9rem">
+        <strong>${escapeHtml(invoice.customer_first_name)} ${escapeHtml(invoice.customer_last_name)}</strong><br>
+        ${invoice.customer_email ? `${escapeHtml(invoice.customer_email)}<br>` : ''}
+        ${invoice.customer_phone ? escapeHtml(invoice.customer_phone) : ''}
+      </p>
+      ${addr ? `<p style="margin:6px 0 0;font-size:0.9rem;color:#444">${addrHtml}</p>` : ''}
+    </div>
+
+    ${(invoice.items ?? []).length > 0 ? `
+    <div class="section">
+      <h2>Line Items</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th class="right">Qty</th>
+            <th class="right">Unit Price</th>
+            <th class="right">Total</th>
+          </tr>
+        </thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
+    </div>` : ''}
+
+    <div class="totals">
+      <p><span class="label">Subtotal:</span> ${formatPrice(invoice.subtotal)}</p>
+      <p class="total-row"><span class="label">Total:</span> ${formatPrice(invoice.total)}</p>
+    </div>
+
+    ${invoice.notes ? `
+    <div class="section" style="margin-top:28px">
+      <h2>Notes</h2>
+      <p class="notes">${escapeHtml(invoice.notes)}</p>
+    </div>` : ''}
+  </div>
+</body>
+</html>`;
+}
+
 function StatusBadge({ status, label, color }: { status: string; label?: string; color?: string }) {
   const colorMap: Record<string, string> = {
     gray:  'bg-gray-600 text-gray-200',
@@ -308,6 +429,7 @@ function AdminInvoicesView() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
   // Order view state
   const [orderData, setOrderData] = useState<Order | null>(null);
@@ -694,7 +816,7 @@ function AdminInvoicesView() {
       })),
     };
     try {
-      const created = await createInvoice(payload, token);
+      const created = await createInvoice(payload, token, language);
       setInvoices((prev) => [created, ...prev]);
       setCreateOpen(false);
     } catch (err) {
@@ -708,6 +830,33 @@ function AdminInvoicesView() {
   const closeCreateModal = () => {
     if (createSaveLoading) return;
     setCreateOpen(false);
+  };
+
+  const handleExportHTML = () => {
+    if (!selectedInvoice) return;
+    const html = buildInvoiceHTML(selectedInvoice);
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selectedInvoice.invoice_number}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = () => {
+    if (!selectedInvoice) return;
+    const html = buildInvoiceHTML(selectedInvoice);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   };
 
   const cartCount = getCart().reduce((sum, item) => sum + item.quantity, 0);
@@ -1482,7 +1631,50 @@ function AdminInvoicesView() {
                   )}
                 </div>
 
-                <div className="flex shrink-0 gap-2 border-t border-gray-700 px-5 py-4">
+                <div className="flex shrink-0 items-center gap-2 border-t border-gray-700 px-5 py-4">
+                  {/* Export dropdown */}
+                  <div className="relative">
+                    {exportMenuOpen && (
+                      <div className="fixed inset-0 z-10" onClick={() => setExportMenuOpen(false)} />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setExportMenuOpen((o) => !o)}
+                      className="flex items-center gap-1.5 rounded-lg border border-gray-600 px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span className="hidden sm:inline">{t.btnExport}</span>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {exportMenuOpen && (
+                      <div className="absolute left-0 bottom-full mb-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 z-20 min-w-32">
+                        <button
+                          type="button"
+                          onClick={() => { setExportMenuOpen(false); handleExportPDF(); }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white hover:bg-gray-700 transition-colors"
+                        >
+                          <svg className="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          PDF
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setExportMenuOpen(false); handleExportHTML(); }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white hover:bg-gray-700 transition-colors"
+                        >
+                          <svg className="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                          </svg>
+                          HTML
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <button type="button" onClick={() => setDeleteConfirm(true)} disabled={deleteLoading || deleteConfirm}
                     className="rounded-lg border border-red-700/60 px-4 py-2.5 text-sm font-semibold text-red-400 hover:bg-red-900/30 transition-colors disabled:opacity-50">
                     {t.btnDelete}

@@ -179,8 +179,8 @@ export interface CreateInvoiceData {
   items?: UpdateInvoiceItemData[];
 }
 
-export async function createInvoice(data: CreateInvoiceData, token?: string): Promise<Invoice> {
-  const url = buildUrl('invoices');
+export async function createInvoice(data: CreateInvoiceData, token?: string, lang?: string): Promise<Invoice> {
+  const url = lang ? buildUrl(`invoices?lang=${encodeURIComponent(lang)}`) : buildUrl('invoices');
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',

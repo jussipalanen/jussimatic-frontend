@@ -213,7 +213,7 @@ function AdminUsersView() {
     setDeleting(true);
     setError(null);
     try {
-      await deleteUser(userToDelete.id);
+      await deleteUser(userToDelete.id, language);
       setUsers((prev) => prev.filter((user) => (user.id ?? user.user_id) !== userToDelete.id));
       setShowDeleteConfirm(false);
       setUserToDelete(null);

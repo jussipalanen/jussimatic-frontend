@@ -155,7 +155,7 @@ function CheckoutView() {
           quantity: item.quantity,
         })),
         notes: formValues.notes.trim() || undefined,
-      });
+      }, language);
 
       clearCart();
       setCartItems([]);

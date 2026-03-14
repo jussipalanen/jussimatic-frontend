@@ -787,6 +787,7 @@ export const translations = {
       emptyCreateLines: 'No lines yet. Select an order above or click "Add line".',
       btnCreating: 'Creating…',
       btnCreate: 'Create Invoice',
+      btnExport: 'Export',
     },
     myOrders: {
       title: 'My Orders',
@@ -1589,6 +1590,7 @@ export const translations = {
       emptyCreateLines: 'Ei rivejä. Valitse tilaus yllä tai klikkaa "Lisää rivi".',
       btnCreating: 'Luodaan…',
       btnCreate: 'Luo lasku',
+      btnExport: 'Vie',
     },
     myOrders: {
       title: 'Tilaukseni',
