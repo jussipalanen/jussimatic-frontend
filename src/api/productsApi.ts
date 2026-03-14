@@ -117,6 +117,8 @@ export interface CreateProductData {
   description: string;
   price: string;
   sale_price?: string;
+  tax_code?: string;
+  tax_rate?: number;
   quantity: string;
   visibility: string;
   user_id?: number;
@@ -172,6 +174,8 @@ export interface UpdateProductData {
   description: string;
   price: string;
   sale_price?: string;
+  tax_code?: string;
+  tax_rate?: number;
   quantity: string;
   visibility: string;
   user_id?: number;

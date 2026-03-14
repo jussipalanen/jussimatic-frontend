@@ -1,7 +1,7 @@
 import { useSearchParams, Link } from 'react-router-dom';
 import React, { useEffect, useMemo, useState } from 'react';
 import { fetchProducts, createProduct, updateProduct, deleteProduct, fetchTaxRates } from '../../../api/productsApi';
-import type { Product, ProductsResponse, TaxRate } from '../../../api/productsApi';
+import type { Product, ProductsResponse, TaxRate, CreateProductData } from '../../../api/productsApi';
 import { addToCart, getCartCount } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
 import { getMe } from '../../../api/authApi';
@@ -332,7 +332,7 @@ function ProductsView() {
       setFormErrors((prev) => ({ ...prev, ...errors }));
       if (!errors.featured_image && formErrors.featured_image) {
         setFormErrors((prev) => {
-          const { featured_image, ...rest } = prev;
+          const { featured_image: _, ...rest } = prev;
           return rest;
         });
       }
@@ -369,7 +369,7 @@ function ProductsView() {
     setFormErrors((prev) => ({ ...prev, ...errors }));
     if (!errors.images && formErrors.images) {
       setFormErrors((prev) => {
-        const { images, ...rest } = prev;
+        const { images: _, ...rest } = prev;
         return rest;
       });
     }
@@ -476,7 +476,7 @@ function ProductsView() {
 
     setSubmitting(true);
     try {
-      const productData: any = {
+      const productData: CreateProductData & { delete_featured_image?: string; delete_images?: string[] } = {
         title: formValues.title.trim(),
         description: formValues.description.trim(),
         price: formValues.price.trim(),

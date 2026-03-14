@@ -12,7 +12,7 @@ const PASSWORD_MAX_LENGTH = 30;
 const PASSWORD_LOWERCASE_REGEX = /[a-z]/;
 const PASSWORD_UPPERCASE_REGEX = /[A-Z]/;
 const PASSWORD_NUMBER_REGEX = /[0-9]/;
-const PASSWORD_SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>_\-+=[\]\\\/;'`~]/;
+const PASSWORD_SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>_\-+=[\]\\/;'`~]/;
 
 type PasswordT = Pick<
   (typeof translations)[typeof DEFAULT_LANGUAGE]['userEdit'],

@@ -47,7 +47,7 @@ export const translations = {
   en: {
     landing: {
       title: 'Hi, I\'m Jussi Alanen',
-      subtitle: 'This is my interactive portfolio. Press \"Get Started\" to chat with an AI that knows my CV — ask about my experience, skills, and projects.',
+      subtitle: 'This is my interactive portfolio. Press "Get Started" to chat with an AI that knows my CV — ask about my experience, skills, and projects.',
       subtitleSecond: 'You can also explore live demos and find links to my GitHub below.',
       coinHint: 'Click the coin to view my CV',
       cta: 'Get Started',

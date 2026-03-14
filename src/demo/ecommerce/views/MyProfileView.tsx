@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMe } from '../../../api/authApi';
+import { getMe, type User } from '../../../api/authApi';
 import { getRoleAccess } from '../../../utils/authUtils';
 import { getCart } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
@@ -11,7 +11,7 @@ function MyProfileView() {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).myProfile;
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);

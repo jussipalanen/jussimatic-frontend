@@ -11,6 +11,11 @@ export default defineConfig(({ mode }) => {
   const appDescription = env.VITE_APP_DESCRIPTION || DEFAULT_APP_DESCRIPTION;
 
   return {
+    test: {
+      environment: 'jsdom',
+      globals: true,
+      setupFiles: ['./src/test/setup.ts'],
+    },
     plugins: [
       react(),
       {

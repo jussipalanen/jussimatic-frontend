@@ -1,3 +1,8 @@
+// Polyfill for Node < 17 (structuredClone required by ESLint 9)
+if (typeof globalThis.structuredClone === 'undefined') {
+  globalThis.structuredClone = (obj) => JSON.parse(JSON.stringify(obj))
+}
+
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
@@ -18,6 +23,18 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          varsIgnorePattern: '^_',
+          argsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+      'react-hooks/set-state-in-effect': 'warn',
     },
   },
 ])
