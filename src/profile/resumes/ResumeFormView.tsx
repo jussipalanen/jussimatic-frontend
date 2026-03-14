@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getMe } from '../../api/authApi';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
+import { PROFICIENCY_LEVELS } from '../../constants';
 import type { Language } from '../../i18n';
 import {
   copyResume,
@@ -1171,7 +1172,7 @@ function ResumeFormView() {
                       >
                         <option value="">{t.fieldProficiencyPlaceholder}</option>
                         {exportOptions.skill_proficiencies.map(o => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
+                          <option key={o.value} value={o.value}>{PROFICIENCY_LEVELS[o.value] ? `${PROFICIENCY_LEVELS[o.value]} - ${o.label}` : o.label}</option>
                         ))}
                       </select>
                     </div>
@@ -1330,7 +1331,7 @@ function ResumeFormView() {
                       >
                         <option value="">{t.fieldProficiencyPlaceholder}</option>
                         {exportOptions.language_proficiencies.map(o => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
+                          <option key={o.value} value={o.value}>{PROFICIENCY_LEVELS[o.value] ? `${PROFICIENCY_LEVELS[o.value]} - ${o.label}` : o.label}</option>
                         ))}
                       </select>
                     </div>

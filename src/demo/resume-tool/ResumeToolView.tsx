@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../../i18n';
+import { PROFICIENCY_LEVELS } from '../../constants';
 import type { Language } from '../../i18n';
 import {
   exportResumePdfPublic,
@@ -691,7 +692,7 @@ function ResumeToolView() {
                       <select value={it.proficiency} onChange={(e) => upd({ proficiency: e.target.value as ResumeSkill['proficiency'] })} className={INPUT_CLS}>
                         <option value="">{t.fieldProficiencyPlaceholder}</option>
                         {exportOptions.skill_proficiencies.map(o => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
+                          <option key={o.value} value={o.value}>{PROFICIENCY_LEVELS[o.value] ? `${PROFICIENCY_LEVELS[o.value]} - ${o.label}` : o.label}</option>
                         ))}
                       </select>
                     </div>
@@ -763,7 +764,7 @@ function ResumeToolView() {
                       <select value={it.proficiency} onChange={(e) => upd({ proficiency: e.target.value as ResumeLanguage['proficiency'] })} className={INPUT_CLS}>
                         <option value="">{t.fieldProficiencyPlaceholder}</option>
                         {exportOptions.language_proficiencies.map(o => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
+                          <option key={o.value} value={o.value}>{PROFICIENCY_LEVELS[o.value] ? `${PROFICIENCY_LEVELS[o.value]} - ${o.label}` : o.label}</option>
                         ))}
                       </select>
                     </div>

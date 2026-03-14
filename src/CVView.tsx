@@ -4,6 +4,7 @@ import NavBar from './components/NavBar';
 import Breadcrumb from './components/Breadcrumb';
 import { DEFAULT_LANGUAGE, translations } from './i18n';
 import type { Language } from './i18n';
+import { PROFICIENCY_LEVELS } from './constants';
 
 // ---------------------------------------------------------------------------
 // Types (matching the API response shape)
@@ -148,19 +149,6 @@ function SectionHeading({ label }: { label: string }) {
 // ---------------------------------------------------------------------------
 // Proficiency dot indicator
 // ---------------------------------------------------------------------------
-
-const PROFICIENCY_LEVELS: Record<string, number> = {
-  beginner: 1,
-  elementary: 1,
-  limited_working: 2,
-  intermediate: 2,
-  professional_working: 3,
-  advanced: 3,
-  full_professional: 4,
-  expert: 5,
-  native_bilingual: 5,
-  native: 5,
-};
 
 function ProficiencyDots({ proficiency }: { proficiency: string }) {
   const level = PROFICIENCY_LEVELS[proficiency] ?? 3;
