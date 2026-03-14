@@ -40,6 +40,7 @@ export interface Invoice {
   subtotal: string;
   total: string;
   status: string;
+  due_date: string | null;
   issued_at: string | null;
   paid_at: string | null;
   notes: string | null;
@@ -78,6 +79,7 @@ export interface UpdateInvoiceData {
   };
   subtotal?: string;
   total?: string;
+  due_date?: string | null;
   notes?: string | null;
   items?: UpdateInvoiceItemData[];
 }
@@ -175,6 +177,7 @@ export interface CreateInvoiceData {
   };
   subtotal: string | number;
   total: string | number;
+  due_date?: string | null;
   notes?: string | null;
   items?: UpdateInvoiceItemData[];
 }
@@ -309,6 +312,7 @@ export interface InvoiceExportPayload {
   subtotal: number;
   total: number;
   status: string;
+  due_date?: string;
   notes?: string;
   items: {
     type: string;

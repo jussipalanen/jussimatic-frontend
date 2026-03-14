@@ -21,10 +21,12 @@ function formatPrice(value: string | number | null | undefined) {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  paid: 'bg-green-500/15 border-green-500/40 text-green-400',
-  issued: 'bg-blue-500/15 border-blue-500/40 text-blue-400',
-  draft: 'bg-gray-500/15 border-gray-500/40 text-gray-400',
+  paid:      'bg-green-500/15 border-green-500/40 text-green-400',
+  issued:    'bg-blue-500/15 border-blue-500/40 text-blue-400',
+  draft:     'bg-gray-500/15 border-gray-500/40 text-gray-400',
   cancelled: 'bg-red-500/15 border-red-500/40 text-red-400',
+  unpaid:    'bg-orange-500/15 border-orange-500/40 text-orange-400',
+  overdue:   'bg-rose-500/15 border-rose-600/50 text-rose-400',
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -181,6 +183,9 @@ export default function MyInvoicesView() {
                   <StatusBadge status={invoice.status} />
                   {invoice.issued_at && (
                     <span className="text-xs text-white/40">{t.issued} {formatDate(invoice.issued_at)}</span>
+                  )}
+                  {invoice.due_date && (
+                    <span className="text-xs text-white/40">{t.due} {formatDate(invoice.due_date)}</span>
                   )}
                 </div>
 
@@ -371,6 +376,9 @@ export default function MyInvoicesView() {
                     )}
                     {modalInvoice.paid_at && (
                       <span className="text-white/50">{t.paid}: <span className="text-green-400">{formatDate(modalInvoice.paid_at)}</span></span>
+                    )}
+                    {modalInvoice.due_date && (
+                      <span className="text-white/50">{t.due}: <span className="text-white">{formatDate(modalInvoice.due_date)}</span></span>
                     )}
                   </div>
 
