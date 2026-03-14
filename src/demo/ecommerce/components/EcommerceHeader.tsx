@@ -6,6 +6,7 @@ import { getMe, logoutUser } from '../../../api/authApi';
 import { getRoleAccess } from '../../../utils/authUtils';
 import AuthModal from '../../../AuthModal';
 import { getStoredLanguage, setStoredLanguage, translations, type Language } from '../../../i18n';
+import LanguageSelect from '../../../components/LanguageSelect';
 
 type NavKey = 'products' | 'cart' | 'my-orders' | 'my-profile' | 'admin-dashboard';
 
@@ -97,13 +98,15 @@ function EcommerceHeader({
 
   return (
     <>
-      <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-gray-900/95 backdrop-blur-sm border-b border-white/10 sticky top-0 z-10">
+        <div className="absolute inset-0 bg-linear-to-r from-blue-600/10 via-transparent to-purple-600/8 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-blue-500/40 to-transparent pointer-events-none" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-baseline gap-2">
               <h1 className="flex min-w-0 items-baseline gap-2 flex-wrap">
-                <span className="text-xl sm:text-2xl font-bold truncate">{ECOMMERCE_MAIN_TITLE}</span>
-                <span className="text-base sm:text-xl font-semibold text-gray-300 truncate">/ {title}</span>
+                <span className="text-lg font-bold text-white truncate">{ECOMMERCE_MAIN_TITLE}</span>
+                <span className="text-sm font-medium text-white/50 truncate">/ {title}</span>
               </h1>
             </div>
 
@@ -246,21 +249,16 @@ function EcommerceHeader({
                 </>
               )}
 
-              <label htmlFor="ecommerce-language" className="sr-only">{t.languageLabel}</label>
-              <select
-                id="ecommerce-language"
+              <LanguageSelect
                 value={language}
-                onChange={(e) => setLanguage(e.target.value as Language)}
-                className="bg-gray-900 text-white border border-gray-700 rounded-lg px-2 py-1 lg:px-3 lg:py-1.5 2xl:px-4 2xl:py-2 text-xs lg:text-sm 2xl:text-base focus:outline-none focus:ring-2 focus:ring-blue-600"
-              >
-                <option value="en">English</option>
-                <option value="fi">Finnish</option>
-              </select>
+                onChange={setLanguage}
+                className="px-2 py-1 lg:px-3 lg:py-1.5 2xl:px-4 2xl:py-2 text-xs lg:text-sm 2xl:text-base"
+              />
             </div>
           </div>
 
           {isMobileMenuOpen && (
-            <div id="ecommerce-mobile-menu" className="mt-4 space-y-2 rounded-xl border border-gray-700 bg-gray-900/80 p-3 md:hidden">
+            <div id="ecommerce-mobile-menu" className="mt-4 space-y-2 rounded-xl border border-white/10 bg-gray-900/80 p-3 md:hidden">
               {actions && <div className="flex flex-wrap items-center gap-2 pb-1">{actions}</div>}
               <button
                 onClick={() => navigateAndCloseMenu('/demo/ecommerce/products')}

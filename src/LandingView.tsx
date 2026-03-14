@@ -5,6 +5,7 @@ import type { Language } from './i18n';
 import { getVisitorsToday, getVisitorsTotal, trackVisitor } from './api/visitorsApi';
 import AuthModal from './AuthModal';
 import NavBar from './components/NavBar';
+import faceJa from './assets/face_ja.jpg';
 
 function LandingView() {
   const navigate = useNavigate();
@@ -105,11 +106,58 @@ function LandingView() {
       {/* Hero Section */}
       <header className="grow flex items-center justify-center px-4 py-12 sm:py-16">
         <div className="text-center w-full max-w-3xl">
-          <h1 className="text-3xl sm:text-5xl font-bold mb-4">{t.landing.title}</h1>
+          <h1 className="text-3xl sm:text-5xl font-bold mb-6">{t.landing.title}</h1>
+
+          {/* ── Spinning coin ── */}
+          <div className="flex justify-center mb-8">
+            <button
+              type="button"
+              className="coin-orbit"
+              aria-label="View CV"
+              title="View CV"
+              onClick={() => navigate('/cv')}
+            >
+              <div className="coin-wrapper">
+                <div className="coin-face">
+                  <svg viewBox="0 0 140 140" className="absolute inset-0 w-full h-full" fill="none" aria-hidden="true">
+                    <circle cx="70" cy="70" r="62" stroke="rgba(255,255,255,0.16)" strokeWidth="2" />
+                    <circle cx="70" cy="70" r="50" stroke="rgba(255,255,255,0.10)" strokeWidth="1.5" />
+                    <circle cx="70" cy="70" r="38" stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
+                  </svg>
+                  <span
+                    className="relative z-10 font-black select-none"
+                    style={{
+                      fontFamily: 'Georgia, serif',
+                      fontSize: '2.4rem',
+                      color: 'rgba(120,53,15,0.92)',
+                      textShadow: '0 1px 4px rgba(255,255,255,0.45)',
+                      letterSpacing: '-0.03em',
+                    }}
+                  >
+                    JA
+                  </span>
+                  <div className="coin-shine" aria-hidden="true" />
+                </div>
+                <div className="coin-back" aria-hidden="true">
+                  <img src={faceJa} alt="" className="coin-back-photo" />
+                  <div className="coin-back-overlay" />
+                  <div className="coin-back-rings" />
+                  <div className="coin-shine" aria-hidden="true" />
+                </div>
+              </div>
+            </button>
+          </div>
+          <p className="text-xs text-white/30 -mt-5 mb-8 flex items-center justify-center gap-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
+            </svg>
+            {t.landing.coinHint}
+          </p>
+
           <p className="text-lg sm:text-xl text-white/90 mb-2">{t.landing.subtitle}</p>
           <p className="text-base sm:text-lg text-white/60 mb-8">{t.landing.subtitleSecond}</p>
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 justify-center">
-            <button 
+            <button
               onClick={() => navigate('/chat')}
               className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2"
             >
@@ -279,7 +327,7 @@ function LandingView() {
               )}
             </div>
           </div>
-          
+
           {/* Social Links */}
           <div className="flex justify-center items-center gap-6 mt-8">
             <a

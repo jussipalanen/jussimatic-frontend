@@ -7,6 +7,7 @@ import {
   translations,
 } from '../../i18n';
 import type { Language } from '../../i18n';
+import DemoHeader from '../../components/DemoHeader';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_FILE_TYPES = [
@@ -112,7 +113,7 @@ function AICVReviewView() {
     }
 
     setSelectedFile(file);
-    
+
     // Update the file input element
     const fileInput = document.getElementById('cv-file-input') as HTMLInputElement;
     if (fileInput && e.dataTransfer.files) {
@@ -156,32 +157,13 @@ function AICVReviewView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      {/* Header */}
-      <header className="bg-gray-800 py-4 px-6 border-b border-gray-700">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t.title}</h1>
-          <div className="flex items-center gap-4">
-            <label htmlFor="language" className="sr-only">
-              {t.languageLabel}
-            </label>
-            <select
-              id="language"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as Language)}
-              className="bg-gray-900 text-white border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-            >
-              <option value="en">English</option>
-              <option value="fi">Finnish</option>
-            </select>
-            <button
-              onClick={() => navigate('/')}
-              className="text-gray-400 hover:text-white"
-            >
-              ← {t.backToHome}
-            </button>
-          </div>
-        </div>
-      </header>
+      <DemoHeader
+        title={t.title}
+        language={language}
+        onLanguageChange={setLanguage}
+        backLabel={t.backToHome}
+        onBack={() => navigate('/')}
+      />
 
       {/* Main content */}
       <main className="grow p-6">
@@ -219,7 +201,7 @@ function AICVReviewView() {
                 disabled={uploading}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
               />
-              
+
               <div className="flex flex-col items-center justify-center text-center pointer-events-none">
                 {/* Upload Icon */}
                 <div className={`mb-4 transition-colors ${isDragging ? 'text-blue-400' : 'text-gray-400'}`}>
@@ -299,7 +281,7 @@ function AICVReviewView() {
                 type="submit"
                 disabled={!selectedFile || uploading}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg
-                  disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 
+                  disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105
                   disabled:hover:scale-100 shadow-lg"
               >
                 {uploading ? (
@@ -320,7 +302,7 @@ function AICVReviewView() {
                   onClick={handleReset}
                   disabled={uploading}
                   className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg
-                    disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 
+                    disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105
                     disabled:hover:scale-100"
                 >
                   {t.reset}
@@ -341,7 +323,7 @@ function AICVReviewView() {
           {result && !uploading && (
             <div className="bg-gray-800 rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4 text-green-400">✓ {t.reviewComplete}</h2>
-              
+
               {/* Summary */}
               {result.summary && (
                 <div className="mb-6">

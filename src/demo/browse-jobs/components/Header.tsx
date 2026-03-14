@@ -1,10 +1,12 @@
+import LanguageSelect from '../../../components/LanguageSelect';
+import type { Language } from '../../../i18n';
+
 interface HeaderProps {
   title: string;
-  language: string;
-  onLanguageChange: (language: string) => void;
+  language: Language;
+  onLanguageChange: (language: Language) => void;
   onBack: () => void;
   translations: {
-    languageLabel: string;
     back: string;
   };
 }
@@ -22,18 +24,7 @@ export function Header({
         <h1 className="text-2xl font-bold">{title}</h1>
 
         <div className="flex items-center gap-3">
-          <label htmlFor="language" className="sr-only">
-            {translations.languageLabel}
-          </label>
-          <select
-            id="language"
-            value={language}
-            onChange={(e) => onLanguageChange(e.target.value)}
-            className="bg-gray-900 text-white border border-gray-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-600"
-          >
-            <option value="en">English</option>
-            <option value="fi">Finnish</option>
-          </select>
+          <LanguageSelect value={language} onChange={onLanguageChange} />
           <button
             onClick={onBack}
             className="text-gray-400 hover:text-white"

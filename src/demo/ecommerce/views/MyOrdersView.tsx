@@ -7,6 +7,7 @@ import { fetchProductById } from '../../../api/productsApi';
 import { getCart } from '../../../utils/cartUtils';
 import type { Order } from '../../../api/ordersApi';
 import EcommerceHeader from '../components/EcommerceHeader';
+import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../../../i18n';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -70,11 +71,19 @@ function calculateOrderTotal(order: Order): number {
 
 function MyOrdersView() {
   const navigate = useNavigate();
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).myOrders;
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    const handleLanguageChange = () => setLanguage(getStoredLanguage());
+    window.addEventListener('jussimatic-language-change', handleLanguageChange);
+    return () => window.removeEventListener('jussimatic-language-change', handleLanguageChange);
+  }, []);
 
   useEffect(() => {
     const loadUserAndOrders = async () => {
@@ -88,7 +97,7 @@ function MyOrdersView() {
         const token = localStorage.getItem('auth_token');
 
         if (!token) {
-          setAuthError('Authentication required. Please log in to view your orders.');
+          setAuthError(t.authErrLogin);
           setLoading(false);
           return;
         }
@@ -144,12 +153,12 @@ function MyOrdersView() {
           setOrders(enrichedOrders);
         } catch (err) {
           console.error('Failed to load orders:', err);
-          setOrdersError('Failed to load orders. Please try again.');
+          setOrdersError(t.errLoad);
           setOrders([]);
         }
       } catch (err) {
         console.error('Authentication failed:', err);
-        setAuthError('Authentication required. Please log in to view your orders.');
+        setAuthError(t.authErrLogin);
       } finally {
         setLoading(false);
       }
@@ -175,9 +184,9 @@ function MyOrdersView() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <EcommerceHeader
-        title="My Orders"
+        title={t.title}
         backTo="/demo/ecommerce/products"
-        backLabel="Products"
+        backLabel={translations[language].ecommerce.browseProducts}
         cartCount={cartCount}
         activeNav="my-orders"
       />
@@ -214,7 +223,7 @@ function MyOrdersView() {
         {loading && !authError && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-            <p className="mt-4 text-gray-300">Loading your orders...</p>
+            <p className="mt-4 text-gray-300">{t.loading}</p>
           </div>
         )}
 
@@ -225,7 +234,7 @@ function MyOrdersView() {
         )}
 
         {!loading && !authError && !ordersError && orders.length === 0 && (
-          <div className="text-center py-10 text-gray-400">No orders found.</div>
+          <div className="text-center py-10 text-gray-400">{t.empty}</div>
         )}
 
         {!loading && !authError && orders.length > 0 && (
@@ -238,7 +247,7 @@ function MyOrdersView() {
               >
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <div className="text-sm text-gray-300">
-                    <span className="text-gray-500">Order #</span>
+                    <span className="text-gray-500">{t.orderPrefix}</span>
                     <span className="font-semibold ml-1">{order.id ?? 'N/A'}</span>
                   </div>
                   <div className="text-sm">
@@ -276,7 +285,7 @@ function MyOrdersView() {
                             {item.product_title || `Product #${item.product_id}`}
                           </h4>
                           <p className="text-xs text-gray-400 mt-0.5">
-                            Qty: {item.quantity} × {' '}
+                            {t.qty} {item.quantity} × {' '}
                             {item.sale_price ? (
                               <>
                                 <span className="line-through opacity-60">{formatPrice(item.unit_price || item.price)}</span>
@@ -295,7 +304,7 @@ function MyOrdersView() {
                     ))}
                     {order.items.length > 3 && (
                       <p className="text-xs text-gray-500 pt-2">
-                        +{order.items.length - 3} more item{order.items.length - 3 !== 1 ? 's' : ''}
+                        +{order.items.length - 3} {order.items.length - 3 !== 1 ? t.moreItems : t.moreItem}
                       </p>
                     )}
                   </div>
@@ -318,7 +327,7 @@ function MyOrdersView() {
           >
             {/* Modal Header */}
             <div className="sticky top-0 bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold">Order Details #{selectedOrder.id}</h2>
+              <h2 className="text-xl font-bold">{t.modalTitle} #{selectedOrder.id}</h2>
               <button
                 onClick={handleCloseModal}
                 className="text-gray-400 hover:text-white transition-colors"
@@ -336,7 +345,7 @@ function MyOrdersView() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="text-sm">
-                    <span className="text-gray-500">Status:</span>
+                    <span className="text-gray-500">{t.labelStatus}</span>
                     <span className={`ml-2 px-3 py-1 rounded-full text-xs font-semibold ${
                       selectedOrder.status === 'completed' ? 'bg-green-900/40 text-green-400 border border-green-500/30' :
                       selectedOrder.status === 'pending' ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-500/30' :
@@ -347,30 +356,30 @@ function MyOrdersView() {
                     </span>
                   </div>
                   <div className="text-sm text-gray-300">
-                    <span className="text-gray-500">Created:</span>
+                    <span className="text-gray-500">{t.labelCreated}</span>
                     <span className="ml-2">{formatDate(selectedOrder.created_at)}</span>
                   </div>
                   <div className="text-sm text-gray-300">
-                    <span className="text-gray-500">Total:</span>
+                    <span className="text-gray-500">{t.labelTotal}</span>
                     <span className="ml-2 font-bold text-green-400 text-lg">{formatPrice(calculateOrderTotal(selectedOrder))}</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   {selectedOrder.customer_first_name && (
                     <div className="text-sm text-gray-300">
-                      <span className="text-gray-500">Customer:</span>
+                      <span className="text-gray-500">{t.labelCustomer}</span>
                       <span className="ml-2">{selectedOrder.customer_first_name} {selectedOrder.customer_last_name}</span>
                     </div>
                   )}
                   {selectedOrder.customer_email && (
                     <div className="text-sm text-gray-300">
-                      <span className="text-gray-500">Email:</span>
+                      <span className="text-gray-500">{t.labelEmail}</span>
                       <span className="ml-2">{selectedOrder.customer_email}</span>
                     </div>
                   )}
                   {selectedOrder.customer_phone && (
                     <div className="text-sm text-gray-300">
-                      <span className="text-gray-500">Phone:</span>
+                      <span className="text-gray-500">{t.labelPhone}</span>
                       <span className="ml-2">{selectedOrder.customer_phone}</span>
                     </div>
                   )}
@@ -380,7 +389,7 @@ function MyOrdersView() {
               {/* Shipping Address */}
               {selectedOrder.shipping_address && (
                 <div className="border-t border-gray-700 pt-4">
-                  <h3 className="text-sm font-semibold text-gray-400 mb-2">Shipping Address</h3>
+                  <h3 className="text-sm font-semibold text-gray-400 mb-2">{t.shippingAddress}</h3>
                   <div className="text-sm text-gray-300">
                     <p>{selectedOrder.shipping_address.street}</p>
                     <p>{selectedOrder.shipping_address.postal_code} {selectedOrder.shipping_address.city}</p>
@@ -392,7 +401,7 @@ function MyOrdersView() {
               {/* Order Items */}
               {Array.isArray(selectedOrder.items) && selectedOrder.items.length > 0 && (
                 <div className="border-t border-gray-700 pt-4">
-                  <h3 className="text-sm font-semibold text-gray-400 mb-4">Order Items</h3>
+                  <h3 className="text-sm font-semibold text-gray-400 mb-4">{t.orderItems}</h3>
                   <div className="space-y-4">
                     {selectedOrder.items.map((item, itemIndex) => (
 
@@ -410,7 +419,7 @@ function MyOrdersView() {
                             {item.product_title || `Product #${item.product_id}`}
                           </h4>
                           <p className="text-sm text-gray-400 mt-1">
-                            Product ID: {item.product_id}
+                            {t.labelProductId} {item.product_id}
                           </p>
                           <p className="text-sm text-gray-400">
                             {item.sale_price ? (
@@ -439,7 +448,7 @@ function MyOrdersView() {
               {/* Notes */}
               {selectedOrder.notes && (
                 <div className="border-t border-gray-700 pt-4">
-                  <h3 className="text-sm font-semibold text-gray-400 mb-2">Order Notes</h3>
+                  <h3 className="text-sm font-semibold text-gray-400 mb-2">{t.orderNotes}</h3>
                   <p className="text-sm text-gray-300">{selectedOrder.notes}</p>
                 </div>
               )}
@@ -451,7 +460,7 @@ function MyOrdersView() {
                 onClick={handleCloseModal}
                 className="rounded-lg bg-gray-700 px-6 py-2 font-semibold text-white hover:bg-gray-600 transition-colors"
               >
-                Close
+                {t.btnClose}
               </button>
             </div>
           </div>

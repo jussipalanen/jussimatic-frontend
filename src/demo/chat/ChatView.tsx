@@ -11,6 +11,7 @@ import type { Language } from '../../i18n';
 import { formatBotHtml, formatTimestamp, getBotText } from './chatHelpers';
 import type { ChatMessage } from './types';
 import { usePersistedMessages } from './usePersistedMessages';
+import DemoHeader from '../../components/DemoHeader';
 
 function ChatView() {
   const navigate = useNavigate();
@@ -108,35 +109,15 @@ function ChatView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      <header className="bg-gray-800 py-4 px-4 sm:px-6 border-b border-gray-700">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">{t.chat.title}</h1>
-            <p className="text-sm text-gray-400 mt-1">{t.chat.subtitle}</p>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <label htmlFor="language" className="sr-only">
-              {t.chat.languageLabel}
-            </label>
-            <select
-              id="language"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as Language)}
-              className="bg-gray-900 text-white border border-gray-700 rounded-lg px-3 py-1.5 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-600"
-            >
-              <option value="en">English</option>
-              <option value="fi">Finnish</option>
-            </select>
-            <button
-              onClick={() => navigate('/')}
-              className="text-sm sm:text-base text-gray-400 hover:text-white"
-            >
-              ← {t.chat.back}
-            </button>
-          </div>
-        </div>
-      </header>
+      <DemoHeader
+        title={t.chat.title}
+        subtitle={t.chat.subtitle}
+        language={language}
+        onLanguageChange={setLanguage}
+        backLabel={t.chat.back}
+        onBack={() => navigate('/')}
+        containerClassName="w-full"
+      />
 
       <main className="grow flex flex-col p-3 sm:p-4 min-h-0">
         <div className="flex-1 min-h-0 bg-gray-800 rounded-lg p-4 mb-4 overflow-y-auto">

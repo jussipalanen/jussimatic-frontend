@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
+import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../../i18n';
 import type { Language } from '../../i18n';
 import { exportInvoicePdfPublic, exportInvoiceHtmlPublic, fetchInvoiceOptions, sendInvoiceEmailPublic } from '../../api/invoicesApi';
 import type { InvoiceExportPayload, InvoiceStatusOption, InvoiceItemTypeOption } from '../../api/invoicesApi';
 import { fetchTaxRates } from '../../api/productsApi';
 import type { TaxRate } from '../../api/productsApi';
-import NavBar from '../../components/NavBar';
+import DemoHeader from '../../components/DemoHeader';
 import CountrySelect from '../../components/CountrySelect';
 
 // ---------------------------------------------------------------------------
@@ -143,12 +143,6 @@ export default function InvoiceToolView() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [sendSuccess, setSendSuccess] = useState(false);
-
-  useEffect(() => {
-    const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
-    window.addEventListener('jussimatic-language-change', handler);
-    return () => window.removeEventListener('jussimatic-language-change', handler);
-  }, []);
 
   useEffect(() => {
     fetchTaxRates(form.lang).then(setTaxRates).catch(() => setTaxRates([]));
@@ -316,28 +310,18 @@ export default function InvoiceToolView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <NavBar />
+      <DemoHeader
+        containerClassName="max-w-3xl mx-auto"
+        title={tInv.demoPageTitle}
+        language={language}
+        onLanguageChange={(lang) => { setLanguage(lang); setStoredLanguage(lang); }}
+        backLabel={tInv.demoBackToHome}
+        onBack={() => navigate('/')}
+      />
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-20 pb-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-12">
         {/* Page header */}
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="text-white/50 hover:text-white transition-colors flex items-center gap-1.5 text-sm"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              {tInv.demoBackToHome}
-            </button>
-            <span className="text-white/30">/</span>
-            <h1 className="text-lg font-semibold text-white">{tInv.demoPageTitle}</h1>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-green-600/20 border border-green-500/30 text-green-300 font-medium">
-              {tInv.demoBadge}
-            </span>
-          </div>
-
+        <div className="flex items-center justify-end mb-6 flex-wrap gap-3">
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {/* Send button */}
             <button

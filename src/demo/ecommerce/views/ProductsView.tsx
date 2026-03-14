@@ -861,14 +861,14 @@ function ProductsView() {
         )}
 
         {!loading && !error && products.length > 0 && viewMode === 'list' && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {products.map((product) => (
               <div
                 key={product.id}
-                className="bg-gray-800 rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors flex gap-4"
+                className="group flex items-center gap-4 rounded-xl border border-white/8 bg-gray-800/60 px-4 py-3 hover:bg-gray-800 hover:border-white/15 transition-colors"
               >
                 {/* Thumbnail */}
-                <div className="shrink-0 h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-lg border border-white/10 bg-gray-900/40">
+                <div className="shrink-0 h-14 w-14 sm:h-16 sm:w-16 overflow-hidden rounded-lg border border-white/10 bg-gray-900/60">
                   <img
                     src={buildStorageUrl(product.featured_image)}
                     alt={product.title}
@@ -877,73 +877,69 @@ function ProductsView() {
                   />
                 </div>
 
-                {/* Main content */}
-                <div className="flex flex-1 min-w-0 flex-col sm:flex-row sm:items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <h2 className="font-bold text-white truncate">{product.title}</h2>
-                      <div className="flex shrink-0 gap-1.5">
-                        <button
-                          onClick={() => openDetailsModal(product)}
-                          className="rounded border border-gray-600 px-2 py-0.5 text-xs text-gray-200 hover:bg-gray-700"
-                        >
-                          {t.details}
-                        </button>
-                        {canManageProducts && (
-                          <button
-                            onClick={() => openEditModal(product)}
-                            className="rounded border border-blue-500/60 px-2 py-0.5 text-xs text-blue-200 hover:bg-blue-600/20"
-                          >
-                            {t.edit}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <p className="mt-1 text-xs text-gray-400 line-clamp-2">{product.description}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
-                      <span>{t.quantityLabel} <span className={product.quantity > 0 ? 'text-white' : 'text-red-400'}>{product.quantity}</span></span>
-                      <span>{t.createdLabel} <span className="text-gray-300">{formatDate(product.created_at)}</span></span>
-                    </div>
+                {/* Title + description */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h2 className="font-semibold text-white text-sm truncate">{product.title}</h2>
+                    {product.sale_price && (
+                      <span className="shrink-0 rounded-full bg-yellow-500/15 px-2 py-0.5 text-xs font-semibold text-yellow-400 border border-yellow-500/30">SALE</span>
+                    )}
+                    {product.quantity === 0 && (
+                      <span className="shrink-0 rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-semibold text-red-400 border border-red-500/30">{t.outOfStock}</span>
+                    )}
                   </div>
+                  <p className="mt-0.5 text-xs text-gray-400 truncate">{product.description}</p>
+                </div>
 
-                  {/* Price + cart */}
-                  <div className="flex sm:flex-col items-center sm:items-end gap-3 sm:gap-2 shrink-0">
-                    <div className="text-right">
-                      {product.sale_price ? (
-                        <>
-                          <div className="text-xs text-gray-500 line-through">
-                            {product.tax_rate != null ? formatGrossPrice(product.price, product.tax_rate) : formatPrice(product.price)}
-                          </div>
-                          <div className="text-base font-bold text-yellow-400">
-                            {product.tax_rate != null ? formatGrossPrice(product.sale_price, product.tax_rate) : formatPrice(product.sale_price)}
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-base font-bold text-green-400">
-                          {product.tax_rate != null ? formatGrossPrice(product.price, product.tax_rate) : formatPrice(product.price)}
-                        </div>
-                      )}
-                      {product.tax_rate != null && (
-                        <div className="text-xs text-gray-500">
-                          excl. {t.vatLabel} {formatTaxPct(product.tax_rate)}{product.tax_code && product.tax_code !== 'ZERO' ? ` · ${product.tax_code}` : ''}:
-                          {' '}{product.sale_price ? formatPrice(product.sale_price) : formatPrice(product.price)}
-                        </div>
-                      )}
-                      {product.sale_price && (
-                        <span className="inline-block rounded-full bg-yellow-500/15 px-2 py-0.5 text-xs font-semibold text-yellow-400 border border-yellow-500/30">SALE</span>
-                      )}
+                {/* Price */}
+                <div className="shrink-0 text-right hidden sm:block">
+                  {product.sale_price ? (
+                    <>
+                      <div className="text-xs text-gray-500 line-through leading-none">
+                        {product.tax_rate != null ? formatGrossPrice(product.price, product.tax_rate) : formatPrice(product.price)}
+                      </div>
+                      <div className="text-base font-bold text-yellow-400 leading-tight">
+                        {product.tax_rate != null ? formatGrossPrice(product.sale_price, product.tax_rate) : formatPrice(product.sale_price)}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-base font-bold text-green-400 leading-tight">
+                      {product.tax_rate != null ? formatGrossPrice(product.price, product.tax_rate) : formatPrice(product.price)}
                     </div>
+                  )}
+                  {product.tax_rate != null && (
+                    <div className="text-xs text-gray-500 leading-none mt-0.5">
+                      {t.vatLabel} {formatTaxPct(product.tax_rate)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="shrink-0 flex items-center gap-2">
+                  <button
+                    onClick={() => openDetailsModal(product)}
+                    className="rounded-lg border border-white/15 px-2.5 py-1.5 text-xs text-gray-300 hover:bg-white/10 transition-colors"
+                  >
+                    {t.details}
+                  </button>
+                  {canManageProducts && (
                     <button
-                      onClick={() => handleAddToCart(product)}
-                      disabled={product.quantity === 0}
-                      className="shrink-0 flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      onClick={() => openEditModal(product)}
+                      className="rounded-lg border border-blue-500/40 px-2.5 py-1.5 text-xs text-blue-300 hover:bg-blue-600/20 transition-colors"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      <span className="hidden sm:inline">{product.quantity === 0 ? t.outOfStock : t.addToCart}</span>
+                      {t.edit}
                     </button>
-                  </div>
+                  )}
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    disabled={product.quantity === 0}
+                    className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span className="hidden md:inline">{t.addToCart}</span>
+                  </button>
                 </div>
               </div>
             ))}

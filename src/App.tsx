@@ -20,12 +20,18 @@ import LogoutView from './profile/LogoutView'
 import ResumesView from './profile/resumes/ResumesView'
 import ResumeFormView from './profile/resumes/ResumeFormView'
 import MyInvoicesView from './profile/invoices/MyInvoicesView'
+import CVView from './CVView'
 
 function App() {
   return (
     <Router>
-      <Routes>
+      <>
+        <div className="stars-layer-1" aria-hidden="true" />
+        <div className="stars-layer-2" aria-hidden="true" />
+        <div className="stars-layer-3" aria-hidden="true" />
+        <Routes>
         <Route path="/" element={<LandingView />} />
+        <Route path="/cv" element={<CVView />} />
         <Route path="/chat" element={<ChatView />} />
         <Route path="/logout" element={<LogoutView />} />
         <Route path="/profile/resumes" element={<ResumesView />} />
@@ -47,7 +53,8 @@ function App() {
         <Route path="/demo/ecommerce/admin/users" element={<AdminUsersView />} />
         <Route path="/demo/ecommerce/admin/invoices" element={<AdminInvoicesView />} />
         <Route path="/reset-password" element={<ResetPasswordView />} />
-      </Routes>
+        </Routes>
+      </>
     </Router>
   )
 }

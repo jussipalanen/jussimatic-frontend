@@ -4,11 +4,21 @@ import { getMe } from '../../../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
 import { getCart } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
+import type { Language } from '../../../i18n';
 
 function AdminDashboardView() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
+
+  useEffect(() => {
+    const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
 
   useEffect(() => {
     const loadAuth = async () => {
@@ -19,7 +29,7 @@ function AdminDashboardView() {
         const token = localStorage.getItem('auth_token');
 
         if (!token) {
-          setAuthError('Authentication required. Please log in to view the admin dashboard.');
+          setAuthError(t.authErrLogin);
           setLoading(false);
           return;
         }
@@ -34,7 +44,7 @@ function AdminDashboardView() {
         }
       } catch (error) {
         console.error('Authentication failed:', error);
-        setAuthError('Authentication required. Please log in to view the admin dashboard.');
+        setAuthError(t.authErrLogin);
       } finally {
         setLoading(false);
       }
@@ -48,9 +58,9 @@ function AdminDashboardView() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <EcommerceHeader
-        title="Admin Dashboard"
+        title={t.title}
         backTo="/demo/ecommerce/products"
-        backLabel="Products"
+        backLabel={translations[language].ecommerce.browseProducts}
         cartCount={cartCount}
         activeNav="admin-dashboard"
       />
@@ -78,7 +88,7 @@ function AdminDashboardView() {
                 onClick={() => navigate('/demo/ecommerce/products')}
                 className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
               >
-                Go to Products
+                {t.goToProducts}
               </button>
             )}
           </div>
@@ -87,52 +97,52 @@ function AdminDashboardView() {
         {loading && !authError && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-            <p className="mt-4 text-gray-300">Loading admin dashboard...</p>
+            <p className="mt-4 text-gray-300">{t.loading}</p>
           </div>
         )}
 
         {!loading && !authError && (
           <div className="mx-auto max-w-4xl rounded-2xl border border-gray-700 bg-gray-800 p-8">
             <div className="flex flex-col gap-2">
-              <h2 className="text-3xl font-bold">Admin dashboard</h2>
-              <p className="text-gray-300">Manage the orders users etc.</p>
+              <h2 className="text-3xl font-bold">{t.heading}</h2>
+              <p className="text-gray-300">{t.subtitle}</p>
             </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl border border-gray-700 bg-gray-900/60 p-5">
-                <h3 className="text-lg font-semibold text-white">Orders</h3>
-                <p className="text-sm text-gray-400 mt-2">Review, update, and fulfill customer orders.</p>
+                <h3 className="text-lg font-semibold text-white">{t.ordersTitle}</h3>
+                <p className="text-sm text-gray-400 mt-2">{t.ordersDesc}</p>
                 <button
                   onClick={() => navigate('/demo/ecommerce/admin/orders')}
                   className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition-colors"
                 >
-                  Go to Orders
+                  {t.goToOrders}
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </div>
               <div className="rounded-xl border border-gray-700 bg-gray-900/60 p-5">
-                <h3 className="text-lg font-semibold text-white">Users</h3>
-                <p className="text-sm text-gray-400 mt-2">View and manage registered users.</p>
+                <h3 className="text-lg font-semibold text-white">{t.usersTitle}</h3>
+                <p className="text-sm text-gray-400 mt-2">{t.usersDesc}</p>
                 <button
                   onClick={() => navigate('/demo/ecommerce/admin/users')}
                   className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition-colors"
                 >
-                  Go to Users
+                  {t.goToUsers}
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </div>
               <div className="rounded-xl border border-gray-700 bg-gray-900/60 p-5">
-                <h3 className="text-lg font-semibold text-white">Invoices</h3>
-                <p className="text-sm text-gray-400 mt-2">View and search customer invoices.</p>
+                <h3 className="text-lg font-semibold text-white">{t.invoicesTitle}</h3>
+                <p className="text-sm text-gray-400 mt-2">{t.invoicesDesc}</p>
                 <button
                   onClick={() => navigate('/demo/ecommerce/admin/invoices')}
                   className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition-colors"
                 >
-                  Go to Invoices
+                  {t.goToInvoices}
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>

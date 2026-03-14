@@ -9,7 +9,7 @@ import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
 import { getCart } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
 import CountrySelect from '../../../components/CountrySelect';
-import { getStoredLanguage, type Language } from '../../../i18n';
+import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../../../i18n';
 import { fetchTaxRates } from '../../../api/productsApi';
 import type { TaxRate } from '../../../api/productsApi';
 
@@ -159,6 +159,7 @@ function AdminInvoicesView() {
   const [searchOrderId, setSearchOrderId] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminInvoices;
   const [statusOptions, setStatusOptions] = useState<InvoiceStatusOption[]>(DEFAULT_STATUS_OPTIONS);
   const [itemTypeOptions, setItemTypeOptions] = useState<InvoiceItemTypeOption[]>(DEFAULT_ITEM_TYPE_OPTIONS);
 
@@ -333,7 +334,7 @@ function AdminInvoicesView() {
         const token = localStorage.getItem('auth_token');
 
         if (!token) {
-          setAuthError('Authentication required. Please log in to view admin invoices.');
+          setAuthError(t.authErrLogin);
           setLoading(false);
           return;
         }
@@ -352,12 +353,12 @@ function AdminInvoicesView() {
           setInvoices(data);
         } catch (err) {
           console.error('Failed to load invoices:', err);
-          setInvoicesError('Failed to load invoices. Please try again.');
+          setInvoicesError(t.errLoad);
           setInvoices([]);
         }
       } catch (err) {
         console.error('Authentication failed:', err);
-        setAuthError('Authentication required. Please log in to view admin invoices.');
+        setAuthError(t.authErrLogin);
       } finally {
         setLoading(false);
       }
@@ -537,7 +538,7 @@ function AdminInvoicesView() {
       setEditItems([]);
     } catch (err) {
       console.error('Failed to update invoice:', err);
-      setSaveError('Failed to update invoice. Please try again.');
+      setSaveError(t.errUpdate);
     } finally {
       setSaveLoading(false);
     }
@@ -553,7 +554,7 @@ function AdminInvoicesView() {
       closeModal();
     } catch (err) {
       console.error('Failed to delete invoice:', err);
-      setSaveError('Failed to delete invoice. Please try again.');
+      setSaveError(t.errDelete);
       setDeleteLoading(false);
       setDeleteConfirm(false);
     }
@@ -570,7 +571,7 @@ function AdminInvoicesView() {
       setOrderData(order);
     } catch (err) {
       console.error('Failed to load order:', err);
-      setOrderError('Failed to load order. Please try again.');
+      setOrderError(t.errLoad);
     } finally {
       setOrderLoading(false);
     }
@@ -698,7 +699,7 @@ function AdminInvoicesView() {
       setCreateOpen(false);
     } catch (err) {
       console.error('Failed to create invoice:', err);
-      setCreateSaveError('Failed to create invoice. Please try again.');
+      setCreateSaveError(t.errCreate);
     } finally {
       setCreateSaveLoading(false);
     }
@@ -714,9 +715,9 @@ function AdminInvoicesView() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <EcommerceHeader
-        title="Admin Invoices"
+        title={t.title}
         backTo="/demo/ecommerce/admin"
-        backLabel="Admin Dashboard"
+        backLabel={translations[language].adminDashboard.title}
         cartCount={cartCount}
         activeNav="admin-dashboard"
       />
@@ -744,7 +745,7 @@ function AdminInvoicesView() {
                 onClick={() => navigate('/demo/ecommerce/products')}
                 className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
               >
-                Go to Products
+                {t.goToProducts}
               </button>
             )}
           </div>
@@ -753,7 +754,7 @@ function AdminInvoicesView() {
         {loading && !authError && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-            <p className="mt-4 text-gray-300">Loading invoices...</p>
+            <p className="mt-4 text-gray-300">{t.loading}</p>
           </div>
         )}
 
@@ -775,7 +776,7 @@ function AdminInvoicesView() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
-                New Invoice
+                {t.btnNewInvoice}
               </button>
             </div>
 
@@ -787,27 +788,27 @@ function AdminInvoicesView() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
                 <div className="flex-1">
                   <label htmlFor="search-invoice-id" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Invoice ID
+                    {t.searchInvoiceIdLabel}
                   </label>
                   <input
                     id="search-invoice-id"
                     type="text"
                     value={searchInvoiceId}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => { setSearchInvoiceId(e.target.value); setCurrentPage(1); }}
-                    placeholder="e.g. 1 or INV-2026-00001"
+                    placeholder={t.searchInvoicePlaceholder}
                     className="w-full rounded-lg border border-gray-600 bg-gray-900 px-4 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div className="flex-1">
                   <label htmlFor="search-order-id" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Order ID
+                    {t.searchOrderIdLabel}
                   </label>
                   <input
                     id="search-order-id"
                     type="text"
                     value={searchOrderId}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => { setSearchOrderId(e.target.value); setCurrentPage(1); }}
-                    placeholder="e.g. 3"
+                    placeholder={t.searchOrderPlaceholder}
                     className="w-full rounded-lg border border-gray-600 bg-gray-900 px-4 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
@@ -816,21 +817,21 @@ function AdminInvoicesView() {
                     type="submit"
                     className="flex-1 rounded-lg bg-blue-600 px-5 py-2 font-semibold text-white hover:bg-blue-700 transition-colors sm:flex-none"
                   >
-                    Search
+                    {t.btnSearch}
                   </button>
                   <button
                     type="button"
                     onClick={handleSearchReset}
                     className="flex-1 rounded-lg border border-gray-600 px-5 py-2 font-semibold text-gray-300 hover:bg-gray-700 transition-colors sm:flex-none"
                   >
-                    Reset
+                    {t.btnReset}
                   </button>
                 </div>
               </div>
             </form>
 
             {filteredInvoices.length === 0 ? (
-              <div className="text-center py-10 text-gray-400">No invoices found.</div>
+              <div className="text-center py-10 text-gray-400">{t.empty}</div>
             ) : (
               <>
                 {/* Mobile: card list */}
@@ -849,10 +850,10 @@ function AdminInvoicesView() {
                         {invoice.customer_first_name} {invoice.customer_last_name}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-400">
-                        <span>Subtotal: <span className="text-gray-200">{formatPrice(invoice.subtotal)}</span></span>
-                        <span>Total: <span className="text-gray-200">{formatPrice(invoice.total)}</span></span>
+                        <span>{t.cardSubtotal} <span className="text-gray-200">{formatPrice(invoice.subtotal)}</span></span>
+                        <span>{t.cardTotal} <span className="text-gray-200">{formatPrice(invoice.total)}</span></span>
                         {invoice.issued_at && (
-                          <span>Issued: <span className="text-gray-200">{new Date(invoice.issued_at).toLocaleDateString()}</span></span>
+                          <span>{t.cardIssued} <span className="text-gray-200">{new Date(invoice.issued_at).toLocaleDateString()}</span></span>
                         )}
                       </div>
                     </button>
@@ -865,12 +866,12 @@ function AdminInvoicesView() {
                     <table className="w-full text-left">
                       <thead className="border-b border-gray-700">
                         <tr className="text-xs uppercase tracking-wider text-gray-400">
-                          <th className="px-5 py-3">Invoice</th>
-                          <th className="px-5 py-3">Customer</th>
-                          <th className="px-5 py-3">Status</th>
-                          <th className="px-5 py-3">Issued</th>
-                          <th className="px-5 py-3">Subtotal</th>
-                          <th className="px-5 py-3">Total</th>
+                          <th className="px-5 py-3">{t.colInvoice}</th>
+                          <th className="px-5 py-3">{t.colCustomer}</th>
+                          <th className="px-5 py-3">{t.colStatus}</th>
+                          <th className="px-5 py-3">{t.colIssued}</th>
+                          <th className="px-5 py-3">{t.colSubtotal}</th>
+                          <th className="px-5 py-3">{t.colTotal}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-700">
@@ -901,7 +902,10 @@ function AdminInvoicesView() {
 
                 <div className="mx-auto mt-2 max-w-5xl px-1">
                   <p className="text-sm text-gray-500">
-                    Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredInvoices.length)} of {filteredInvoices.length} invoices
+                    {t.showingOf
+                      .replace('{start}', String((currentPage - 1) * ITEMS_PER_PAGE + 1))
+                      .replace('{end}', String(Math.min(currentPage * ITEMS_PER_PAGE, filteredInvoices.length)))
+                      .replace('{total}', String(filteredInvoices.length))}
                   </p>
                 </div>
 
@@ -973,7 +977,7 @@ function AdminInvoicesView() {
                   </button>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs text-gray-500">Order #{selectedInvoice.order_id}</p>
-                    <h2 className="text-sm font-bold text-white leading-tight">Order Details</h2>
+                    <h2 className="text-sm font-bold text-white leading-tight">{t.sectionOrderInfo}</h2>
                   </div>
                   <button
                     onClick={closeModal}
@@ -999,7 +1003,7 @@ function AdminInvoicesView() {
                     <>
                       {/* Order meta */}
                       <section>
-                        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Order Info</h3>
+                        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionOrderInfo}</h3>
                         <div className="grid grid-cols-2 gap-y-1.5 text-sm">
                           <p className="text-gray-300"><span className="text-gray-500">ID: </span>#{orderData.id}</p>
                           {orderData.status && (
@@ -1009,15 +1013,15 @@ function AdminInvoicesView() {
                             </p>
                           )}
                           <p className="text-gray-300 col-span-2">
-                            <span className="text-gray-500">Customer: </span>
+                            <span className="text-gray-500">{t.labelOrderCustomer} </span>
                             {orderData.customer_first_name} {orderData.customer_last_name}
                           </p>
                           {orderData.created_at && (
-                            <p className="text-gray-300"><span className="text-gray-500">Created: </span>{new Date(orderData.created_at).toLocaleDateString()}</p>
+                            <p className="text-gray-300"><span className="text-gray-500">{t.labelOrderCreated} </span>{new Date(orderData.created_at).toLocaleDateString()}</p>
                           )}
                           {orderData.total !== undefined && (
                             <p className="text-gray-300">
-                              <span className="text-gray-500">Total: </span>
+                              <span className="text-gray-500">{t.labelOrderTotal} </span>
                               <span className="font-semibold text-white">{formatPrice(orderData.total)}</span>
                             </p>
                           )}
@@ -1027,7 +1031,7 @@ function AdminInvoicesView() {
                       {/* Shipping address */}
                       {orderData.shipping_address && (
                         <section>
-                          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Shipping Address</h3>
+                          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionShipping}</h3>
                           <p className="text-sm text-gray-300 leading-relaxed">
                             {orderData.shipping_address.street}<br />
                             {orderData.shipping_address.postal_code} {orderData.shipping_address.city}<br />
@@ -1040,7 +1044,7 @@ function AdminInvoicesView() {
                       {orderData.items && orderData.items.length > 0 && (
                         <section>
                           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                            Items ({orderData.items.length})
+                            {t.sectionOrderItems} ({orderData.items.length})
                           </h3>
                           <div className="space-y-2">
                             {orderData.items.map((item, idx) => (
@@ -1061,7 +1065,7 @@ function AdminInvoicesView() {
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-white truncate">{item.product_title ?? `Product #${item.product_id}`}</p>
                                   <p className="text-xs text-gray-400">
-                                    Qty: {item.quantity} &middot; {formatPrice(item.unit_price ?? item.price ?? item.sale_price)}
+                                    {t.labelItemQty} {item.quantity} &middot; {formatPrice(item.unit_price ?? item.price ?? item.sale_price)}
                                   </p>
                                 </div>
                                 <p className="shrink-0 text-sm font-semibold text-white">{formatPrice(item.subtotal)}</p>
@@ -1073,8 +1077,7 @@ function AdminInvoicesView() {
 
                       {orderData.notes && (
                         <section>
-                          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Notes</h3>
-                          <p className="text-sm text-gray-300 whitespace-pre-wrap">{orderData.notes}</p>
+                          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionOrderNotes}</h3>
                         </section>
                       )}
                     </>
@@ -1087,7 +1090,7 @@ function AdminInvoicesView() {
                 <div className="flex shrink-0 items-center justify-between border-b border-gray-700 px-5 py-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="font-mono text-base font-bold text-blue-300 truncate">{selectedInvoice.invoice_number}</span>
-                    <span className="text-xs text-gray-400">Editing</span>
+                    <span className="text-xs text-gray-400">{t.editingLabel}</span>
                   </div>
                   <button
                     type="button"
@@ -1105,21 +1108,21 @@ function AdminInvoicesView() {
                 <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
                   {/* Invoice Number */}
                   <fieldset>
-                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Invoice Number</legend>
+                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionInvoiceNumber}</legend>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         name="invoice_number"
                         value={editForm.invoice_number}
                         onChange={handleEditChange}
-                        placeholder="e.g. INV-2026-47832"
+                        placeholder={t.invoiceNumPlaceholder}
                         className="flex-1 rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white font-mono text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
                       <button
                         type="button"
                         onClick={() => setEditForm(prev => prev ? { ...prev, invoice_number: generateInvoiceNumber() } : prev)}
                         className="shrink-0 rounded-lg border border-gray-600 px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                        title="Generate invoice number"
+                        title={t.titleGenerateNumber}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -1130,7 +1133,7 @@ function AdminInvoicesView() {
 
                   {/* Status */}
                   <fieldset>
-                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Status</legend>
+                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionStatus}</legend>
                     <select
                       name="status"
                       value={editForm.status}
@@ -1145,25 +1148,25 @@ function AdminInvoicesView() {
 
                   {/* Customer */}
                   <fieldset>
-                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Customer</legend>
+                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionCustomerEdit}</legend>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="mb-1 block text-xs text-gray-400">First name</label>
+                        <label className="mb-1 block text-xs text-gray-400">{t.labelFirstName}</label>
                         <input type="text" name="customer_first_name" value={editForm.customer_first_name} onChange={handleEditChange}
                           className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs text-gray-400">Last name</label>
+                        <label className="mb-1 block text-xs text-gray-400">{t.labelLastName}</label>
                         <input type="text" name="customer_last_name" value={editForm.customer_last_name} onChange={handleEditChange}
                           className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs text-gray-400">Email</label>
+                        <label className="mb-1 block text-xs text-gray-400">{t.labelEmailEdit}</label>
                         <input type="email" name="customer_email" value={editForm.customer_email} onChange={handleEditChange}
                           className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs text-gray-400">Phone</label>
+                        <label className="mb-1 block text-xs text-gray-400">{t.labelPhoneEdit}</label>
                         <input type="tel" name="customer_phone" value={editForm.customer_phone} onChange={handleEditChange}
                           className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
@@ -1172,25 +1175,25 @@ function AdminInvoicesView() {
 
                   {/* Billing address */}
                   <fieldset>
-                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Billing Address</legend>
+                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionBillingEdit}</legend>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div className="sm:col-span-2">
-                        <label className="mb-1 block text-xs text-gray-400">Street</label>
+                        <label className="mb-1 block text-xs text-gray-400">{t.labelStreet}</label>
                         <input type="text" name="billing_address_street" value={editForm.billing_address_street} onChange={handleEditChange}
                           className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs text-gray-400">City</label>
+                        <label className="mb-1 block text-xs text-gray-400">{t.labelCity}</label>
                         <input type="text" name="billing_address_city" value={editForm.billing_address_city} onChange={handleEditChange}
                           className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs text-gray-400">Postal code</label>
+                        <label className="mb-1 block text-xs text-gray-400">{t.labelPostalCode}</label>
                         <input type="text" name="billing_address_postal_code" value={editForm.billing_address_postal_code} onChange={handleEditChange}
                           className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs text-gray-400">Country</label>
+                        <label className="mb-1 block text-xs text-gray-400">{t.labelCountry}</label>
                         <CountrySelect name="billing_address_country" value={editForm.billing_address_country} onChange={handleEditChange}
                           className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
@@ -1200,7 +1203,7 @@ function AdminInvoicesView() {
                   {/* Invoice lines */}
                   <fieldset>
                     <div className="mb-2 flex items-center justify-between">
-                      <legend className="text-xs font-semibold uppercase tracking-wider text-gray-400">Invoice Lines</legend>
+                      <legend className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionLinesEdit}</legend>
                       <button
                         type="button"
                         onClick={addItem}
@@ -1209,12 +1212,12 @@ function AdminInvoicesView() {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                         </svg>
-                        Add line
+                        {t.btnAddLine}
                       </button>
                     </div>
                     {editItems.length === 0 ? (
                       <p className="rounded-lg border border-dashed border-gray-600 py-6 text-center text-sm text-gray-500">
-                        No lines yet. Click "Add line" to add one.
+                        {t.emptyLines}
                       </p>
                     ) : (
                       <div className="space-y-3">
@@ -1233,7 +1236,7 @@ function AdminInvoicesView() {
                               </select>
                               <input
                                 type="text"
-                                placeholder="Description"
+                                placeholder={t.descriptionPlaceholder}
                                 value={item.description}
                                 onChange={(e) => handleItemChange(index, 'description', e.target.value)}
                                 className="flex-1 min-w-0 rounded border border-gray-600 bg-gray-800 px-2 py-1.5 text-xs text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
@@ -1252,7 +1255,7 @@ function AdminInvoicesView() {
                             {/* Row 2: qty + unit price + tax rate + auto total */}
                             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                               <div>
-                                <label className="mb-0.5 block text-xs text-gray-500">Qty</label>
+                                <label className="mb-0.5 block text-xs text-gray-500">{t.labelQty}</label>
                                 <input
                                   type="number"
                                   value={item.quantity}
@@ -1262,7 +1265,7 @@ function AdminInvoicesView() {
                                 />
                               </div>
                               <div>
-                                <label className="mb-0.5 block text-xs text-gray-500">Unit price</label>
+                                <label className="mb-0.5 block text-xs text-gray-500">{t.labelUnitPrice}</label>
                                 <input
                                   type="number"
                                   value={item.unit_price}
@@ -1272,7 +1275,7 @@ function AdminInvoicesView() {
                                 />
                               </div>
                               <div>
-                                <label className="mb-0.5 block text-xs text-gray-500">Tax rate</label>
+                                <label className="mb-0.5 block text-xs text-gray-500">{t.labelTaxRate}</label>
                                 <TaxRateCombobox
                                   itemKey={item._key}
                                   value={item.tax_rate}
@@ -1281,7 +1284,7 @@ function AdminInvoicesView() {
                                 />
                               </div>
                               <div>
-                                <label className="mb-0.5 block text-xs text-gray-500">Total (auto)</label>
+                                <label className="mb-0.5 block text-xs text-gray-500">{t.labelTotalAuto}</label>
                                 <div className="rounded border border-gray-700 bg-gray-800/50 px-2 py-1.5 text-xs text-gray-300">
                                   {formatPrice(computeLineTotal(item.quantity, item.unit_price))}
                                 </div>
@@ -1295,16 +1298,16 @@ function AdminInvoicesView() {
 
                   {/* Amounts */}
                   <fieldset>
-                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Amounts</legend>
+                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionAmountsEdit}</legend>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="mb-1 block text-xs text-gray-400">Subtotal</label>
+                        <label className="mb-1 block text-xs text-gray-400">{t.labelSubtotalEdit}</label>
                         <input type="number" name="subtotal" value={editForm.subtotal} onChange={handleEditChange}
                           step="0.01" min="0"
                           className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs text-gray-400">Total</label>
+                        <label className="mb-1 block text-xs text-gray-400">{t.labelTotalEdit}</label>
                         <input type="number" name="total" value={editForm.total} onChange={handleEditChange}
                           step="0.01" min="0"
                           className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
@@ -1314,7 +1317,7 @@ function AdminInvoicesView() {
 
                   {/* Notes */}
                   <fieldset>
-                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Notes</legend>
+                    <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionNotesEdit}</legend>
                     <textarea name="notes" value={editForm.notes} onChange={handleEditChange}
                       rows={3}
                       className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none" />
@@ -1328,12 +1331,12 @@ function AdminInvoicesView() {
                 <div className="flex shrink-0 gap-2 border-t border-gray-700 px-5 py-4">
                   <button type="button" onClick={cancelEditing} disabled={saveLoading}
                     className="flex-1 rounded-lg border border-gray-600 py-2.5 font-semibold text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50">
-                    Cancel
+                    {t.btnCancelEdit}
                   </button>
                   <button type="submit" disabled={saveLoading}
                     className="flex-1 rounded-lg bg-blue-600 py-2.5 font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
                     {saveLoading && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-                    {saveLoading ? 'Saving\u2026' : 'Save changes'}
+                    {saveLoading ? t.btnSaving : t.btnSaveChanges}
                   </button>
                 </div>
               </form>
@@ -1360,18 +1363,18 @@ function AdminInvoicesView() {
                 <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
                   {/* Customer info */}
                   <section>
-                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Customer</h3>
+                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionCustomer}</h3>
                     <div className="grid grid-cols-1 gap-y-1 text-sm sm:grid-cols-2 sm:gap-x-6">
-                      <p className="text-gray-300"><span className="text-gray-500">Name: </span>{selectedInvoice.customer_first_name} {selectedInvoice.customer_last_name}</p>
-                      <p className="text-gray-300"><span className="text-gray-500">Email: </span>{selectedInvoice.customer_email || '\u2014'}</p>
-                      <p className="text-gray-300"><span className="text-gray-500">Phone: </span>{selectedInvoice.customer_phone || '\u2014'}</p>
+                      <p className="text-gray-300"><span className="text-gray-500">{t.labelName} </span>{selectedInvoice.customer_first_name} {selectedInvoice.customer_last_name}</p>
+                      <p className="text-gray-300"><span className="text-gray-500">{t.labelEmail} </span>{selectedInvoice.customer_email || '\u2014'}</p>
+                      <p className="text-gray-300"><span className="text-gray-500">{t.labelPhone} </span>{selectedInvoice.customer_phone || '\u2014'}</p>
                     </div>
                   </section>
 
                   {/* Billing address */}
                   {selectedInvoice.billing_address && (
                     <section>
-                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Billing Address</h3>
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionBilling}</h3>
                       <p className="text-sm text-gray-300 leading-relaxed">
                         {selectedInvoice.billing_address.street}<br />
                         {selectedInvoice.billing_address.postal_code} {selectedInvoice.billing_address.city}<br />
@@ -1384,16 +1387,16 @@ function AdminInvoicesView() {
                   {selectedInvoice.items && selectedInvoice.items.length > 0 && (
                     <section>
                       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                        Invoice Lines ({selectedInvoice.items.length})
+                        {t.sectionLines} ({selectedInvoice.items.length})
                       </h3>
                       <div className="rounded-lg border border-gray-700 overflow-hidden">
                         <table className="w-full text-xs">
                           <thead className="border-b border-gray-700 bg-gray-900/50">
                             <tr className="text-gray-500">
-                              <th className="px-3 py-2 text-left font-medium">Description</th>
-                              <th className="px-3 py-2 text-right font-medium">Qty</th>
-                              <th className="px-3 py-2 text-right font-medium">Unit</th>
-                              <th className="px-3 py-2 text-right font-medium">Total</th>
+                              <th className="px-3 py-2 text-left font-medium">{t.colDescription}</th>
+                              <th className="px-3 py-2 text-right font-medium">{t.colQty}</th>
+                              <th className="px-3 py-2 text-right font-medium">{t.colUnit}</th>
+                              <th className="px-3 py-2 text-right font-medium">{t.colTotal}</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-700/50">
@@ -1416,19 +1419,19 @@ function AdminInvoicesView() {
 
                   {/* Amounts */}
                   <section>
-                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Amounts</h3>
+                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionAmounts}</h3>
                     <div className="flex gap-8 text-sm">
-                      <p className="text-gray-300"><span className="text-gray-500">Subtotal: </span>{formatPrice(selectedInvoice.subtotal)}</p>
-                      <p className="text-gray-300"><span className="text-gray-500">Total: </span><span className="font-semibold text-white">{formatPrice(selectedInvoice.total)}</span></p>
+                      <p className="text-gray-300"><span className="text-gray-500">{t.labelSubtotal} </span>{formatPrice(selectedInvoice.subtotal)}</p>
+                      <p className="text-gray-300"><span className="text-gray-500">{t.labelTotal} </span><span className="font-semibold text-white">{formatPrice(selectedInvoice.total)}</span></p>
                     </div>
                   </section>
 
                   {/* Other */}
                   <section>
-                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Other</h3>
+                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionOther}</h3>
                     <div className="grid grid-cols-2 gap-y-1.5 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-500">Order ID:</span>
+                        <span className="text-gray-500">{t.labelOrderId}</span>
                         {selectedInvoice.order_id ? (
                           <button
                             type="button"
@@ -1441,20 +1444,19 @@ function AdminInvoicesView() {
                           <span className="text-gray-300">\u2014</span>
                         )}
                       </div>
-                      <p className="text-gray-300"><span className="text-gray-500">User ID: </span>{selectedInvoice.user_id}</p>
+                      <p className="text-gray-300"><span className="text-gray-500">{t.labelUserId} </span>{selectedInvoice.user_id}</p>
                       {selectedInvoice.issued_at && (
-                        <p className="text-gray-300"><span className="text-gray-500">Issued: </span>{new Date(selectedInvoice.issued_at).toLocaleDateString()}</p>
+                        <p className="text-gray-300"><span className="text-gray-500">{t.labelIssued} </span>{new Date(selectedInvoice.issued_at).toLocaleDateString()}</p>
                       )}
                       {selectedInvoice.paid_at && (
-                        <p className="text-gray-300"><span className="text-gray-500">Paid: </span>{new Date(selectedInvoice.paid_at).toLocaleDateString()}</p>
+                        <p className="text-gray-300"><span className="text-gray-500">{t.labelPaid} </span>{new Date(selectedInvoice.paid_at).toLocaleDateString()}</p>
                       )}
                     </div>
                   </section>
 
                   {selectedInvoice.notes && (
                     <section>
-                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Notes</h3>
-                      <p className="text-sm text-gray-300 whitespace-pre-wrap">{selectedInvoice.notes}</p>
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionNotes}</h3>
                     </section>
                   )}
 
@@ -1464,7 +1466,7 @@ function AdminInvoicesView() {
 
                   {deleteConfirm && (
                     <div className="rounded-lg border border-red-500/30 bg-red-900/20 p-4">
-                      <p className="mb-3 text-sm font-medium text-red-300">Delete this invoice? This action cannot be undone.</p>
+                      <p className="mb-3 text-sm font-medium text-red-300">{t.deleteConfirm}</p>
                       <div className="flex gap-2">
                         <button type="button" onClick={() => setDeleteConfirm(false)} disabled={deleteLoading}
                           className="flex-1 rounded-lg border border-gray-600 py-2 text-sm font-semibold text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50">
@@ -1483,11 +1485,11 @@ function AdminInvoicesView() {
                 <div className="flex shrink-0 gap-2 border-t border-gray-700 px-5 py-4">
                   <button type="button" onClick={() => setDeleteConfirm(true)} disabled={deleteLoading || deleteConfirm}
                     className="rounded-lg border border-red-700/60 px-4 py-2.5 text-sm font-semibold text-red-400 hover:bg-red-900/30 transition-colors disabled:opacity-50">
-                    Delete
+                    {t.btnDelete}
                   </button>
                   <button type="button" onClick={startEditing}
                     className="flex-1 rounded-lg bg-blue-600 py-2.5 font-semibold text-white hover:bg-blue-700 transition-colors">
-                    Edit
+                    {t.btnEdit}
                   </button>
                 </div>
               </div>
@@ -1503,7 +1505,7 @@ function AdminInvoicesView() {
           <div className="relative w-full sm:max-w-2xl max-h-[92dvh] rounded-t-2xl sm:rounded-2xl bg-gray-800 border border-gray-700 shadow-2xl flex flex-col overflow-hidden">
             {/* Header */}
             <div className="flex shrink-0 items-center justify-between border-b border-gray-700 px-5 py-4">
-              <h2 className="text-base font-bold text-white">New Invoice</h2>
+              <h2 className="text-base font-bold text-white">{t.createTitle}</h2>
               <button
                 type="button"
                 onClick={closeCreateModal}
@@ -1522,11 +1524,11 @@ function AdminInvoicesView() {
 
                 {/* Order selector */}
                 <fieldset>
-                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Link to Order (optional)</legend>
+                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionLinkOrder}</legend>
                   {createOrdersLoading ? (
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                       <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
-                      Loading orders…
+                      {t.loadingOrders}
                     </div>
                   ) : (
                     <select
@@ -1534,7 +1536,7 @@ function AdminInvoicesView() {
                       onChange={(e) => handleCreateOrderSelect(e.target.value)}
                       className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      <option value="">— No order —</option>
+                      <option value="">{t.noOrder}</option>
                       {createOrdersList.map((order) => (
                         <option key={order.id} value={String(order.id)}>
                           {order.order_number ?? `#${order.id}`}
@@ -1545,27 +1547,27 @@ function AdminInvoicesView() {
                     </select>
                   )}
                   {createSelectedOrderId && (
-                    <p className="mt-1.5 text-xs text-green-400">Customer and line items auto-populated from order. You can still edit them below.</p>
+                    <p className="mt-1.5 text-xs text-green-400">{t.autoPopulated}</p>
                   )}
                 </fieldset>
 
                 {/* Invoice Number */}
                 <fieldset>
-                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Invoice Number</legend>
+                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionInvoiceNumber}</legend>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       name="invoice_number"
                       value={createForm.invoice_number}
                       onChange={handleCreateFormChange}
-                      placeholder="e.g. INV-2026-47832"
+                      placeholder={t.invoiceNumPlaceholder}
                       className="flex-1 rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white font-mono text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <button
                       type="button"
                       onClick={() => setCreateForm(prev => ({ ...prev, invoice_number: generateInvoiceNumber() }))}
                       className="shrink-0 rounded-lg border border-gray-600 px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                      title="Generate invoice number"
+                      title={t.titleGenerateNumber}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -1576,7 +1578,7 @@ function AdminInvoicesView() {
 
                 {/* Status */}
                 <fieldset>
-                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Status</legend>
+                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionStatus}</legend>
                   <select
                     name="status"
                     value={createForm.status}
@@ -1591,25 +1593,25 @@ function AdminInvoicesView() {
 
                 {/* Customer */}
                 <fieldset>
-                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Customer</legend>
+                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionCustomerEdit}</legend>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <label className="mb-1 block text-xs text-gray-400">First name</label>
+                      <label className="mb-1 block text-xs text-gray-400">{t.labelFirstName}</label>
                       <input type="text" name="customer_first_name" value={createForm.customer_first_name} onChange={handleCreateFormChange}
                         className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs text-gray-400">Last name</label>
+                      <label className="mb-1 block text-xs text-gray-400">{t.labelLastName}</label>
                       <input type="text" name="customer_last_name" value={createForm.customer_last_name} onChange={handleCreateFormChange}
                         className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs text-gray-400">Email</label>
+                      <label className="mb-1 block text-xs text-gray-400">{t.labelEmailEdit}</label>
                       <input type="email" name="customer_email" value={createForm.customer_email} onChange={handleCreateFormChange}
                         className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs text-gray-400">Phone</label>
+                      <label className="mb-1 block text-xs text-gray-400">{t.labelPhoneEdit}</label>
                       <input type="tel" name="customer_phone" value={createForm.customer_phone} onChange={handleCreateFormChange}
                         className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
@@ -1618,25 +1620,25 @@ function AdminInvoicesView() {
 
                 {/* Billing address */}
                 <fieldset>
-                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Billing Address</legend>
+                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionBillingEdit}</legend>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="sm:col-span-2">
-                      <label className="mb-1 block text-xs text-gray-400">Street</label>
+                      <label className="mb-1 block text-xs text-gray-400">{t.labelStreet}</label>
                       <input type="text" name="billing_address_street" value={createForm.billing_address_street} onChange={handleCreateFormChange}
                         className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs text-gray-400">City</label>
+                      <label className="mb-1 block text-xs text-gray-400">{t.labelCity}</label>
                       <input type="text" name="billing_address_city" value={createForm.billing_address_city} onChange={handleCreateFormChange}
                         className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs text-gray-400">Postal code</label>
+                      <label className="mb-1 block text-xs text-gray-400">{t.labelPostalCode}</label>
                       <input type="text" name="billing_address_postal_code" value={createForm.billing_address_postal_code} onChange={handleCreateFormChange}
                         className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs text-gray-400">Country</label>
+                      <label className="mb-1 block text-xs text-gray-400">{t.labelCountry}</label>
                       <CountrySelect name="billing_address_country" value={createForm.billing_address_country} onChange={handleCreateFormChange}
                         className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
@@ -1646,7 +1648,7 @@ function AdminInvoicesView() {
                 {/* Invoice lines */}
                 <fieldset>
                   <div className="mb-2 flex items-center justify-between">
-                    <legend className="text-xs font-semibold uppercase tracking-wider text-gray-400">Invoice Lines</legend>
+                    <legend className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionLinesEdit}</legend>
                     <button
                       type="button"
                       onClick={addCreateItem}
@@ -1655,12 +1657,12 @@ function AdminInvoicesView() {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                       </svg>
-                      Add line
+                      {t.btnAddLine}
                     </button>
                   </div>
                   {createItems.length === 0 ? (
                     <p className="rounded-lg border border-dashed border-gray-600 py-6 text-center text-sm text-gray-500">
-                      No lines yet. Select an order above or click "Add line".
+                      {t.emptyCreateLines}
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -1678,7 +1680,7 @@ function AdminInvoicesView() {
                             </select>
                             <input
                               type="text"
-                              placeholder="Description"
+                              placeholder={t.descriptionPlaceholder}
                               value={item.description}
                               onChange={(e) => handleCreateItemChange(index, 'description', e.target.value)}
                               className="flex-1 min-w-0 rounded border border-gray-600 bg-gray-800 px-2 py-1.5 text-xs text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
@@ -1696,19 +1698,19 @@ function AdminInvoicesView() {
                           </div>
                           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                             <div>
-                              <label className="mb-0.5 block text-xs text-gray-500">Qty</label>
+                              <label className="mb-0.5 block text-xs text-gray-500">{t.labelQty}</label>
                               <input type="number" value={item.quantity} onChange={(e) => handleCreateItemChange(index, 'quantity', e.target.value)}
                                 step="1"
                                 className="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none" />
                             </div>
                             <div>
-                              <label className="mb-0.5 block text-xs text-gray-500">Unit price</label>
+                              <label className="mb-0.5 block text-xs text-gray-500">{t.labelUnitPrice}</label>
                               <input type="number" value={item.unit_price} onChange={(e) => handleCreateItemChange(index, 'unit_price', e.target.value)}
                                 step="0.01"
                                 className="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none" />
                             </div>
                             <div>
-                              <label className="mb-0.5 block text-xs text-gray-500">Tax rate</label>
+                              <label className="mb-0.5 block text-xs text-gray-500">{t.labelTaxRate}</label>
                               <TaxRateCombobox
                                 itemKey={item._key}
                                 value={item.tax_rate}
@@ -1717,7 +1719,7 @@ function AdminInvoicesView() {
                               />
                             </div>
                             <div>
-                              <label className="mb-0.5 block text-xs text-gray-500">Total (auto)</label>
+                              <label className="mb-0.5 block text-xs text-gray-500">{t.labelTotalAuto}</label>
                               <div className="rounded border border-gray-700 bg-gray-800/50 px-2 py-1.5 text-xs text-gray-300">
                                 {formatPrice(computeLineTotal(item.quantity, item.unit_price))}
                               </div>
@@ -1731,16 +1733,16 @@ function AdminInvoicesView() {
 
                 {/* Amounts */}
                 <fieldset>
-                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Amounts</legend>
+                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionAmountsEdit}</legend>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <label className="mb-1 block text-xs text-gray-400">Subtotal</label>
+                      <label className="mb-1 block text-xs text-gray-400">{t.labelSubtotalEdit}</label>
                       <input type="number" name="subtotal" value={createForm.subtotal} onChange={handleCreateFormChange}
                         step="0.01" min="0"
                         className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs text-gray-400">Total</label>
+                      <label className="mb-1 block text-xs text-gray-400">{t.labelTotalEdit}</label>
                       <input type="number" name="total" value={createForm.total} onChange={handleCreateFormChange}
                         step="0.01" min="0"
                         className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
@@ -1750,7 +1752,7 @@ function AdminInvoicesView() {
 
                 {/* Notes */}
                 <fieldset>
-                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Notes</legend>
+                  <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.sectionNotesEdit}</legend>
                   <textarea name="notes" value={createForm.notes} onChange={handleCreateFormChange}
                     rows={3}
                     className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none" />
@@ -1765,12 +1767,12 @@ function AdminInvoicesView() {
               <div className="flex shrink-0 gap-2 border-t border-gray-700 px-5 py-4">
                 <button type="button" onClick={closeCreateModal} disabled={createSaveLoading}
                   className="flex-1 rounded-lg border border-gray-600 py-2.5 font-semibold text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50">
-                  Cancel
+                  {t.btnCancelEdit}
                 </button>
                 <button type="submit" disabled={createSaveLoading}
                   className="flex-1 rounded-lg bg-green-600 py-2.5 font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
                   {createSaveLoading && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-                  {createSaveLoading ? 'Creating…' : 'Create Invoice'}
+                  {createSaveLoading ? t.btnCreating : t.btnCreate}
                 </button>
               </div>
             </form>

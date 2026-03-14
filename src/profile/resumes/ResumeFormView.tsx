@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getMe } from '../../api/authApi';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
 import type { Language } from '../../i18n';
 import {
@@ -26,6 +27,7 @@ import type {
   WorkExperience,
 } from '../../api/resumesApi';
 import NavBar from '../../components/NavBar';
+import SkillCategorySelect from '../../components/SkillCategorySelect';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -46,6 +48,8 @@ interface FormData {
   photo: string;
   language: string;
   is_primary: boolean;
+  is_public: boolean;
+  code: string;
   theme: string;
   template: string;
   // summary
@@ -280,6 +284,98 @@ function listMove<T>(arr: T[], index: number, direction: -1 | 1): T[] {
 }
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// SpokenLanguageSelect — searchable combobox
+// ---------------------------------------------------------------------------
+
+function SpokenLanguageSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options: ExportOption[];
+  placeholder?: string;
+}) {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery('');
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filtered = query.trim()
+    ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
+    : options;
+
+  const selectedLabel =
+    options.find((o) => o.value === value)?.label ??
+    options.find((o) => o.value.toLowerCase() === value.toLowerCase())?.label ??
+    options.find((o) => o.label.toLowerCase() === value.toLowerCase())?.label ??
+    value;
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div
+        className={INPUT_CLS + ' flex items-center justify-between cursor-pointer gap-2'}
+        onClick={() => { setOpen((v) => !v); setQuery(''); }}
+      >
+        <span className={selectedLabel ? 'text-white' : 'text-white/30'}>
+          {selectedLabel || placeholder}
+        </span>
+        <svg className="w-4 h-4 text-white/30 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-gray-600 bg-gray-800 shadow-xl overflow-hidden">
+          <div className="p-2 border-b border-gray-700">
+            <input
+              autoFocus
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search…"
+              className="w-full bg-gray-700 rounded-md px-3 py-1.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <ul className="max-h-52 overflow-y-auto">
+            {filtered.length === 0 && (
+              <li className="px-3 py-2 text-sm text-white/40">No results</li>
+            )}
+            {filtered.map((opt) => (
+              <li
+                key={opt.value}
+                onClick={() => { onChange(opt.value); setOpen(false); setQuery(''); }}
+                className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
+                  opt.value === value
+                    ? 'bg-blue-600/30 text-blue-300'
+                    : 'text-white/80 hover:bg-gray-700'
+                }`}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Section renderers
 // ---------------------------------------------------------------------------
 
@@ -292,6 +388,7 @@ function PersonalSection({
   themes,
   templates,
   languages,
+  username,
   t,
 }: {
   data: FormData;
@@ -302,9 +399,12 @@ function PersonalSection({
   themes: ExportOption[];
   templates: ExportOption[];
   languages: ExportOption[];
+  username: string;
   t: (typeof translations)[typeof DEFAULT_LANGUAGE]['resumes'];
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showCode, setShowCode] = useState(() => !!data.code);
+  const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -430,6 +530,92 @@ function PersonalSection({
           </div>
         </div>
       </div>
+
+      {/* Visibility & Access Code */}
+      <div className="sm:col-span-2">
+        <div className="flex items-center justify-between mb-3">
+          <label className={LABEL_CLS + ' mb-0'}>{t.fieldResumeVisibility}</label>
+          <button
+            type="button"
+            onClick={() => onChange({ is_public: !data.is_public })}
+            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border transition-colors ${
+              data.is_public
+                ? 'bg-green-500/20 border-green-500/50 text-green-400'
+                : 'border-gray-600 text-white/40 hover:text-white/70 hover:border-gray-500'
+            }`}
+          >
+            {data.is_public ? (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            )}
+            {data.is_public ? t.visibilityPublic : t.visibilityPrivate}
+          </button>
+        </div>
+        <label className={LABEL_CLS}>{t.fieldResumeCode}</label>
+        <div className="relative">
+          <input
+            type={showCode ? 'text' : 'password'}
+            value={data.code}
+            onChange={(e) => onChange({ code: e.target.value })}
+            placeholder={t.fieldResumeCodePlaceholder}
+            autoComplete="off"
+            className={INPUT_CLS + ' pr-10'}
+          />
+          <button
+            type="button"
+            onClick={() => setShowCode((v) => !v)}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-white/40 hover:text-white/70 transition-colors"
+            tabIndex={-1}
+            aria-label={showCode ? 'Hide code' : 'Show code'}
+          >
+            {showCode ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            )}
+          </button>
+        </div>
+        <div className="mt-2 rounded-lg bg-gray-800/60 border border-gray-700 px-3 py-2 text-xs text-white/50 space-y-1">
+          <p>{t.resumeCodeDesc}</p>
+          <button
+            type="button"
+            onClick={() => {
+              const url = `${(import.meta.env.VITE_JUSSILOG_BACKEND_API_BASE_URL as string)?.replace(/\/+$/, '')}/resumes/current?owner=${username || 'owner'}${data.code ? `&code=${data.code}` : ''}`;
+              navigator.clipboard.writeText(url).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              });
+            }}
+            className="flex items-center gap-1.5 w-full text-left group"
+            title="Click to copy"
+          >
+            <code className="block font-mono text-white/30 break-all group-hover:text-white/50 transition-colors flex-1">
+              {(import.meta.env.VITE_JUSSILOG_BACKEND_API_BASE_URL as string)?.replace(/\/+$/, '')}/resumes/current?owner={username || 'owner'}{data.code ? `&code=${data.code}` : ''}
+            </code>
+            <span className="shrink-0 ml-1">
+              {copied ? (
+                <svg className="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5 text-white/20 group-hover:text-white/50 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              )}
+            </span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -492,7 +678,7 @@ function ResumeFormView() {
   }, []);
 
   const [activeSection, setActiveSection] = useState<SectionKey>('personal');
-  const [exportOptions, setExportOptions] = useState<ExportOptions>({ themes: [], templates: [], languages: [] });
+  const [exportOptions, setExportOptions] = useState<ExportOptions>({ themes: [], templates: [], languages: [], skill_categories: [], skill_proficiencies: [], language_proficiencies: [], spoken_languages: [] });
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -502,6 +688,18 @@ function ResumeFormView() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [removePhoto, setRemovePhoto] = useState(false);
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    getMe()
+      .then((me) => {
+        // /me returns { user_id, user: { username, ... } } — username is nested
+        const nested = me.user as Record<string, unknown> | undefined;
+        const name = (nested?.username ?? me.username ?? '') as string;
+        setUsername(name);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     getExportOptions(language)
@@ -521,6 +719,8 @@ function ResumeFormView() {
     photo: '',
     language: '',
     is_primary: false,
+    is_public: false,
+    code: '',
     theme: '',
     template: '',
     summary: '',
@@ -560,6 +760,8 @@ function ResumeFormView() {
           photo: resume.photo ?? '',
           language: resume.language ?? '',
           is_primary: resume.is_primary ?? false,
+          is_public: resume.is_public ?? false,
+          code: resume.code ?? '',
           theme: resume.theme ?? '',
           template: resume.template ?? '',
           summary: resume.summary ?? '',
@@ -685,6 +887,8 @@ function ResumeFormView() {
         github_url: form.github_url || undefined,
         language: form.language || undefined,
         is_primary: form.is_primary,
+        is_public: form.is_public,
+        code: form.code.trim() || null,
         theme: form.theme || undefined,
         template: form.template || undefined,
         summary: form.summary || undefined,
@@ -764,6 +968,7 @@ function ResumeFormView() {
             themes={exportOptions.themes}
             templates={exportOptions.templates}
             languages={exportOptions.languages}
+            username={username}
             t={t}
           />
         );
@@ -787,11 +992,11 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldJobTitle} *</label>
+                      <label className={LABEL_CLS}>{t.fieldJobTitle}</label>
                       <input type="text" value={it.job_title} onChange={(e) => upd({ job_title: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldCompanyName} *</label>
+                      <label className={LABEL_CLS}>{t.fieldCompanyName}</label>
                       <input type="text" value={it.company_name} onChange={(e) => upd({ company_name: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div className="sm:col-span-2">
@@ -799,7 +1004,7 @@ function ResumeFormView() {
                       <input type="text" value={it.location ?? ''} onChange={(e) => upd({ location: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldStartDate} *</label>
+                      <label className={LABEL_CLS}>{t.fieldStartDate}</label>
                       <input type="date" value={it.start_date} onChange={(e) => upd({ start_date: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div className="flex flex-col justify-end gap-2">
@@ -866,15 +1071,15 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldDegree} *</label>
+                      <label className={LABEL_CLS}>{t.fieldDegree}</label>
                       <input type="text" value={it.degree} onChange={(e) => upd({ degree: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldFieldOfStudy} *</label>
+                      <label className={LABEL_CLS}>{t.fieldFieldOfStudy}</label>
                       <input type="text" value={it.field_of_study} onChange={(e) => upd({ field_of_study: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldInstitution} *</label>
+                      <label className={LABEL_CLS}>{t.fieldInstitution}</label>
                       <input type="text" value={it.institution_name} onChange={(e) => upd({ institution_name: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
@@ -937,17 +1142,18 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldCategory} *</label>
-                      <input
-                        type="text"
+                      <SkillCategorySelect
                         value={it.category}
-                        onChange={(e) => upd({ category: e.target.value })}
+                        onChange={(val) => upd({ category: val })}
+                        options={exportOptions.skill_categories}
+                        label={t.fieldCategory}
                         placeholder={t.fieldCategoryPlaceholder}
-                        className={INPUT_CLS}
+                        inputCls={INPUT_CLS}
+                        labelCls={LABEL_CLS}
                       />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldSkillName} *</label>
+                      <label className={LABEL_CLS}>{t.fieldSkillName}</label>
                       <input
                         type="text"
                         value={it.name}
@@ -957,15 +1163,16 @@ function ResumeFormView() {
                       />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldProficiency} *</label>
+                      <label className={LABEL_CLS}>{t.fieldProficiency}</label>
                       <select
                         value={it.proficiency}
                         onChange={(e) => upd({ proficiency: e.target.value as ResumeSkill['proficiency'] })}
                         className={INPUT_CLS}
                       >
-                        <option value="beginner">{t.proficiencyBeginner}</option>
-                        <option value="intermediate">{t.proficiencyIntermediate}</option>
-                        <option value="expert">{t.proficiencyExpert}</option>
+                        <option value="">{t.fieldProficiencyPlaceholder}</option>
+                        {exportOptions.skill_proficiencies.map(o => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -1001,7 +1208,7 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="sm:col-span-2">
-                      <label className={LABEL_CLS}>{t.fieldProjectName} *</label>
+                      <label className={LABEL_CLS}>{t.fieldProjectName}</label>
                       <input type="text" value={it.name} onChange={(e) => upd({ name: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div className="sm:col-span-2">
@@ -1062,11 +1269,11 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldCertName} *</label>
+                      <label className={LABEL_CLS}>{t.fieldCertName}</label>
                       <input type="text" value={it.name} onChange={(e) => upd({ name: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldIssuingOrg} *</label>
+                      <label className={LABEL_CLS}>{t.fieldIssuingOrg}</label>
                       <input type="text" value={it.issuing_organization} onChange={(e) => upd({ issuing_organization: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
@@ -1106,26 +1313,25 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldLanguage} *</label>
-                      <input
-                        type="text"
+                      <label className={LABEL_CLS}>{t.fieldLanguage}</label>
+                      <SpokenLanguageSelect
                         value={it.language}
-                        onChange={(e) => upd({ language: e.target.value })}
+                        onChange={(val) => upd({ language: val })}
+                        options={exportOptions.spoken_languages}
                         placeholder={t.fieldLanguagePlaceholder}
-                        className={INPUT_CLS}
                       />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldProficiency} *</label>
+                      <label className={LABEL_CLS}>{t.fieldProficiency}</label>
                       <select
                         value={it.proficiency}
                         onChange={(e) => upd({ proficiency: e.target.value as ResumeLanguage['proficiency'] })}
                         className={INPUT_CLS}
                       >
-                        <option value="native">{t.langNative}</option>
-                        <option value="fluent">{t.langFluent}</option>
-                        <option value="conversational">{t.langConversational}</option>
-                        <option value="basic">{t.langBasic}</option>
+                        <option value="">{t.fieldProficiencyPlaceholder}</option>
+                        {exportOptions.language_proficiencies.map(o => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -1161,7 +1367,7 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldAwardTitle} *</label>
+                      <label className={LABEL_CLS}>{t.fieldAwardTitle}</label>
                       <input type="text" value={it.title} onChange={(e) => upd({ title: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
@@ -1214,7 +1420,7 @@ function ResumeFormView() {
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldRecFullName} *</label>
+                      <label className={LABEL_CLS}>{t.fieldRecFullName}</label>
                       <input type="text" value={it.full_name} onChange={(e) => upd({ full_name: e.target.value })} className={INPUT_CLS} />
                     </div>
                     <div>
@@ -1234,7 +1440,7 @@ function ResumeFormView() {
                       <input type="tel" value={it.phone ?? ''} onChange={(e) => upd({ phone: e.target.value })} className={INPUT_CLS} placeholder={t.fieldPhonePlaceholder} />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={LABEL_CLS}>{t.fieldRecommendation} *</label>
+                      <label className={LABEL_CLS}>{t.fieldRecommendation}</label>
                       <textarea
                         value={it.recommendation}
                         onChange={(e) => upd({ recommendation: e.target.value })}

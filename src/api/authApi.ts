@@ -86,6 +86,7 @@ export async function resetPassword(payload: ResetPasswordPayload) {
 
 export interface User {
   user_id: number;
+  username?: string;
   role?: string;
   is_admin?: boolean;
   [key: string]: unknown;
@@ -93,7 +94,7 @@ export interface User {
 
 export async function getMe(): Promise<User> {
   const token = localStorage.getItem('auth_token');
-  
+
   if (!token) {
     throw new Error('No authentication token found');
   }

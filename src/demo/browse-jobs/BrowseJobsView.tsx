@@ -11,7 +11,7 @@ import { useJobsData } from './hooks/useJobsData';
 import { useJobsFilter } from './hooks/useJobsFilter';
 import { usePagination } from './hooks/usePagination';
 import type { VantaaJob } from './types';
-import { Header } from './components/Header';
+import DemoHeader from '../../components/DemoHeader';
 import { SearchForm } from './components/SearchForm';
 import { JobList } from './components/JobList';
 import { Pagination } from './components/Pagination';
@@ -22,7 +22,7 @@ function BrowseJobsView() {
   const year = new Date().getFullYear();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
-  
+
   // Custom hooks for data management
   const { jobs, categories, loading, error } = useJobsData(t.jobs.errorLoading);
   const {
@@ -33,7 +33,7 @@ function BrowseJobsView() {
     setSelectedCategory,
     handleClearSearch,
   } = useJobsFilter(jobs);
-  
+
   const pagination = usePagination(5);
 
   // Persist language preference
@@ -51,15 +51,12 @@ function BrowseJobsView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      <Header
+      <DemoHeader
         title={t.jobs.title}
         language={language}
-        onLanguageChange={(lang) => setLanguage(lang as Language)}
+        onLanguageChange={setLanguage}
+        backLabel={t.jobs.back}
         onBack={() => navigate('/')}
-        translations={{
-          languageLabel: t.chat.languageLabel,
-          back: t.jobs.back,
-        }}
       />
 
       <main className="grow p-6">

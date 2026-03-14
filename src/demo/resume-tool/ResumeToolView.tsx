@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
+import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../../i18n';
 import type { Language } from '../../i18n';
 import {
   exportResumePdfPublic,
@@ -20,7 +20,8 @@ import type {
   ResumeSkill,
   WorkExperience,
 } from '../../api/resumesApi';
-import NavBar from '../../components/NavBar';
+import DemoHeader from '../../components/DemoHeader';
+import SkillCategorySelect from '../../components/SkillCategorySelect';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -198,6 +199,89 @@ interface RepeatableItemProps<T extends { _id: string; sort_order?: number }> {
   onRemove: (index: number) => void;
   onMove: (index: number, direction: -1 | 1) => void;
   children: (item: T, update: (partial: Partial<T>) => void) => React.ReactNode;
+}
+
+// ---------------------------------------------------------------------------
+// SpokenLanguageSelect — searchable combobox
+// ---------------------------------------------------------------------------
+
+function SpokenLanguageSelect({
+  value, onChange, options, placeholder,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options: ExportOption[];
+  placeholder?: string;
+}) {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false); setQuery('');
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filtered = query.trim()
+    ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
+    : options;
+
+  const selectedLabel =
+    options.find((o) => o.value === value)?.label ??
+    options.find((o) => o.value.toLowerCase() === value.toLowerCase())?.label ??
+    options.find((o) => o.label.toLowerCase() === value.toLowerCase())?.label ??
+    value;
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div
+        className={INPUT_CLS + ' flex items-center justify-between cursor-pointer gap-2'}
+        onClick={() => { setOpen((v) => !v); setQuery(''); }}
+      >
+        <span className={selectedLabel ? 'text-white' : 'text-white/30'}>
+          {selectedLabel || placeholder}
+        </span>
+        <svg className="w-4 h-4 text-white/30 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-gray-600 bg-gray-800 shadow-xl overflow-hidden">
+          <div className="p-2 border-b border-gray-700">
+            <input
+              autoFocus
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search…"
+              className="w-full bg-gray-700 rounded-md px-3 py-1.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <ul className="max-h-52 overflow-y-auto">
+            {filtered.length === 0 && (
+              <li className="px-3 py-2 text-sm text-white/40">No results</li>
+            )}
+            {filtered.map((opt) => (
+              <li
+                key={opt.value}
+                onClick={() => { onChange(opt.value); setOpen(false); setQuery(''); }}
+                className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
+                  opt.value === value ? 'bg-blue-600/30 text-blue-300' : 'text-white/80 hover:bg-gray-700'
+                }`}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function RepeatableItem<T extends { _id: string; sort_order?: number }>({
@@ -404,17 +488,9 @@ function ResumeToolView() {
     { key: 'recommendations', label: t.sectionRecommendations },
   ];
 
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const lang = (e as CustomEvent<Language>).detail;
-      setLanguage(lang);
-    };
-    window.addEventListener('jussimatic-language-change', handler);
-    return () => window.removeEventListener('jussimatic-language-change', handler);
-  }, []);
   const [activeSection, setActiveSection] = useState<SectionKey>('personal');
   const [form, setForm] = useState<FormData>({ ...EMPTY_FORM });
-  const [exportOptions, setExportOptions] = useState<ExportOptions>({ themes: [], templates: [], languages: [] });
+  const [exportOptions, setExportOptions] = useState<ExportOptions>({ themes: [], templates: [], languages: [], skill_categories: [], skill_proficiencies: [], language_proficiencies: [], spoken_languages: [] });
   const [exporting, setExporting] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -554,10 +630,10 @@ function ResumeToolView() {
               <RepeatableItem key={item._id} item={item} index={i} total={form.work_experiences.length} onUpdate={workHandlers.update} onRemove={workHandlers.remove} onMove={workHandlers.move}>
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label className={LABEL_CLS}>{t.fieldJobTitle} *</label><input type="text" value={it.job_title} onChange={(e) => upd({ job_title: e.target.value })} className={INPUT_CLS} /></div>
-                    <div><label className={LABEL_CLS}>{t.fieldCompanyName} *</label><input type="text" value={it.company_name} onChange={(e) => upd({ company_name: e.target.value })} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldJobTitle}</label><input type="text" value={it.job_title} onChange={(e) => upd({ job_title: e.target.value })} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldCompanyName}</label><input type="text" value={it.company_name} onChange={(e) => upd({ company_name: e.target.value })} className={INPUT_CLS} /></div>
                     <div className="sm:col-span-2"><label className={LABEL_CLS}>{t.fieldLocation}</label><input type="text" value={it.location ?? ''} onChange={(e) => upd({ location: e.target.value })} className={INPUT_CLS} /></div>
-                    <div><label className={LABEL_CLS}>{t.fieldStartDate} *</label><input type="date" value={it.start_date} onChange={(e) => upd({ start_date: e.target.value })} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldStartDate}</label><input type="date" value={it.start_date} onChange={(e) => upd({ start_date: e.target.value })} className={INPUT_CLS} /></div>
                     <div className="flex flex-col justify-end gap-2">
                       <label className="flex items-center gap-2 text-sm text-white/70 cursor-pointer select-none">
                         <input type="checkbox" checked={!!it.is_current} onChange={(e) => upd({ is_current: e.target.checked, end_date: e.target.checked ? '' : it.end_date })} className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500" />
@@ -584,9 +660,9 @@ function ResumeToolView() {
               <RepeatableItem key={item._id} item={item} index={i} total={form.educations.length} onUpdate={edHandlers.update} onRemove={edHandlers.remove} onMove={edHandlers.move}>
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label className={LABEL_CLS}>{t.fieldDegree} *</label><input type="text" value={it.degree} onChange={(e) => upd({ degree: e.target.value })} className={INPUT_CLS} /></div>
-                    <div><label className={LABEL_CLS}>{t.fieldFieldOfStudy} *</label><input type="text" value={it.field_of_study} onChange={(e) => upd({ field_of_study: e.target.value })} className={INPUT_CLS} /></div>
-                    <div><label className={LABEL_CLS}>{t.fieldInstitution} *</label><input type="text" value={it.institution_name} onChange={(e) => upd({ institution_name: e.target.value })} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldDegree}</label><input type="text" value={it.degree} onChange={(e) => upd({ degree: e.target.value })} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldFieldOfStudy}</label><input type="text" value={it.field_of_study} onChange={(e) => upd({ field_of_study: e.target.value })} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldInstitution}</label><input type="text" value={it.institution_name} onChange={(e) => upd({ institution_name: e.target.value })} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldLocation}</label><input type="text" value={it.location ?? ''} onChange={(e) => upd({ location: e.target.value })} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldGraduationYear}</label><input type="number" value={it.graduation_year ?? ''} onChange={(e) => upd({ graduation_year: e.target.value ? Number(e.target.value) : undefined })} min={1900} max={2100} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldGPA}</label><input type="number" value={it.gpa ?? ''} onChange={(e) => upd({ gpa: e.target.value ? Number(e.target.value) : undefined })} min={0} max={10} step={0.01} className={INPUT_CLS} /></div>
@@ -608,14 +684,15 @@ function ResumeToolView() {
               <RepeatableItem key={item._id} item={item} index={i} total={form.skills.length} onUpdate={skillHandlers.update} onRemove={skillHandlers.remove} onMove={skillHandlers.move}>
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div><label className={LABEL_CLS}>{t.fieldCategory} *</label><input type="text" value={it.category} onChange={(e) => upd({ category: e.target.value })} placeholder={t.fieldCategoryPlaceholder} className={INPUT_CLS} /></div>
-                    <div><label className={LABEL_CLS}>{t.fieldSkillName} *</label><input type="text" value={it.name} onChange={(e) => upd({ name: e.target.value })} placeholder={t.fieldSkillNamePlaceholder} className={INPUT_CLS} /></div>
+                    <div><SkillCategorySelect value={it.category} onChange={(val) => upd({ category: val })} options={exportOptions.skill_categories} label={t.fieldCategory} placeholder={t.fieldCategoryPlaceholder} inputCls={INPUT_CLS} labelCls={LABEL_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldSkillName}</label><input type="text" value={it.name} onChange={(e) => upd({ name: e.target.value })} placeholder={t.fieldSkillNamePlaceholder} className={INPUT_CLS} /></div>
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldProficiency} *</label>
+                      <label className={LABEL_CLS}>{t.fieldProficiency}</label>
                       <select value={it.proficiency} onChange={(e) => upd({ proficiency: e.target.value as ResumeSkill['proficiency'] })} className={INPUT_CLS}>
-                        <option value="beginner">{t.proficiencyBeginner}</option>
-                        <option value="intermediate">{t.proficiencyIntermediate}</option>
-                        <option value="expert">{t.proficiencyExpert}</option>
+                        <option value="">{t.fieldProficiencyPlaceholder}</option>
+                        {exportOptions.skill_proficiencies.map(o => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -636,7 +713,7 @@ function ResumeToolView() {
               <RepeatableItem key={item._id} item={item} index={i} total={form.projects.length} onUpdate={projectHandlers.update as (index: number, item: WithId<Project & { technologies: string[] }>) => void} onRemove={projectHandlers.remove} onMove={projectHandlers.move}>
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="sm:col-span-2"><label className={LABEL_CLS}>{t.fieldProjectName} *</label><input type="text" value={it.name} onChange={(e) => upd({ name: e.target.value })} className={INPUT_CLS} /></div>
+                    <div className="sm:col-span-2"><label className={LABEL_CLS}>{t.fieldProjectName}</label><input type="text" value={it.name} onChange={(e) => upd({ name: e.target.value })} className={INPUT_CLS} /></div>
                     <div className="sm:col-span-2"><label className={LABEL_CLS}>{t.fieldDescription}</label><textarea value={it.description ?? ''} onChange={(e) => upd({ description: e.target.value })} rows={3} className={INPUT_CLS + ' resize-y'} /></div>
                     <div className="sm:col-span-2"><label className={LABEL_CLS}>{t.fieldTechnologies}</label><TagInput value={it.technologies} onChange={(tags) => upd({ technologies: tags })} placeholder={t.fieldTechnologiesPlaceholder} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldLiveURL}</label><input type="url" value={it.live_url ?? ''} onChange={(e) => upd({ live_url: e.target.value })} className={INPUT_CLS} /></div>
@@ -659,8 +736,8 @@ function ResumeToolView() {
               <RepeatableItem key={item._id} item={item} index={i} total={form.certifications.length} onUpdate={certHandlers.update} onRemove={certHandlers.remove} onMove={certHandlers.move}>
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label className={LABEL_CLS}>{t.fieldCertName} *</label><input type="text" value={it.name} onChange={(e) => upd({ name: e.target.value })} className={INPUT_CLS} /></div>
-                    <div><label className={LABEL_CLS}>{t.fieldIssuingOrg} *</label><input type="text" value={it.issuing_organization} onChange={(e) => upd({ issuing_organization: e.target.value })} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldCertName}</label><input type="text" value={it.name} onChange={(e) => upd({ name: e.target.value })} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldIssuingOrg}</label><input type="text" value={it.issuing_organization} onChange={(e) => upd({ issuing_organization: e.target.value })} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldIssueDate}</label><input type="date" value={it.issue_date ?? ''} onChange={(e) => upd({ issue_date: e.target.value })} className={INPUT_CLS} /></div>
                   </div>
                 )}
@@ -680,14 +757,14 @@ function ResumeToolView() {
               <RepeatableItem key={item._id} item={item} index={i} total={form.languages.length} onUpdate={langHandlers.update} onRemove={langHandlers.remove} onMove={langHandlers.move}>
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label className={LABEL_CLS}>{t.fieldLanguage} *</label><input type="text" value={it.language} onChange={(e) => upd({ language: e.target.value })} placeholder={t.fieldLanguagePlaceholder} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldLanguage}</label><SpokenLanguageSelect value={it.language} onChange={(val) => upd({ language: val })} options={exportOptions.spoken_languages} placeholder={t.fieldLanguagePlaceholder} /></div>
                     <div>
-                      <label className={LABEL_CLS}>{t.fieldProficiency} *</label>
+                      <label className={LABEL_CLS}>{t.fieldProficiency}</label>
                       <select value={it.proficiency} onChange={(e) => upd({ proficiency: e.target.value as ResumeLanguage['proficiency'] })} className={INPUT_CLS}>
-                        <option value="native">{t.langNative}</option>
-                        <option value="fluent">{t.langFluent}</option>
-                        <option value="conversational">{t.langConversational}</option>
-                        <option value="basic">{t.langBasic}</option>
+                        <option value="">{t.fieldProficiencyPlaceholder}</option>
+                        {exportOptions.language_proficiencies.map(o => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -708,7 +785,7 @@ function ResumeToolView() {
               <RepeatableItem key={item._id} item={item} index={i} total={form.awards.length} onUpdate={awardHandlers.update} onRemove={awardHandlers.remove} onMove={awardHandlers.move}>
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label className={LABEL_CLS}>{t.fieldAwardTitle} *</label><input type="text" value={it.title} onChange={(e) => upd({ title: e.target.value })} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldAwardTitle}</label><input type="text" value={it.title} onChange={(e) => upd({ title: e.target.value })} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldIssuer}</label><input type="text" value={it.issuer ?? ''} onChange={(e) => upd({ issuer: e.target.value })} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldDate}</label><input type="date" value={it.date ?? ''} onChange={(e) => upd({ date: e.target.value })} className={INPUT_CLS} /></div>
                     <div className="sm:col-span-2"><label className={LABEL_CLS}>{t.fieldDescription}</label><textarea value={it.description ?? ''} onChange={(e) => upd({ description: e.target.value })} rows={3} className={INPUT_CLS + ' resize-y'} /></div>
@@ -730,12 +807,12 @@ function ResumeToolView() {
               <RepeatableItem key={item._id} item={item} index={i} total={form.recommendations.length} onUpdate={recHandlers.update} onRemove={recHandlers.remove} onMove={recHandlers.move}>
                 {(it, upd) => (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label className={LABEL_CLS}>{t.fieldRecFullName} *</label><input type="text" value={it.full_name} onChange={(e) => upd({ full_name: e.target.value })} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldRecFullName}</label><input type="text" value={it.full_name} onChange={(e) => upd({ full_name: e.target.value })} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldTitle}</label><input type="text" value={it.title ?? ''} onChange={(e) => upd({ title: e.target.value })} placeholder={t.fieldTitlePlaceholder} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldCompany}</label><input type="text" value={it.company ?? ''} onChange={(e) => upd({ company: e.target.value })} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldEmail}</label><input type="email" value={it.email ?? ''} onChange={(e) => upd({ email: e.target.value })} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldPhone}</label><input type="tel" value={it.phone ?? ''} onChange={(e) => upd({ phone: e.target.value })} placeholder={t.fieldPhonePlaceholder} className={INPUT_CLS} /></div>
-                    <div className="sm:col-span-2"><label className={LABEL_CLS}>{t.fieldRecommendation} *</label><textarea value={it.recommendation} onChange={(e) => upd({ recommendation: e.target.value })} rows={4} className={INPUT_CLS + ' resize-y'} /></div>
+                    <div className="sm:col-span-2"><label className={LABEL_CLS}>{t.fieldRecommendation}</label><textarea value={it.recommendation} onChange={(e) => upd({ recommendation: e.target.value })} rows={4} className={INPUT_CLS + ' resize-y'} /></div>
                   </div>
                 )}
               </RepeatableItem>
@@ -756,26 +833,18 @@ function ResumeToolView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <NavBar />
+      <DemoHeader
+        containerClassName="max-w-6xl mx-auto"
+        title={t.demoPageTitle}
+        language={language}
+        onLanguageChange={(lang) => { setLanguage(lang); setStoredLanguage(lang); }}
+        backLabel={t.demoBackToHome}
+        onBack={() => navigate('/')}
+      />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 pb-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-12">
         {/* Page header */}
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="text-white/50 hover:text-white transition-colors flex items-center gap-1.5 text-sm"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              {t.demoBackToHome}
-            </button>
-            <span className="text-white/30">/</span>
-            <h1 className="text-lg font-semibold text-white">{t.demoPageTitle}</h1>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-green-600/20 border border-green-500/30 text-green-300 font-medium">{t.demoBadge}</span>
-          </div>
-
+        <div className="flex items-center justify-end mb-4 flex-wrap gap-3">
           <div className="flex items-center gap-2">
             {/* Clear button */}
             <button
