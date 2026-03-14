@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.5] - 2026-03-15
+
+### Added
+- **`src/demos.ts` — centralised demos registry**: New `DEMOS` array with typed `Demo` and `DemoBadge` interfaces. Each entry carries `id`, `path`, `labelKey` (i18n key), `iconColor`, `iconPath` (SVG `d` attribute), and `badges[]`. Marked with a comment for future replacement by an API call, keeping the shape stable for that migration.
+- **Projects & Demos modal on Landing page**: The "Projects / Demos" hero button now opens a full-screen modal (bottom-sheet on mobile, centred dialog on tablet/desktop) instead of a positioned dropdown. Features:
+  - Backdrop click closes the modal.
+  - **List / Grid view toggle** in the modal header — list shows full badge rows, grid uses 2-col (mobile) / 3-col (sm+) cards with icon box, name, and up to 2 badges + overflow count.
+  - Dedicated X close button with `cursor-pointer`.
+  - Mobile-friendly: slides up from the bottom edge (`rounded-t-2xl`), `max-h-[90vh]`, reduced horizontal padding (`px-4 sm:px-6`).
+
+### Changed
+- **`NavActions` — demos driven by `DEMOS`**: Both the desktop dropdown and the mobile slide-down panel now import and iterate over `DEMOS` instead of repeating per-demo JSX. No visual change.
+- **`LandingView` — demos driven by `DEMOS`**: Modal body iterates over `DEMOS` for both list and grid views.
+- **Mobile menu close fix (`NavActions`)**: The global `mousedown` handler no longer unconditionally closes the mobile panel on every click. Added `mobileMenuRef` and `mobileMenuButtonRef`; the panel only closes when the click target is outside both, matching the pattern used for the desktop dropdowns. Removed the now-redundant `e.stopPropagation()` from the panel and toggle button.
+- **`DemoHeader` — "Jussimatic" title is now a link**: Replaced the non-interactive `<span>` with a `<button>` that calls `navigate('/')`, matching `NavBar`. Added `cursor-pointer` and `hover:text-blue-400` styles.
+- **`NavBar` — added `cursor-pointer`** to the "Jussimatic" title button.
+
 ## [0.6.4] - 2026-03-15
 
 ### Added
