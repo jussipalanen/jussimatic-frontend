@@ -4,13 +4,18 @@ import { getMe, logoutUser } from '../api/authApi';
 import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 import LanguageSelect from './LanguageSelect';
+import UserEditModal from '../demo/ecommerce/components/UserEditModal';
 
 interface NavUserData {
+  user_id?: number;
   first_name?: string;
   firstname?: string;
   last_name?: string;
   lastname?: string;
   email?: string;
+  username?: string;
+  fullname?: string;
+  role?: string;
   user?: {
     first_name?: string;
     last_name?: string;
@@ -41,6 +46,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const projectsMenuRef = useRef<HTMLDivElement>(null);
 
@@ -247,16 +253,14 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
 
                 <div className="py-1">
                   <button
-                    disabled
-                    title="Coming soon"
-                    className="w-full text-left px-4 py-2 text-sm text-white/40 flex items-center gap-2 cursor-not-allowed"
+                    onClick={() => { setShowUserMenu(false); setShowEditModal(true); }}
+                    className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
                   >
                     <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    Settings
-                    <span className="ml-auto text-xs">(TBA)</span>
+                    {t.landing.editProfile}
                   </button>
 
                   <button
@@ -373,6 +377,28 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
             </div>
           </div>
         </div>
+      )}
+
+      {showEditModal && userData?.user_id != null && (
+        <UserEditModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          userId={userData.user_id}
+          initialData={{
+            username: String(userData.username ?? (userData.user as Record<string, unknown>)?.username ?? ''),
+            fullname: String(userData.fullname ?? userData.user?.name ?? ''),
+            first_name: String(userData.first_name ?? userData.firstname ?? userData.user?.first_name ?? ''),
+            last_name: String(userData.last_name ?? userData.lastname ?? userData.user?.last_name ?? ''),
+            email: String(userData.email ?? userData.user?.email ?? ''),
+            role: String(userData.role ?? ''),
+          }}
+          onSuccess={() => {
+            getMe()
+              .then((data) => setUserData(data as NavUserData))
+              .catch(() => {});
+          }}
+          showRoleSelect={false}
+        />
       )}
     </>
   );

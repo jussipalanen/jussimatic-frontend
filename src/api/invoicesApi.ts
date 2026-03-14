@@ -267,8 +267,9 @@ export async function getInvoice(id: number): Promise<Invoice> {
   return data as Invoice;
 }
 
-export async function exportInvoicePdf(id: number): Promise<void> {
-  const response = await fetch(buildUrl(`invoices/${id}/pdf`), {
+export async function exportInvoicePdf(id: number, lang?: string): Promise<void> {
+  const path = lang ? `invoices/${id}/pdf?lang=${encodeURIComponent(lang)}` : `invoices/${id}/pdf`;
+  const response = await fetch(buildUrl(path), {
     method: 'GET',
     headers: { Accept: 'application/pdf', ...getAuthToken() },
   });
@@ -279,8 +280,9 @@ export async function exportInvoicePdf(id: number): Promise<void> {
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-export async function exportInvoiceHtml(id: number): Promise<void> {
-  const response = await fetch(buildUrl(`invoices/${id}/html`), {
+export async function exportInvoiceHtml(id: number, lang?: string): Promise<void> {
+  const path = lang ? `invoices/${id}/html?lang=${encodeURIComponent(lang)}` : `invoices/${id}/html`;
+  const response = await fetch(buildUrl(path), {
     method: 'GET',
     headers: { Accept: 'text/html', ...getAuthToken() },
   });

@@ -112,8 +112,8 @@ export default function MyInvoicesView() {
     }
     setExportError(null);
     try {
-      if (format === 'pdf') await exportInvoicePdf(id);
-      else await exportInvoiceHtml(id);
+      if (format === 'pdf') await exportInvoicePdf(id, language);
+      else await exportInvoiceHtml(id, language);
     } catch (err) {
       console.error(`Failed to export invoice ${format.toUpperCase()}:`, err);
       setExportError(t.errExport);

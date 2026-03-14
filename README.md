@@ -9,6 +9,7 @@ A React + TypeScript portfolio application showcasing real-world integrations wi
 - 🧠 **AI CV Review**: Upload a CV and receive AI-generated feedback via a Python backend service.
 - 📄 **Resume Builder Demo**: Create and export resumes (PDF/HTML) without an account. Choose language, template, and theme; fill in all sections; export directly from the browser.
 - 👤 **Resume Management**: Authenticated users can create, edit, duplicate, and manage multiple resumes from their profile (`/profile/resumes`). One resume can be set as primary.
+- ✏️ **Edit Profile**: Logged-in users can edit their profile details and change their password from the NavBar user menu on any page.
 - 🌍 **Multi-language Support**: Full internationalization (i18n) with English and Finnish throughout the UI.
 - 📱 **Responsive Design**: Mobile-first responsive layout with Tailwind CSS.
 - 🔐 **Authentication**: Login, registration, forgot/reset password, and Google OAuth support.

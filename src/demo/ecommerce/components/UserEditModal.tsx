@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { deleteUser, updateUser } from '../../../api/usersApi';
-import { getStoredLanguage } from '../../../i18n';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
+import type { Language } from '../../../i18n';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -12,24 +14,39 @@ const PASSWORD_UPPERCASE_REGEX = /[A-Z]/;
 const PASSWORD_NUMBER_REGEX = /[0-9]/;
 const PASSWORD_SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>_\-+=[\]\\\/;'`~]/;
 
-function validatePasswordStrength(password: string): string | null {
+type PasswordT = Pick<
+  (typeof translations)[typeof DEFAULT_LANGUAGE]['userEdit'],
+  | 'errPasswordMinLength'
+  | 'errPasswordMaxLength'
+  | 'errPasswordLowercase'
+  | 'errPasswordUppercase'
+  | 'errPasswordNumber'
+  | 'errPasswordSpecial'
+>;
+
+// Helper to work around TS type inference on indexed translation
+function getUserEditT(lang: Language) {
+  return (translations[lang] ?? translations[DEFAULT_LANGUAGE]).userEdit;
+}
+
+function validatePasswordStrength(password: string, t: PasswordT): string | null {
   if (password.length < PASSWORD_MIN_LENGTH) {
-    return `Password must be at least ${PASSWORD_MIN_LENGTH} characters long.`;
+    return t.errPasswordMinLength.replace('{min}', String(PASSWORD_MIN_LENGTH));
   }
   if (password.length > PASSWORD_MAX_LENGTH) {
-    return `Password must be at most ${PASSWORD_MAX_LENGTH} characters long.`;
+    return t.errPasswordMaxLength.replace('{max}', String(PASSWORD_MAX_LENGTH));
   }
   if (!PASSWORD_LOWERCASE_REGEX.test(password)) {
-    return 'Password must contain at least one lowercase letter.';
+    return t.errPasswordLowercase;
   }
   if (!PASSWORD_UPPERCASE_REGEX.test(password)) {
-    return 'Password must contain at least one uppercase letter.';
+    return t.errPasswordUppercase;
   }
   if (!PASSWORD_NUMBER_REGEX.test(password)) {
-    return 'Password must contain at least one number.';
+    return t.errPasswordNumber;
   }
   if (!PASSWORD_SPECIAL_CHAR_REGEX.test(password)) {
-    return 'Password must contain at least one special character.';
+    return t.errPasswordSpecial;
   }
   return null;
 }
@@ -69,6 +86,15 @@ function UserEditModal({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+
+  useEffect(() => {
+    const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
+
+  const t = getUserEditT(language);
 
   const [profileForm, setProfileForm] = useState({
     username: initialData.username,
@@ -94,22 +120,22 @@ function UserEditModal({
     } = {};
 
     if (!profileForm.fullname.trim()) {
-      errors.fullname = 'Full name is required.';
+      errors.fullname = t.errFullnameRequired;
     }
     if (!profileForm.first_name.trim()) {
-      errors.first_name = 'First name is required.';
+      errors.first_name = t.errFirstNameRequired;
     }
     if (!profileForm.last_name.trim()) {
-      errors.last_name = 'Last name is required.';
+      errors.last_name = t.errLastNameRequired;
     }
     if (!profileForm.email.trim()) {
-      errors.email = 'Email is required.';
+      errors.email = t.errEmailRequired;
     } else if (!EMAIL_REGEX.test(profileForm.email.trim())) {
-      errors.email = 'Enter a valid email address.';
+      errors.email = t.errEmailFormat;
     }
 
     return errors;
-  }, [profileForm]);
+  }, [profileForm, t]);
 
   const passwordErrors = useMemo(() => {
     const errors: {
@@ -119,36 +145,35 @@ function UserEditModal({
     } = {};
 
     if (!passwordForm.current_password.trim()) {
-      errors.current_password = 'Current password is required.';
+      errors.current_password = t.errCurrentPasswordRequired;
     }
 
     if (!passwordForm.password.trim()) {
-      errors.password = 'New password is required.';
+      errors.password = t.errNewPasswordRequired;
     } else {
-      // Validate password strength
-      const strengthError = validatePasswordStrength(passwordForm.password);
+      const strengthError = validatePasswordStrength(passwordForm.password, t);
       if (strengthError) {
         errors.password = strengthError;
       }
     }
 
     if (!passwordForm.password_confirmation.trim()) {
-      errors.password_confirmation = 'Please re-enter the new password.';
+      errors.password_confirmation = t.errConfirmPasswordRequired;
     } else if (passwordForm.password && passwordForm.password !== passwordForm.password_confirmation) {
-      errors.password_confirmation = 'Passwords do not match.';
+      errors.password_confirmation = t.errPasswordsNoMatch;
     }
 
     if (
       passwordForm.current_password.trim() &&
       passwordForm.password.trim() &&
       passwordForm.current_password === passwordForm.password &&
-      !errors.password // Only show this error if there's no strength error
+      !errors.password
     ) {
-      errors.password = 'New password must be different from current password.';
+      errors.password = t.errPasswordSameAsCurrent;
     }
 
     return errors;
-  }, [passwordForm]);
+  }, [passwordForm, t]);
 
   const profileHasErrors = Object.keys(profileErrors).length > 0;
   const passwordHasErrors = Object.keys(passwordErrors).length > 0;
@@ -212,11 +237,11 @@ function UserEditModal({
 
       await updateUser(userId, payload);
 
-      setEditSuccess('User details saved successfully.');
+      setEditSuccess(t.successProfile);
       onSuccess();
     } catch (err) {
       console.error('Failed to update user:', err);
-      setEditError(err instanceof Error ? err.message : 'Failed to update user. Please try again.');
+      setEditError(err instanceof Error ? err.message : t.errUpdateUser);
     } finally {
       setSavingEdit(false);
     }
@@ -241,11 +266,11 @@ function UserEditModal({
 
       setPasswordForm({ current_password: '', password: '', password_confirmation: '' });
       setPasswordSubmitted(false);
-      setEditSuccess('Password updated successfully.');
+      setEditSuccess(t.successPassword);
       onSuccess();
     } catch (err) {
       console.error('Failed to update password:', err);
-      setEditError(err instanceof Error ? err.message : 'Failed to update password. Please try again.');
+      setEditError(err instanceof Error ? err.message : t.errUpdatePassword);
     } finally {
       setSavingEdit(false);
     }
@@ -263,7 +288,7 @@ function UserEditModal({
       window.location.href = '/';
     } catch (err) {
       console.error('Failed to delete user:', err);
-      setEditError(err instanceof Error ? err.message : 'Failed to delete user. Please try again.');
+      setEditError(err instanceof Error ? err.message : t.errDeleteUser);
     } finally {
       setDeletingAccount(false);
     }
@@ -271,18 +296,18 @@ function UserEditModal({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+  return createPortal(
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 px-4">
       <div className="w-full max-w-xl rounded-lg border border-gray-700 bg-gray-900 shadow-lg flex flex-col max-h-[90vh]" role="dialog" aria-modal="true">
         <div className="flex items-center justify-between gap-3 p-6 pb-0">
-          <h2 className="text-xl font-semibold text-white">Edit user</h2>
+          <h2 className="text-xl font-semibold text-white">{t.title}</h2>
           <button
             type="button"
             onClick={handleClose}
             disabled={savingEdit}
             className="rounded-lg border border-gray-600 px-3 py-1.5 text-sm font-semibold text-gray-200 hover:bg-gray-800 disabled:opacity-50"
           >
-            Close
+            {t.btnClose}
           </button>
         </div>
 
@@ -300,7 +325,7 @@ function UserEditModal({
                 : 'border border-gray-600 text-gray-200 hover:bg-gray-800'
             }`}
           >
-            Basic info
+            {t.tabBasicInfo}
           </button>
           <button
             type="button"
@@ -315,7 +340,7 @@ function UserEditModal({
                 : 'border border-gray-600 text-gray-200 hover:bg-gray-800'
             }`}
           >
-            Change password
+            {t.tabChangePassword}
           </button>
         </div>
 
@@ -335,7 +360,7 @@ function UserEditModal({
           <div className="mt-5 space-y-4 overflow-y-auto px-6 pb-6">
             <div>
               <label className="mb-1 block text-sm text-gray-300" htmlFor="edit-username">
-                Username (readonly)
+                {t.labelUsername}
               </label>
               <input
                 id="edit-username"
@@ -349,7 +374,7 @@ function UserEditModal({
 
             <div>
               <label className="mb-1 block text-sm text-gray-300" htmlFor="edit-fullname">
-                Name (fullname)
+                {t.labelFullname}
               </label>
               <input
                 id="edit-fullname"
@@ -365,7 +390,7 @@ function UserEditModal({
 
             <div>
               <label className="mb-1 block text-sm text-gray-300" htmlFor="edit-first-name">
-                Firstname (first_name)
+                {t.labelFirstName}
               </label>
               <input
                 id="edit-first-name"
@@ -381,7 +406,7 @@ function UserEditModal({
 
             <div>
               <label className="mb-1 block text-sm text-gray-300" htmlFor="edit-last-name">
-                Lastname (last_name)
+                {t.labelLastName}
               </label>
               <input
                 id="edit-last-name"
@@ -397,7 +422,7 @@ function UserEditModal({
 
             <div>
               <label className="mb-1 block text-sm text-gray-300" htmlFor="edit-email">
-                Email (email)
+                {t.labelEmail}
               </label>
               <input
                 id="edit-email"
@@ -414,7 +439,7 @@ function UserEditModal({
             {showRoleSelect && (
               <div>
                 <label className="mb-1 block text-sm text-gray-300" htmlFor="edit-role">
-                  Role
+                  {t.labelRole}
                 </label>
                 <select
                   id="edit-role"
@@ -422,9 +447,9 @@ function UserEditModal({
                   onChange={(event) => setProfileForm((prev) => ({ ...prev, role: event.target.value }))}
                   className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
                 >
-                  <option value="customer">Customer</option>
-                  <option value="vendor">Vendor</option>
-                  <option value="admin">Admin</option>
+                  <option value="customer">{t.roleCustomer}</option>
+                  <option value="vendor">{t.roleVendor}</option>
+                  <option value="admin">{t.roleAdmin}</option>
                 </select>
               </div>
             )}
@@ -436,7 +461,7 @@ function UserEditModal({
                 className="rounded-lg border border-gray-600 px-4 py-2 text-sm font-semibold text-gray-200 hover:bg-gray-800"
                 disabled={savingEdit}
               >
-                Cancel
+                {t.btnCancel}
               </button>
               <button
                 type="button"
@@ -444,14 +469,14 @@ function UserEditModal({
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
                 disabled={savingEdit}
               >
-                {savingEdit ? 'Saving...' : 'Save'}
+                {savingEdit ? t.btnSaving : t.btnSave}
               </button>
             </div>
 
             <div className="mt-6 rounded-lg border border-red-500/30 bg-red-900/10 p-4">
-              <h3 className="text-sm font-semibold text-red-300">Delete account</h3>
+              <h3 className="text-sm font-semibold text-red-300">{t.deleteTitle}</h3>
               <p className="mt-2 text-xs text-red-200/80">
-                This permanently deletes your account and cannot be undone.
+                {t.deleteHint}
               </p>
               {!showDeleteConfirm ? (
                 <button
@@ -459,12 +484,12 @@ function UserEditModal({
                   onClick={() => setShowDeleteConfirm(true)}
                   className="mt-3 rounded-lg border border-red-500/50 px-4 py-2 text-xs font-semibold text-red-200 hover:bg-red-500/10"
                 >
-                  Delete my account
+                  {t.btnDeleteAccount}
                 </button>
               ) : (
                 <div className="mt-3 rounded-lg border border-red-500/40 bg-red-900/20 p-3">
                   <p className="text-xs text-red-200">
-                    Are you sure? This will delete your account and log you out immediately.
+                    {t.deleteConfirm}
                   </p>
                   <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
                     <button
@@ -473,7 +498,7 @@ function UserEditModal({
                       className="rounded-lg border border-gray-600 px-3 py-2 text-xs font-semibold text-gray-200 hover:bg-gray-800"
                       disabled={deletingAccount}
                     >
-                      Cancel
+                      {t.btnCancel}
                     </button>
                     <button
                       type="button"
@@ -481,7 +506,7 @@ function UserEditModal({
                       className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
                       disabled={deletingAccount}
                     >
-                      {deletingAccount ? 'Deleting...' : 'Yes, delete'}
+                      {deletingAccount ? t.btnDeleting : t.btnYesDelete}
                     </button>
                   </div>
                 </div>
@@ -494,7 +519,7 @@ function UserEditModal({
           <div className="mt-5 space-y-4 overflow-y-auto px-6 pb-6">
             <div>
               <label className="mb-1 block text-sm text-gray-300" htmlFor="edit-current-password">
-                Current password
+                {t.labelCurrentPassword}
               </label>
               <div className="relative">
                 <input
@@ -510,7 +535,7 @@ function UserEditModal({
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                  aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                  aria-label={showCurrentPassword ? t.ariaHidePassword : t.ariaShowPassword}
                 >
                   {showCurrentPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -531,7 +556,7 @@ function UserEditModal({
 
             <div>
               <label className="mb-1 block text-sm text-gray-300" htmlFor="edit-new-password">
-                New password
+                {t.labelNewPassword}
               </label>
               <div className="relative">
                 <input
@@ -545,7 +570,7 @@ function UserEditModal({
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                  aria-label={showNewPassword ? "Hide password" : "Show password"}
+                  aria-label={showNewPassword ? t.ariaHidePassword : t.ariaShowPassword}
                 >
                   {showNewPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -564,14 +589,14 @@ function UserEditModal({
               )}
               {!passwordSubmitted && (
                 <p className="mt-1 text-xs text-gray-400">
-                  Requirements: 4-30 characters, at least one lowercase, one uppercase, one number, and one special character.
+                  {t.passwordHint}
                 </p>
               )}
             </div>
 
             <div>
               <label className="mb-1 block text-sm text-gray-300" htmlFor="edit-password-confirmation">
-                Re-password to confirm
+                {t.labelConfirmPassword}
               </label>
               <div className="relative">
                 <input
@@ -587,7 +612,7 @@ function UserEditModal({
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  aria-label={showConfirmPassword ? t.ariaHidePassword : t.ariaShowPassword}
                 >
                   {showConfirmPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -613,7 +638,7 @@ function UserEditModal({
                 className="rounded-lg border border-gray-600 px-4 py-2 text-sm font-semibold text-gray-200 hover:bg-gray-800"
                 disabled={savingEdit}
               >
-                Cancel
+                {t.btnCancel}
               </button>
               <button
                 type="button"
@@ -621,13 +646,14 @@ function UserEditModal({
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
                 disabled={savingEdit}
               >
-                {savingEdit ? 'Saving...' : 'Save password'}
+                {savingEdit ? t.btnSaving : t.btnSavePassword}
               </button>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
