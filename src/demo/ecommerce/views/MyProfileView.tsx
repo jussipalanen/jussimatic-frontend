@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMe, type User } from '../../../api/authApi';
+import { getMe } from '../../../api/authApi';
 import { getRoleAccess } from '../../../utils/authUtils';
 import { getCart } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
 import UserEditModal from '../components/UserEditModal';
 import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../../../i18n';
+import type { UserSummary } from '../../../api/usersApi';
 
 function MyProfileView() {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).myProfile;
-  const [userData, setUserData] = useState<User | null>(null);
+  const [userData, setUserData] = useState<UserSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -73,16 +74,17 @@ function MyProfileView() {
   };
 
   // Extract user details safely - handle nested user object from /me endpoint
-  const getUser = () => {
+  const getUser = (): UserSummary | null => {
     if (!userData) return null;
     // API returns { user_id: 4, user: { id, username, name, ... } }
-    return userData.user || userData;
+    return userData.user ?? userData;
   };
 
-  const getUserField = (field: string) => {
+  const getUserField = (field: string): string => {
     const user = getUser();
     if (!user) return 'N/A';
-    return user[field] || 'N/A';
+    const value = user[field];
+    return typeof value === 'string' && value ? value : 'N/A';
   };
 
   const getUserRole = () => {
@@ -257,7 +259,7 @@ function MyProfileView() {
         <UserEditModal
           isOpen={showEditModal}
           onClose={handleModalClose}
-          userId={userData.user_id || userData.user?.id || userData.id}
+          userId={userData.user_id ?? userData.user?.id ?? userData.id ?? 0}
           initialData={getModalInitialData()}
           onSuccess={handleModalSuccess}
           showRoleSelect={isAdmin}

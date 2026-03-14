@@ -25,6 +25,8 @@ export interface UserSummary {
   user_role?: string;
   type?: string;
   roles?: string[];
+  is_admin?: boolean;
+  user?: UserSummary;
   [key: string]: unknown;
 }
 
