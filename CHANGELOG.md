@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.6.1] - 2026-03-14
+## [0.6.3] - 2026-03-14
 
 ### Added
 - **CV page** (`/cv`): New `CVView` component fetches and renders a full résumé from `VITE_CV_ENDPOINT`. Displays photo, contact info, summary, work experience, education, skills (with proficiency dots), projects, certifications, languages, awards, and recommendations.
