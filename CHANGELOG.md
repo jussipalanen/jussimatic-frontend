@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.4] - 2026-03-15
+
+### Added
+- **Invoice `due_date` field**: All invoice forms (Invoice Builder demo, Admin Invoices create/edit, My Invoices view) now include a Due Date field. The value is passed in the API payload for both `createInvoice` and `updateInvoice` calls.
+- **New invoice statuses — `unpaid` and `overdue`**: Added to the fallback/default status option arrays in `InvoiceToolView` and `AdminInvoicesView`. Color-coded with orange (`unpaid`) and rose/dark-red (`overdue`) across all `StatusBadge` components and the HTML export inline CSS.
+- **`due_date` on `Invoice` interface** (`invoicesApi.ts`): Added `due_date: string | null` to `Invoice`, `due_date?: string | null` to `UpdateInvoiceData` and `CreateInvoiceData`, and `due_date?: string` to `InvoiceExportPayload`.
+- **i18n keys** (EN + FI) for due date and new statuses:
+  - `invoices.fieldDueDate`, `invoices.due` — Due Date label and display prefix.
+  - `adminInvoices.labelDueDate`, `adminInvoices.labelDueDateEdit` — view-mode and edit-form labels.
+  - `adminInvoices.cardUnpaid`, `adminInvoices.cardOverdue` — card meta labels.
+  - `adminInvoices.labelUnpaid`, `adminInvoices.labelOverdue` — section labels.
+
+### Changed
+- **`AdminInvoicesView`**: Edit and create modal forms include a Due Date date-input after the Status selector. The view-mode detail panel displays `due_date` alongside `issued_at` / `paid_at`. HTML export CSS extended with `.status-unpaid` and `.status-overdue` rules.
+- **`InvoiceToolView`**: Due Date date-input added to the Invoice Info section (alongside Status and Language).
+- **`MyInvoicesView`**: Invoice list cards and the detail modal now display `due_date` when set.
+
 ## [0.6.3] - 2026-03-14
 
 ### Added
