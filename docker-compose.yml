@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Development service
@@ -27,7 +27,7 @@ services:
         VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
     container_name: jussimatic-frontend-prod
     ports:
-      - "8080:80"
+      - "8080:8080"
     restart: unless-stopped
     profiles:
       - production
