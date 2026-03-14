@@ -2,7 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.6.0] - 2026-03-14
+## [0.6.1] - 2026-03-14
+
+### Added
+- **CV page** (`/cv`): New `CVView` component fetches and renders a full résumé from `VITE_CV_ENDPOINT`. Displays photo, contact info, summary, work experience, education, skills (with proficiency dots), projects, certifications, languages, awards, and recommendations.
+- **`VITE_CV_ENDPOINT` build variable**: Added `ARG`/`ENV` in `Dockerfile`, `--build-arg` in `cloudbuild.yaml` Kaniko step, `--set-env-vars` in Cloud Run deploy step, and `_VITE_CV_ENDPOINT` substitution.
+- **`PROFICIENCY_LEVELS` shared constant** (`src/constants.ts`): Single source of truth for the 1–5 skill/language proficiency mapping, used by `CVView` dots and both resume form dropdowns.
+
+### Fixed
+- **CV photo base URL**: `resolvePhoto()` helper prepends `VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL` to relative photo paths returned by the API.
+- **Proficiency dot indicator**: Corrected level mapping — `basic` → 2, `intermediate` → 3, `advanced` → 4 (was 2 and 3 respectively). Added missing `basic` key.
+- **Kaniko shell quoting**: `--build-arg=VITE_CV_ENDPOINT` is now quoted (`"VITE_CV_ENDPOINT=$_VITE_CV_ENDPOINT"`) to prevent the `&` in query-string URLs from being interpreted as a shell background operator, which previously caused the image push to silently fail.
+
+### Changed
+- Skill and language proficiency dropdowns in `ResumeFormView` and `ResumeToolView` now display a numeric prefix, e.g. **"3 - Intermediate"**, sourced from the shared `PROFICIENCY_LEVELS` map.
+
 
 ### Added
 - **CI pipeline** (`.github/workflows/ci.yml`): Three parallel jobs — `ESLint`, `Tests`, and `Build` — run on every push and pull request to `main` and `dev-*` branches using Node 20 (from `.nvmrc`).
