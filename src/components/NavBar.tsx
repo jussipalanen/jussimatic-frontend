@@ -15,7 +15,7 @@ export default function NavBar({ onLoginClick }: NavBarProps) {
         <div className="flex items-center justify-between h-14">
           <button
             onClick={() => navigate('/')}
-            className="text-white font-bold text-lg hover:text-blue-400 transition-colors"
+            className="text-white font-bold text-lg hover:text-blue-400 transition-colors cursor-pointer"
           >
             Jussimatic
           </button>

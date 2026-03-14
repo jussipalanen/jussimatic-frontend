@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import NavActions from './NavActions';
 import Breadcrumb from './Breadcrumb';
 import type { Language } from '../i18n';
@@ -22,6 +23,7 @@ export default function DemoHeader({
   onBack,
   containerClassName = 'max-w-4xl mx-auto',
 }: DemoHeaderProps) {
+  const navigate = useNavigate();
   return (
     <>
       {/* ── Top bar ───────────────────────────────────────────────── */}
@@ -31,7 +33,12 @@ export default function DemoHeader({
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           {/* Branding */}
-          <span className="text-white font-bold text-lg">Jussimatic</span>
+          <button
+            onClick={() => navigate('/')}
+            className="text-white font-bold text-lg hover:text-blue-400 transition-colors cursor-pointer"
+          >
+            Jussimatic
+          </button>
 
           {/* Nav actions (projects, language, login) */}
           <NavActions language={language} onLanguageChange={onLanguageChange} />
