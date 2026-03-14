@@ -128,6 +128,131 @@ body::after {
   100% { opacity: 0.55; filter: brightness(0.80); }
 }
 
+/* ================================================ */
+/* SHOOTING STARS & STARLIGHT FLARES                */
+/* ================================================ */
+
+.shooting-stars-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* ---- Shooting Star base ---- */
+.shooting-star {
+  position: absolute;
+  height: 2px;
+  border-radius: 999px;
+  opacity: 0;
+  /* Long comet tail: very faint root → rich blue-white body → bright bright head */
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(150, 195, 255, 0.06) 12%,
+    rgba(175, 215, 255, 0.22) 35%,
+    rgba(210, 235, 255, 0.60) 60%,
+    rgba(245, 252, 255, 0.88) 82%,
+    rgba(255, 255, 255, 0.96) 93%,
+    rgba(255, 255, 255, 0.55) 100%
+  );
+  /* Soft atmospheric glow on the whole tail */
+  filter: drop-shadow(0 0 3px rgba(180, 220, 255, 0.55));
+}
+
+/* Glowing leading tip */
+.shooting-star::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  translate: 0 -50%;
+  width: 5px;
+  height: 5px;
+  background: radial-gradient(circle, #fff 0%, rgba(210, 240, 255, 0.85) 55%, transparent 100%);
+  border-radius: 50%;
+  box-shadow:
+    0 0  4px  2px rgba(255, 255, 255, 1.0),
+    0 0 12px  5px rgba(210, 238, 255, 0.95),
+    0 0 28px 11px rgba(175, 220, 255, 0.55),
+    0 0 55px 20px rgba(155, 210, 255, 0.22);
+}
+
+/* left edge, near top         */ .shooting-star--1 { top:  4%; left:  0;   width: 310px; animation: shootAcross 78s linear  5s infinite; }
+/* top edge, left quarter      */ .shooting-star--2 { top:  0;  left:  8%;  width: 255px; animation: shootAcross 65s linear 23s infinite; }
+/* left edge, slightly lower   */ .shooting-star--3 { top: 17%; left:  0;   width: 390px; animation: shootAcross 94s linear 47s infinite; }
+/* top edge, further right     */ .shooting-star--4 { top:  0;  left: 22%;  width: 275px; animation: shootAcross 72s linear 14s infinite; }
+/* left edge, mid-top          */ .shooting-star--5 { top:  9%; left:  0;   width: 230px; animation: shootAcross 85s linear 61s infinite; }
+
+@keyframes shootAcross {
+  /* Parked off-screen, fully invisible */
+  0%    { transform: rotate(28deg) translateX(-700px); opacity: 0; }
+  2%    { transform: rotate(28deg) translateX(-700px); opacity: 0; }
+
+  /* Still off-screen left — about to cross the edge */
+  3%    { transform: rotate(28deg) translateX(-280px); opacity: 0;
+          animation-timing-function: linear; }
+
+  /* ----  FADE IN: crosses left edge, materialises smoothly  ---- */
+  5.2%  { transform: rotate(28deg) translateX(60px);                opacity: 1; }
+
+  /* ----  CRUISE: full brightness sweep across the sky  ---- */
+  9.5%  { transform: rotate(28deg) translateX(calc(100vw - 80px));  opacity: 1; }
+
+  /* ----  FADE OUT: dissolves as it exits right edge  ---- */
+  11.5% { transform: rotate(28deg) translateX(calc(100vw + 340px)); opacity: 0; }
+
+  /* Reset back to start, stay invisible for the rest of the cycle */
+  12%   { transform: rotate(28deg) translateX(-700px); opacity: 0; }
+  100%  { transform: rotate(28deg) translateX(-700px); opacity: 0; }
+}
+
+/* ---- Starlight Flare (occasional large glowing star burst) ---- */
+.starlight-flare {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.starlight-flare--1 { top: 22%; left: 28%; animation: starlightFlare 90s ease-in-out  8s infinite; }
+.starlight-flare--2 { top: 58%; left: 72%; animation: starlightFlare 72s ease-in-out 38s infinite; }
+.starlight-flare--3 { top: 14%; left: 62%; animation: starlightFlare 85s ease-in-out 55s infinite; }
+
+@keyframes starlightFlare {
+  0%   { opacity: 0; transform: scale(1);   box-shadow: none; }
+  1.5% { opacity: 0; }
+  2%   {
+    opacity: 1;
+    transform: scale(1.8);
+    box-shadow:
+       0    0   8px  3px rgba(255, 255, 255, 1.0),
+       0    0  26px 11px rgba(220, 240, 255, 0.7),
+       0    0  80px 35px rgba(180, 215, 255, 0.28),
+      -65px 0  12px  0   rgba(255, 255, 255, 0.10),
+       65px 0  12px  0   rgba(255, 255, 255, 0.10),
+       0  -65px 12px  0  rgba(255, 255, 255, 0.08),
+       0   65px 12px  0  rgba(255, 255, 255, 0.08);
+  }
+  5%   {
+    opacity: 0.75;
+    transform: scale(1.2);
+    box-shadow:
+       0    0  14px  6px rgba(255, 255, 255, 0.75),
+       0    0  45px 18px rgba(210, 235, 255, 0.45),
+       0    0 120px 55px rgba(170, 210, 255, 0.18),
+      -85px 0  14px  0   rgba(255, 255, 255, 0.07),
+       85px 0  14px  0   rgba(255, 255, 255, 0.07),
+       0  -85px 14px  0  rgba(255, 255, 255, 0.06),
+       0   85px 14px  0  rgba(255, 255, 255, 0.06);
+  }
+  9%   { opacity: 0; transform: scale(0.8); box-shadow: none; }
+  100% { opacity: 0; transform: scale(0.8); box-shadow: none; }
+}
+
 .typing-indicator {
   display: inline-flex;
   align-items: center;

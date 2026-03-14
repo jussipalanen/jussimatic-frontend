@@ -6,6 +6,7 @@ import { getVisitorsToday, getVisitorsTotal, trackVisitor } from './api/visitors
 import AuthModal from './AuthModal';
 import NavBar from './components/NavBar';
 import faceJa from './assets/face_ja.jpg';
+import ShootingStars from './components/ShootingStars';
 
 function LandingView() {
   const navigate = useNavigate();
@@ -101,6 +102,7 @@ function LandingView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-14">
+      <ShootingStars />
       <NavBar onLoginClick={() => setIsModalOpen(true)} />
 
       {/* Hero Section */}
