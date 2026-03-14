@@ -180,6 +180,14 @@ function ProficiencyDots({ proficiency }: { proficiency: string }) {
 // Main view
 // ---------------------------------------------------------------------------
 
+const STORAGE_BASE_URL = (import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
+
+function resolvePhoto(photo?: string | null): string | null {
+  if (!photo) return null;
+  if (photo.startsWith('http://') || photo.startsWith('https://')) return photo;
+  return `${STORAGE_BASE_URL}/${photo}`;
+}
+
 export default function CVView() {
   const navigate = useNavigate();
   const [resume, setResume] = useState<Resume | null>(null);
@@ -254,9 +262,9 @@ export default function CVView() {
 
             {/* ── Header ── */}
             <header className="flex flex-col sm:flex-row sm:items-start gap-6">
-              {resume.photo && (
+              {resolvePhoto(resume.photo) && (
                 <img
-                  src={resume.photo}
+                  src={resolvePhoto(resume.photo)!}
                   alt={resume.full_name}
                   className="w-24 h-24 rounded-2xl object-cover border border-white/10 shrink-0"
                 />
