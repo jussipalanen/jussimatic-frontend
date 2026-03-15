@@ -4,6 +4,7 @@ import { getMe } from '../../api/authApi';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
 import { PROFICIENCY_LEVELS } from '../../constants';
 import type { Language } from '../../i18n';
+import { toISODate } from '../../utils/dateUtils';
 import {
   copyResume,
   createResume,
@@ -360,11 +361,10 @@ function SpokenLanguageSelect({
               <li
                 key={opt.value}
                 onClick={() => { onChange(opt.value); setOpen(false); setQuery(''); }}
-                className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
-                  opt.value === value
-                    ? 'bg-blue-600/30 text-blue-300'
-                    : 'text-white/80 hover:bg-gray-700'
-                }`}
+                className={`px-3 py-2 text-sm cursor-pointer transition-colors ${opt.value === value
+                  ? 'bg-blue-600/30 text-blue-300'
+                  : 'text-white/80 hover:bg-gray-700'
+                  }`}
               >
                 {opt.label}
               </li>
@@ -539,11 +539,10 @@ function PersonalSection({
           <button
             type="button"
             onClick={() => onChange({ is_public: !data.is_public })}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border transition-colors ${
-              data.is_public
-                ? 'bg-green-500/20 border-green-500/50 text-green-400'
-                : 'border-gray-600 text-white/40 hover:text-white/70 hover:border-gray-500'
-            }`}
+            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border transition-colors ${data.is_public
+              ? 'bg-green-500/20 border-green-500/50 text-green-400'
+              : 'border-gray-600 text-white/40 hover:text-white/70 hover:border-gray-500'
+              }`}
           >
             {data.is_public ? (
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -678,7 +677,15 @@ function ResumeFormView() {
     return () => window.removeEventListener('jussimatic-language-change', handler);
   }, []);
 
-  const [activeSection, setActiveSection] = useState<SectionKey>('personal');
+  const VALID_SECTIONS = new Set<SectionKey>(['personal', 'summary', 'work_experiences', 'educations', 'skills', 'projects', 'certifications', 'languages', 'awards', 'recommendations']);
+  const hashSection = window.location.hash.replace('#', '') as SectionKey;
+  const [activeSection, setActiveSection] = useState<SectionKey>(
+    VALID_SECTIONS.has(hashSection) ? hashSection : 'personal'
+  );
+  const navigateSection = (key: SectionKey) => {
+    setActiveSection(key);
+    window.location.hash = key;
+  };
   const [exportOptions, setExportOptions] = useState<ExportOptions>({ themes: [], templates: [], languages: [], skill_categories: [], skill_proficiencies: [], language_proficiencies: [], spoken_languages: [] });
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
@@ -699,7 +706,7 @@ function ResumeFormView() {
         const name = (nested?.username ?? me.username ?? '') as string;
         setUsername(name);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -766,7 +773,12 @@ function ResumeFormView() {
           theme: resume.theme ?? '',
           template: resume.template ?? '',
           summary: resume.summary ?? '',
-          work_experiences: (resume.work_experiences ?? []).map((e) => ({ ...e, _id: uid() })),
+          work_experiences: (resume.work_experiences ?? []).map((e) => ({
+            ...e,
+            _id: uid(),
+            start_date: toISODate(e.start_date),
+            end_date: toISODate(e.end_date),
+          })),
           educations: (resume.educations ?? []).map((e) => ({ ...e, _id: uid() })),
           skills: (resume.skills ?? []).map((e) => ({ ...e, _id: uid() })),
           projects: (resume.projects ?? []).map((e) => ({
@@ -774,9 +786,17 @@ function ResumeFormView() {
             technologies: e.technologies ?? [],
             _id: uid(),
           })),
-          certifications: (resume.certifications ?? []).map((e) => ({ ...e, _id: uid() })),
+          certifications: (resume.certifications ?? []).map((e) => ({
+            ...e,
+            _id: uid(),
+            issue_date: toISODate(e.issue_date),
+          })),
           languages: (resume.languages ?? []).map((e) => ({ ...e, _id: uid() })),
-          awards: (resume.awards ?? []).map((e) => ({ ...e, _id: uid() })),
+          awards: (resume.awards ?? []).map((e) => ({
+            ...e,
+            _id: uid(),
+            date: toISODate(e.date),
+          })),
           recommendations: (resume.recommendations ?? []).map((e) => ({ ...e, _id: uid() })),
         });
         setRemovePhoto(false);
@@ -869,7 +889,7 @@ function ResumeFormView() {
     e.preventDefault();
     if (!form.language) {
       setError(t.errLanguageRequired);
-      setActiveSection('personal');
+      navigateSection('personal');
       return;
     }
     setSaving(true);
@@ -1089,14 +1109,16 @@ function ResumeFormView() {
                     </div>
                     <div>
                       <label className={LABEL_CLS}>{t.fieldGraduationYear}</label>
-                      <input
-                        type="number"
+                      <select
                         value={it.graduation_year ?? ''}
                         onChange={(e) => upd({ graduation_year: e.target.value ? Number(e.target.value) : undefined })}
-                        min={1900}
-                        max={2100}
                         className={INPUT_CLS}
-                      />
+                      >
+                        <option value="">—</option>
+                        {Array.from({ length: 101 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className={LABEL_CLS}>{t.fieldGPA}</label>
@@ -1583,11 +1605,10 @@ function ResumeFormView() {
             <button
               type="button"
               onClick={() => patch({ is_primary: !form.is_primary })}
-              className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border transition-colors ${
-                form.is_primary
-                  ? 'bg-amber-500/20 border-amber-500/60 text-amber-400'
-                  : 'border-gray-600 text-white/50 hover:text-white hover:border-gray-500'
-              }`}
+              className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border transition-colors ${form.is_primary
+                ? 'bg-amber-500/20 border-amber-500/60 text-amber-400'
+                : 'border-gray-600 text-white/50 hover:text-white hover:border-gray-500'
+                }`}
               title={t.fieldIsPrimary}
             >
               <svg className="w-4 h-4" fill={form.is_primary ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -1650,12 +1671,11 @@ function ResumeFormView() {
                   <button
                     key={section.key}
                     type="button"
-                    onClick={() => setActiveSection(section.key)}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors border-b border-gray-700/50 last:border-b-0 ${
-                      activeSection === section.key
-                        ? 'bg-blue-600 text-white font-medium'
-                        : 'text-white/60 hover:text-white hover:bg-gray-700'
-                    }`}
+                    onClick={() => navigateSection(section.key)}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors border-b border-gray-700/50 last:border-b-0 ${activeSection === section.key
+                      ? 'bg-blue-600 text-white font-medium'
+                      : 'text-white/60 hover:text-white hover:bg-gray-700'
+                      }`}
                   >
                     {section.label}
                   </button>
@@ -1669,7 +1689,7 @@ function ResumeFormView() {
               <div className="lg:hidden mb-4">
                 <select
                   value={activeSection}
-                  onChange={(e) => setActiveSection(e.target.value as SectionKey)}
+                  onChange={(e) => navigateSection(e.target.value as SectionKey)}
                   className={INPUT_CLS}
                 >
                   {SECTIONS.map((section) => (

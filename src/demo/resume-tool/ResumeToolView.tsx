@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../../i18n';
 import { PROFICIENCY_LEVELS } from '../../constants';
 import type { Language } from '../../i18n';
+
 import {
   exportResumePdfPublic,
   exportResumeHtmlPublic,
@@ -271,9 +272,8 @@ function SpokenLanguageSelect({
               <li
                 key={opt.value}
                 onClick={() => { onChange(opt.value); setOpen(false); setQuery(''); }}
-                className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
-                  opt.value === value ? 'bg-blue-600/30 text-blue-300' : 'text-white/80 hover:bg-gray-700'
-                }`}
+                className={`px-3 py-2 text-sm cursor-pointer transition-colors ${opt.value === value ? 'bg-blue-600/30 text-blue-300' : 'text-white/80 hover:bg-gray-700'
+                  }`}
               >
                 {opt.label}
               </li>
@@ -503,7 +503,7 @@ function ResumeToolView() {
   useEffect(() => {
     getExportOptions(language)
       .then((opts) => setExportOptions(opts))
-      .catch(() => {});
+      .catch(() => { });
   }, [language]);
 
   useEffect(() => {
@@ -552,13 +552,22 @@ function ResumeToolView() {
     theme: form.theme || undefined,
     template: form.template || undefined,
     summary: form.summary || undefined,
-    work_experiences: form.work_experiences.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
+    work_experiences: form.work_experiences.map(({ _id, ...rest }, i) => ({
+      ...rest,
+      sort_order: i,
+    })),
     educations: form.educations.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
     skills: form.skills.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
     projects: form.projects.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
-    certifications: form.certifications.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
+    certifications: form.certifications.map(({ _id, ...rest }, i) => ({
+      ...rest,
+      sort_order: i,
+    })),
     languages: form.languages.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
-    awards: form.awards.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
+    awards: form.awards.map(({ _id, ...rest }, i) => ({
+      ...rest,
+      sort_order: i,
+    })),
     recommendations: form.recommendations.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
   });
 
@@ -665,7 +674,7 @@ function ResumeToolView() {
                     <div><label className={LABEL_CLS}>{t.fieldFieldOfStudy}</label><input type="text" value={it.field_of_study} onChange={(e) => upd({ field_of_study: e.target.value })} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldInstitution}</label><input type="text" value={it.institution_name} onChange={(e) => upd({ institution_name: e.target.value })} className={INPUT_CLS} /></div>
                     <div><label className={LABEL_CLS}>{t.fieldLocation}</label><input type="text" value={it.location ?? ''} onChange={(e) => upd({ location: e.target.value })} className={INPUT_CLS} /></div>
-                    <div><label className={LABEL_CLS}>{t.fieldGraduationYear}</label><input type="number" value={it.graduation_year ?? ''} onChange={(e) => upd({ graduation_year: e.target.value ? Number(e.target.value) : undefined })} min={1900} max={2100} className={INPUT_CLS} /></div>
+                    <div><label className={LABEL_CLS}>{t.fieldGraduationYear}</label><select value={it.graduation_year ?? ''} onChange={(e) => upd({ graduation_year: e.target.value ? Number(e.target.value) : undefined })} className={INPUT_CLS}><option value="">—</option>{Array.from({ length: 101 }, (_, i) => new Date().getFullYear() - i).map((y) => (<option key={y} value={y}>{y}</option>))}</select></div>
                     <div><label className={LABEL_CLS}>{t.fieldGPA}</label><input type="number" value={it.gpa ?? ''} onChange={(e) => upd({ gpa: e.target.value ? Number(e.target.value) : undefined })} min={0} max={10} step={0.01} className={INPUT_CLS} /></div>
                   </div>
                 )}
@@ -910,7 +919,7 @@ function ResumeToolView() {
         <div className="mb-5 rounded-lg border border-blue-500/30 bg-blue-900/20 px-4 py-3 text-sm text-blue-300 flex items-start gap-2">
           <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           <span>
-          {t.demoNotice}{' '}
+            {t.demoNotice}{' '}
             <button onClick={() => navigate('/?auth=login')} className="underline hover:text-blue-200 transition-colors">{t.demoNoticeLoginLink}</button>
             {' '}{t.demoNoticeLoginSuffix}
           </span>
@@ -933,11 +942,10 @@ function ResumeToolView() {
                   key={section.key}
                   type="button"
                   onClick={() => setActiveSection(section.key)}
-                  className={`w-full text-left px-4 py-2.5 text-sm transition-colors border-b border-gray-700/50 last:border-b-0 ${
-                    activeSection === section.key
-                      ? 'bg-blue-600 text-white font-medium'
-                      : 'text-white/60 hover:text-white hover:bg-gray-700'
-                  }`}
+                  className={`w-full text-left px-4 py-2.5 text-sm transition-colors border-b border-gray-700/50 last:border-b-0 ${activeSection === section.key
+                    ? 'bg-blue-600 text-white font-medium'
+                    : 'text-white/60 hover:text-white hover:bg-gray-700'
+                    }`}
                 >
                   {section.label}
                 </button>
