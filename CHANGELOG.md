@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.7] - 2026-03-15
+
+### Added
+- **`AdminOrdersView` — order language selector**: Edit order modal now includes an "Order language" (`lang`) dropdown (English / Finnish) per order. The selected language is sent in the `updateOrder` API payload, allowing admins to control the language of order confirmation emails/documents independently per order. Defaults to the current UI language when opening the modal.
+- **`AdminOrdersView` — translated status badges**: Order status labels (`pending`, `processing`, `completed`, `cancelled`, `refunded`) are now resolved through `orderStatusOptions` and translated via i18n rather than rendered as raw strings. Status badges in both the order list cards and the order detail modal reflect the current UI language.
+- **`AdminOrdersView` — auto-open first order**: The first order's detail modal is automatically opened on page load for quicker access.
+- **`AdminDashboardView` — icon navigation cards**: Replaced the previous layout with a unified 3-column grid (`grid-cols-1 sm:grid-cols-3`) of large clickable icon cards for Orders (blue), Users (purple), and Invoices (green). Each card contains an icon, title, and description.
+- **`AdminUsersView` — card-based user list**: Replaced the horizontal-scroll table with a card list layout. Each card shows an avatar with initials, full name, a "You" badge for the current user, a colour-coded role badge (purple = admin, blue = vendor, gray = customer), username / email / user ID, and Edit / Delete action buttons.
+- **`NavActions` — Admin Dashboard shortcut**: A gear icon button linking to `/demo/ecommerce/admin` is now shown in the main site navigation bar for users with `admin` or `vendor` roles. Hidden on small screens (`hidden sm:flex`).
+- **i18n keys** (EN + FI):
+  - `adminOrders.labelOrderLang` — "Order language" / "Tilauksen kieli" label for the new lang selector.
+  - `adminUsers.labelYou` — "You" / "Sinä" badge label for the current user in the users list.
+
+### Changed
+- **`AdminInvoicesView` — due date format**: Invoice `due_date` inputs changed from `type="date"` (YYYY-MM-DD) to `type="text"` with `placeholder="d.m.yyyy"`. Two helpers `toDateInputValue()` and `parseDisplayDateToISO()` convert between the Finnish `D.M.YYYY` display format and the ISO `YYYY-MM-DD` API format in both edit and create forms.
+- **`ordersApi` — `lang` moved to request body**: `createOrder` second-argument `lang` query param removed; `lang` is now a body field in both `CreateOrderData` and `UpdateOrderData` interfaces. `CheckoutView` and `AdminOrdersView` updated accordingly.
+- **`EcommerceHeader` — 2K monitor layout**: Container widened to `max-w-screen-2xl`; desktop nav button labels shifted to `2xl:inline` breakpoint to prevent overflow on wide viewports.
+- **`EcommerceHeader` — mobile header bar**: Language selector and login/logout buttons moved directly into the sticky mobile header bar (visible on mobile, hidden on desktop), alongside the hamburger button. `LanguageSelect` removed from the bottom bar of the dropdown.
+- **`EcommerceHeader` — desktop nav**: `LanguageSelect` repositioned to the leftmost slot of the desktop navigation bar.
+- **`EcommerceHeader` — mobile dropdown**: Dropdown layout changed from a 2-column CSS grid to a single-column `flex-col` list for cleaner stacking on narrow screens.
+
+### Fixed
+- **`AdminUsersView` — `shrink-0` class**: Replaced `flex-shrink-0` (Tailwind v2 syntax) with `shrink-0` to resolve lint/build warnings.
+- **`AdminOrdersView` — missing `</span>` tag**: Fixed unclosed `<span>` element in the order list status badge markup.
+- **`AdminInvoicesView` — customer fields dropped from edit payload**: Structural bug where customer fields were omitted from the update payload during a refactor was corrected.
+- **`EcommerceHeader` — stray `}` syntax error**: Removed extra `}` after a JSX comment (`{/* Products */}}`).
+- **`adminUsers.labelYou` missing from i18n**: Added `labelYou` to both `en` and `fi` `adminUsers` translation objects, fixing a TypeScript build error (`TS2339`) surfaced in CI.
+
 ## [0.6.6] - 2026-03-15
 
 ### Changed
