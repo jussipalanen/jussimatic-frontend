@@ -428,9 +428,9 @@ function AdminOrdersView() {
                   </div>
                   <div className="text-sm">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${order.status === 'completed' ? 'bg-green-900/40 text-green-400 border border-green-500/30' :
-                        order.status === 'pending' ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-500/30' :
-                          order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
-                            'bg-gray-700 text-gray-300 border border-gray-600'
+                      order.status === 'pending' ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-500/30' :
+                        order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
+                          'bg-gray-700 text-gray-300 border border-gray-600'
                       }`}>
                       {getStatusLabel(order.status)}
                     </span>
@@ -518,9 +518,9 @@ function AdminOrdersView() {
                   <div className="text-sm">
                     <span className="text-gray-500">{t.labelStatus}</span>
                     <span className={`ml-2 px-3 py-1 rounded-full text-xs font-semibold ${selectedOrder.status === 'completed' ? 'bg-green-900/40 text-green-400 border border-green-500/30' :
-                        selectedOrder.status === 'pending' ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-500/30' :
-                          selectedOrder.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
-                            'bg-gray-700 text-gray-300 border border-gray-600'
+                      selectedOrder.status === 'pending' ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-500/30' :
+                        selectedOrder.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
+                          'bg-gray-700 text-gray-300 border border-gray-600'
                       }`}>
                       {getStatusLabel(selectedOrder.status)}
                     </span>
