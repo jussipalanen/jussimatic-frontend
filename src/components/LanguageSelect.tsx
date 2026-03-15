@@ -42,9 +42,9 @@ export default function LanguageSelect({ value, onChange, className }: LanguageS
         ].join(' ')}
       >
         <span className="text-base leading-none" aria-hidden="true">{FLAGS[value]}</span>
-        <span>{t[value]}</span>
+        <span className="hidden sm:inline">{t[value]}</span>
         <svg
-          className={`w-3 h-3 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`hidden sm:block w-3 h-3 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

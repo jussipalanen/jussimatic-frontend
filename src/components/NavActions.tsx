@@ -251,7 +251,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
               </div>
               <span className="hidden sm:block max-w-30 truncate">{getFullName()}</span>
               <svg
-                className={`w-3 h-3 shrink-0 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
+                className={`hidden sm:block w-3 h-3 shrink-0 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -390,12 +390,12 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
         ) : (
           <button
             onClick={handleLoginClick}
-            className="flex items-center gap-1.5 text-sm text-white px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-white px-2 sm:px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors"
           >
             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
             </svg>
-            {t.auth.tabLogin}
+            <span className="hidden sm:inline">{t.auth.tabLogin}</span>
           </button>
         )}
       </div>
