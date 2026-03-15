@@ -700,6 +700,7 @@ export const translations = {
       roleAdmin: 'Admin',
       roleVendor: 'Vendor',
       roleCustomer: 'Customer',
+      labelYou: 'You',
     },
     userEdit: {
       title: 'Edit user',
@@ -1575,6 +1576,7 @@ export const translations = {
       roleAdmin: 'Ylläpitäjä',
       roleVendor: 'Myyjä',
       roleCustomer: 'Asiakas',
+      labelYou: 'Sinä',
     },
     userEdit: {
       title: 'Muokkaa käyttäjää',
