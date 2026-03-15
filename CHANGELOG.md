@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.8] - 2026-03-15
+
+### Added
+- **Shared `Pagination` component** (`src/components/Pagination.tsx`): Extracted a single reusable `<Pagination>` component used across the entire app. Accepts `currentPage`, `totalPages`, `onPageChange`, `pageNumbers` (supports `-1` as an ellipsis sentinel), and optional `previousLabel`/`nextLabel` props. Returns `null` when `totalPages <= 1`. All four previous inline pagination implementations replaced with this component.
+- **`LanguageSelect` — `dropdownAlign` prop**: New optional `dropdownAlign: 'left' | 'right'` prop (default `'right'`) controls which edge of the trigger button the dropdown panel aligns to. Prevents the panel from overflowing off-screen when the trigger is near the left edge of the viewport (e.g. inside the mobile menu bottom bar).
+
+### Changed
+- **Browse Jobs — `JobCard` mobile layout**: Added `overflow-hidden` to the card wrapper and `break-words` to job title and organisation/category text so long strings wrap instead of overflowing on narrow screens. Job titles gain `line-clamp-2` (grid) / `line-clamp-3` (list) to cap runaway multi-line titles. Removed the previous ineffective JS word-count truncation (was set to 100 words, far too high to ever trigger).
+- **Browse Jobs — `Pagination`**: Rebuilt to match the ecommerce `ProductsView` style — `rounded-lg border border-gray-700 px-3 py-1 text-sm` buttons, `«`/`»` symbols rendered only when a previous/next page exists (no disabled state), active page highlighted with `bg-blue-600 font-semibold`, container uses `flex flex-wrap` so buttons wrap naturally on mobile.
+- **All pagination UI unified**: `AdminInvoicesView`, `ResumesView`, and `ProductsView` inline pagination blocks replaced with the new shared `<Pagination>` component, ensuring a consistent look and mobile behaviour across the whole app. `src/demo/browse-jobs/components/Pagination.tsx` retained as a thin re-export for backward compatibility.
+- **`EcommerceHeader` — mobile top bar decluttered**: Language selector, Login, Register, and Logout buttons removed from the sticky mobile header bar. The top bar now shows only the title and the hamburger toggle button, preventing overflow on small screens.
+- **`EcommerceHeader` — mobile dropdown bottom bar**: Language selector moved into the dropdown's bottom section alongside the auth buttons (Login + Register or Logout), keeping all secondary controls accessible without cluttering the header.
+- **`EcommerceHeader` — mobile dropdown `overflow-hidden` removed**: The dropdown wrapper no longer has `overflow-hidden`, which was clipping the `LanguageSelect` panel before it could render outside the menu box.
+- **`LanguageSelect` — mobile menu alignment**: The `LanguageSelect` inside the ecommerce mobile dropdown now uses `dropdownAlign="left"` so the language panel opens rightward from the button rather than off the left edge of the screen.
+- **`NavActions` — animation toggle button redesigned**: The animated-background toggle is now a `w-8 h-8 rounded-lg border` icon-only button matching the style of other nav icon buttons. **ON state**: amber border + tint, filled gold star with a soft pulsing glow ring. **OFF state**: dim white border + ghost background, outline star with a diagonal slash. Label removed entirely.
+
+### Fixed
+- **`EcommerceHeader` — `LanguageSelect` dropdown clipped on mobile**: `overflow-hidden` on the mobile dropdown container was preventing the language option list from rendering outside its bounds; removed to allow the panel to float freely.
+- **`LanguageSelect` — dropdown off-screen on small viewports**: When the trigger sits near the left edge (mobile menu), `right-0` alignment pushed the 144 px panel off-screen to the left. Fixed via the new `dropdownAlign` prop.
+
 ## [0.6.7] - 2026-03-15
 
 ### Added
