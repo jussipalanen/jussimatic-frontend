@@ -16,11 +16,11 @@ function formatDate(dateString: string): string {
   if (!dateString) return '';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString;
-  
+
   const day = date.getDate();
   const month = date.getMonth() + 1;
   const year = date.getFullYear();
-  
+
   return `${day}.${month}.${year}`;
 }
 
@@ -28,21 +28,18 @@ export function JobCard({ job, viewMode, onApply, translations }: JobCardProps) 
   const isGrid = viewMode === 'grid';
   return (
     <div
-      className={`bg-gray-800 rounded-lg hover:bg-gray-750 transition-colors flex flex-col ${
-        isGrid ? 'p-4' : 'p-4 sm:p-6'
-      }`}
+      className={`bg-gray-800 rounded-lg hover:bg-gray-750 transition-colors flex flex-col overflow-hidden ${isGrid ? 'p-4' : 'p-4 sm:p-6'
+        }`}
     >
-      <h3 className={`font-semibold mb-2 ${isGrid ? 'text-base' : 'text-lg sm:text-xl'}`}>
+      <h3 className={`font-semibold mb-2 break-words ${isGrid ? 'text-base line-clamp-2' : 'text-lg sm:text-xl line-clamp-3'}`}>
         {job.tyotehtava}
       </h3>
       <div className={`space-y-1 text-gray-300 grow ${isGrid ? 'text-sm' : 'text-sm sm:text-base'}`}>
-        <p>
+        <p className="break-words">
           <span className="text-gray-400">{translations.organization}:</span>{' '}
-          {job.organisaatio.split(' ').length > 100
-            ? job.organisaatio.split(' ').slice(0, 100).join(' ') + '...'
-            : job.organisaatio}
+          {job.organisaatio}
         </p>
-        <p>
+        <p className="break-words">
           <span className="text-gray-400">{translations.category}:</span>{' '}
           {job.ammattiala}
         </p>
@@ -61,9 +58,8 @@ export function JobCard({ job, viewMode, onApply, translations }: JobCardProps) 
               e.preventDefault();
               onApply(job.linkki);
             }}
-            className={`bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors ${
-              isGrid ? 'block text-center w-full' : 'inline-block'
-            }`}
+            className={`bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors ${isGrid ? 'block text-center w-full' : 'inline-block'
+              }`}
           >
             {translations.apply}
           </a>

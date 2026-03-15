@@ -7,6 +7,7 @@ import EcommerceHeader from '../components/EcommerceHeader';
 import { getMe } from '../../../api/authApi';
 import { getRoleAccess } from '../../../utils/authUtils';
 import { getStoredLanguage, translations, type Language } from '../../../i18n';
+import { Pagination } from '../../../components/Pagination';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -243,13 +244,13 @@ function ProductsView() {
     if (!canManageProducts) return;
     setActiveProduct(null);
     resetForm();
-    if (taxRates.length === 0) fetchTaxRates(language).then(setTaxRates).catch(() => {});
+    if (taxRates.length === 0) fetchTaxRates(language).then(setTaxRates).catch(() => { });
     setActiveModal('create');
   };
 
   const openEditModal = (product: Product) => {
     if (!canManageProducts) return;
-    if (taxRates.length === 0) fetchTaxRates(language).then(setTaxRates).catch(() => {});
+    if (taxRates.length === 0) fetchTaxRates(language).then(setTaxRates).catch(() => { });
     setActiveProduct(product);
     setFormValues({
       title: product.title ?? '',
@@ -685,9 +686,8 @@ function ProductsView() {
                 <button
                   onClick={() => { setViewMode('grid'); setPerPage(9); }}
                   title={t.viewGrid}
-                  className={`px-3 py-2 flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                    viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-                  }`}
+                  className={`px-3 py-2 flex items-center gap-1.5 text-sm font-medium transition-colors ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                    }`}
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -697,9 +697,8 @@ function ProductsView() {
                 <button
                   onClick={() => { setViewMode('list'); setPerPage(10); }}
                   title={t.viewList}
-                  className={`px-3 py-2 flex items-center gap-1.5 text-sm font-medium transition-colors border-l border-gray-600 ${
-                    viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-                  }`}
+                  className={`px-3 py-2 flex items-center gap-1.5 text-sm font-medium transition-colors border-l border-gray-600 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                    }`}
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -946,40 +945,13 @@ function ProductsView() {
           </div>
         )}
 
-        {!loading && !error && totalPages > 1 && (
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-            {currentPage > 1 && (
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                className="rounded-lg border border-gray-700 px-3 py-1 text-sm text-gray-200 hover:bg-gray-800"
-                aria-label="Previous page"
-              >
-                «
-              </button>
-            )}
-            {pageNumbers.map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={
-                  page === currentPage
-                    ? 'rounded-lg bg-blue-600 px-3 py-1 text-sm font-semibold text-white'
-                    : 'rounded-lg border border-gray-700 px-3 py-1 text-sm text-gray-200 hover:bg-gray-800'
-                }
-              >
-                {page}
-              </button>
-            ))}
-            {currentPage < totalPages && (
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                className="rounded-lg border border-gray-700 px-3 py-1 text-sm text-gray-200 hover:bg-gray-800"
-                aria-label="Next page"
-              >
-                »
-              </button>
-            )}
-          </div>
+        {!loading && !error && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            pageNumbers={pageNumbers}
+          />
         )}
       </main>
 
@@ -1129,390 +1101,381 @@ function ProductsView() {
                   </div>
                 )}
 
-              {(activeModal === 'create' || activeModal === 'edit') && (
-                <form className="space-y-4">
-                  {formErrors.submit && (
-                    <div className="rounded-lg bg-red-900/20 border border-red-500/30 p-3 text-sm text-red-300">
-                      {formErrors.submit}
-                    </div>
-                  )}
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium text-white/80">{t.formTitle}</label>
-                      <input
-                        value={formValues.title}
-                        onChange={(event) =>
-                          setFormValues((current) => ({ ...current, title: event.target.value }))
-                        }
-                        className={`mt-2 w-full rounded-lg border ${
-                          formErrors.title ? 'border-red-500' : 'border-white/10'
-                        } bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      />
-                      {formErrors.title && (
-                        <p className="mt-1 text-xs text-red-400">{formErrors.title}</p>
-                      )}
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium text-white/80">{t.formDescription}</label>
-                      <textarea
-                        rows={5}
-                        value={formValues.description}
-                        onChange={(event) =>
-                          setFormValues((current) => ({ ...current, description: event.target.value }))
-                        }
-                        className={`mt-2 w-full rounded-lg border ${
-                          formErrors.description ? 'border-red-500' : 'border-white/10'
-                        } bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      />
-                      {formErrors.description && (
-                        <p className="mt-1 text-xs text-red-400">{formErrors.description}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-white/80">{t.formPrice}</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formValues.price}
-                        onChange={(event) =>
-                          setFormValues((current) => ({ ...current, price: event.target.value }))
-                        }
-                        className={`mt-2 w-full rounded-lg border ${
-                          formErrors.price ? 'border-red-500' : 'border-white/10'
-                        } bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      />
-                      {formErrors.price && (
-                        <p className="mt-1 text-xs text-red-400">{formErrors.price}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-white/80">{t.formSalePrice}</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formValues.salePrice}
-                        onChange={(event) =>
-                          setFormValues((current) => ({ ...current, salePrice: event.target.value }))
-                        }
-                        className={`mt-2 w-full rounded-lg border ${
-                          formErrors.salePrice ? 'border-red-500' : 'border-white/10'
-                        } bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      />
-                      {formErrors.salePrice && (
-                        <p className="mt-1 text-xs text-red-400">{formErrors.salePrice}</p>
-                      )}
-                    </div>
-                    <div className="relative">
-                      <label className="block text-sm font-medium text-white/80">{t.formTaxCode}</label>
-                      <input
-                        type="text"
-                        value={taxSearch}
-                        onChange={(e) => {
-                          setTaxSearch(e.target.value);
-                          setTaxDropdownOpen(true);
-                          // If user clears or types freely, unset the selected code
-                          if (!e.target.value.trim()) {
-                            setFormValues(cur => ({ ...cur, taxCode: '', taxRate: '' }));
+                {(activeModal === 'create' || activeModal === 'edit') && (
+                  <form className="space-y-4">
+                    {formErrors.submit && (
+                      <div className="rounded-lg bg-red-900/20 border border-red-500/30 p-3 text-sm text-red-300">
+                        {formErrors.submit}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-white/80">{t.formTitle}</label>
+                        <input
+                          value={formValues.title}
+                          onChange={(event) =>
+                            setFormValues((current) => ({ ...current, title: event.target.value }))
                           }
-                        }}
-                        onFocus={() => setTaxDropdownOpen(true)}
-                        onBlur={() => setTimeout(() => setTaxDropdownOpen(false), 150)}
-                        placeholder={taxRates.length ? t.formTaxCode + '...' : 'Loading...'}
-                        autoComplete="off"
-                        className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      {formValues.taxCode && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFormValues(cur => ({ ...cur, taxCode: '', taxRate: '' }));
-                            setTaxSearch('');
+                          className={`mt-2 w-full rounded-lg border ${formErrors.title ? 'border-red-500' : 'border-white/10'
+                            } bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        />
+                        {formErrors.title && (
+                          <p className="mt-1 text-xs text-red-400">{formErrors.title}</p>
+                        )}
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-white/80">{t.formDescription}</label>
+                        <textarea
+                          rows={5}
+                          value={formValues.description}
+                          onChange={(event) =>
+                            setFormValues((current) => ({ ...current, description: event.target.value }))
+                          }
+                          className={`mt-2 w-full rounded-lg border ${formErrors.description ? 'border-red-500' : 'border-white/10'
+                            } bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        />
+                        {formErrors.description && (
+                          <p className="mt-1 text-xs text-red-400">{formErrors.description}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-white/80">{t.formPrice}</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formValues.price}
+                          onChange={(event) =>
+                            setFormValues((current) => ({ ...current, price: event.target.value }))
+                          }
+                          className={`mt-2 w-full rounded-lg border ${formErrors.price ? 'border-red-500' : 'border-white/10'
+                            } bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        />
+                        {formErrors.price && (
+                          <p className="mt-1 text-xs text-red-400">{formErrors.price}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-white/80">{t.formSalePrice}</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formValues.salePrice}
+                          onChange={(event) =>
+                            setFormValues((current) => ({ ...current, salePrice: event.target.value }))
+                          }
+                          className={`mt-2 w-full rounded-lg border ${formErrors.salePrice ? 'border-red-500' : 'border-white/10'
+                            } bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        />
+                        {formErrors.salePrice && (
+                          <p className="mt-1 text-xs text-red-400">{formErrors.salePrice}</p>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <label className="block text-sm font-medium text-white/80">{t.formTaxCode}</label>
+                        <input
+                          type="text"
+                          value={taxSearch}
+                          onChange={(e) => {
+                            setTaxSearch(e.target.value);
+                            setTaxDropdownOpen(true);
+                            // If user clears or types freely, unset the selected code
+                            if (!e.target.value.trim()) {
+                              setFormValues(cur => ({ ...cur, taxCode: '', taxRate: '' }));
+                            }
                           }}
-                          className="absolute right-2 top-9.5 text-gray-500 hover:text-white"
-                          aria-label="Clear tax code"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                      )}
-                      {taxDropdownOpen && taxRates.length > 0 && (() => {
-                        const q = taxSearch.toLowerCase();
-                        const filtered = taxRates.filter(tr =>
-                          !q ||
-                          tr.code.toLowerCase().includes(q) ||
-                          (tr.name ?? '').toLowerCase().includes(q) ||
-                          (tr.label ?? '').toLowerCase().includes(q)
-                        );
-                        if (!filtered.length) return null;
-                        return (
-                          <ul className="absolute z-50 mt-1 max-h-52 w-full overflow-y-auto rounded-lg border border-white/10 bg-gray-800 shadow-xl">
-                            {filtered.map(tr => (
-                              <li
-                                key={tr.code}
-                                onMouseDown={() => {
-                                  setFormValues(cur => ({
-                                    ...cur,
-                                    taxCode: tr.code,
-                                    taxRate: String(tr.rate),
-                                  }));
-                                  setTaxSearch(tr.label ?? (tr.name ? `${tr.name} (${tr.code})` : tr.code));
-                                  setTaxDropdownOpen(false);
-                                }}
-                                className={`flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-gray-700 ${
-                                  formValues.taxCode === tr.code ? 'bg-blue-600/20 text-blue-300' : 'text-white'
-                                }`}
-                              >
-                                <span className="flex flex-col min-w-0">
-                                  <span className="font-medium truncate">
-                                    {tr.label ?? tr.name ?? tr.code}
-                                  </span>
-                                  {(tr.label || tr.name) && (
-                                    <span className="text-xs text-gray-400">{tr.code}</span>
-                                  )}
-                                </span>
-                                <span className="ml-3 shrink-0 rounded-full bg-gray-700 px-2 py-0.5 text-xs text-gray-300">{formatTaxPct(tr.rate)}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        );
-                      })()}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-white/80">{t.formTaxRate} <span className="text-xs text-gray-500">{t.formTaxRateHint}</span></label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value={formValues.taxRate}
-                        onChange={(event) =>
-                          setFormValues((current) => ({ ...current, taxRate: event.target.value }))
-                        }
-                        readOnly={taxRates.some(tr => tr.code === formValues.taxCode)}
-                        placeholder="0.24"
-                        className={`mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500${
-                          taxRates.some(tr => tr.code === formValues.taxCode) ? ' opacity-60 cursor-not-allowed' : ''
-                        }`}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-white/80">{t.formQuantity}</label>
-                      <input
-                        type="number"
-                        value={formValues.quantity}
-                        onChange={(event) =>
-                          setFormValues((current) => ({ ...current, quantity: event.target.value }))
-                        }
-                        className={`mt-2 w-full rounded-lg border ${
-                          formErrors.quantity ? 'border-red-500' : 'border-white/10'
-                        } bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      />
-                      {formErrors.quantity && (
-                        <p className="mt-1 text-xs text-red-400">{formErrors.quantity}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-white/80">{t.formVisibility}</label>
-                      <select
-                        value={formValues.visibility}
-                        onChange={(event) =>
-                          setFormValues((current) => ({ ...current, visibility: event.target.value }))
-                        }
-                        className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="show">{t.visibilityShow}</option>
-                        <option value="hidden">{t.visibilityHidden}</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Price summary */}
-                  {formValues.price.trim() && (
-                    (() => {
-                      const net = parseFloat(formValues.price);
-                      const saleNet = formValues.salePrice.trim() ? parseFloat(formValues.salePrice) : null;
-                      const rate = formValues.taxRate.trim() ? parseFloat(formValues.taxRate) : null;
-                      const effectiveRate = rate != null && !isNaN(rate) ? (rate > 1 ? rate / 100 : rate) : null;
-                      const grossPrice = !isNaN(net) && effectiveRate != null ? net * (1 + effectiveRate) : null;
-                      const grossSale = saleNet != null && !isNaN(saleNet) && effectiveRate != null ? saleNet * (1 + effectiveRate) : null;
-                      if (isNaN(net)) return null;
-                      return (
-                        <div className="rounded-lg border border-white/10 bg-gray-900/50 px-4 py-3 text-sm space-y-1.5">
-                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t.pricePreview}</p>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">{t.netPrice}</span>
-                            <span className="text-white font-medium">{formatPrice(net)}</span>
-                          </div>
-                          {saleNet != null && !isNaN(saleNet) && (
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">{t.netSalePrice}</span>
-                              <span className="text-yellow-400 font-medium">{formatPrice(saleNet)}</span>
-                            </div>
-                          )}
-                          {effectiveRate != null && (
-                            <>
-                              <div className="flex justify-between">
-                                <span className="text-gray-400">
-                                  {t.vatLabel}{formValues.taxCode ? ` (${formValues.taxCode})` : ''} {formatTaxPct(rate!)}
-                                </span>
-                                <span className="text-gray-300">{formatPrice(net * effectiveRate)}</span>
-                              </div>
-                              <div className="flex justify-between border-t border-white/10 pt-1.5">
-                                <span className="text-gray-400">{t.grossPrice.replace('%vat%', t.vatLabel)}</span>
-                                <span className="text-green-400 font-semibold">{formatPrice(grossPrice!)}</span>
-                              </div>
-                              {grossSale != null && (
-                                <div className="flex justify-between">
-                                  <span className="text-gray-400">{t.grossSalePrice.replace('%vat%', t.vatLabel)}</span>
-                                  <span className="text-yellow-400 font-semibold">{formatPrice(grossSale)}</span>
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      );
-                    })()
-                  )}
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="block text-sm font-medium text-white/80">
-                        {t.formFeaturedImage} <span className="text-xs text-gray-500">{t.formFeaturedImageHint}</span>
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFeaturedChange}
-                        className={`mt-2 w-full rounded-lg border ${
-                          formErrors.featured_image ? 'border-red-500' : 'border-white/10'
-                        } bg-gray-900 px-3 py-2 text-white file:mr-3 file:rounded-md file:border-0 file:bg-gray-700 file:px-3 file:py-1 file:text-white`}
-                      />
-                      {formErrors.featured_image && (
-                        <p className="mt-1 text-xs text-red-400">{formErrors.featured_image}</p>
-                      )}
-
-                      {/* Show existing featured image in edit mode */}
-                      {activeModal === 'edit' && existingFeaturedImage && !deleteFeaturedImage && (
-                        <div className="mt-3">
-                          <p className="text-xs text-gray-400 mb-2">{t.currentImage}</p>
-                          <div className="relative inline-block">
-                            <img
-                              src={buildStorageUrl(existingFeaturedImage)}
-                              alt="Existing featured"
-                              className="h-24 w-24 rounded-lg object-cover border-2 border-blue-500"
-                            />
-                            <button
-                              type="button"
-                              onClick={handleDeleteExistingFeaturedImage}
-                              className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-                              aria-label="Delete existing featured image"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Show new preview */}
-                      {featuredPreview && (
-                        <div className="mt-3">
-                          <p className="text-xs text-gray-400 mb-2">{t.newUpload}</p>
-                          <img
-                            src={featuredPreview}
-                            alt="Featured preview"
-                            className="h-24 w-24 rounded-lg object-cover border-2 border-green-500"
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-white/80">
-                        {t.formImages} <span className="text-xs text-gray-500">{t.formImagesHint}</span>
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleImagesChange}
-                        className={`mt-2 w-full rounded-lg border ${
-                          formErrors.images ? 'border-red-500' : 'border-white/10'
-                        } bg-gray-900 px-3 py-2 text-white file:mr-3 file:rounded-md file:border-0 file:bg-gray-700 file:px-3 file:py-1 file:text-white`}
-                      />
-                      {formErrors.images && (
-                        <p className="mt-1 text-xs text-red-400">{formErrors.images}</p>
-                      )}
-
-                      {/* Show existing images in edit mode */}
-                      {activeModal === 'edit' && existingImages.length > 0 && (
-                        <div className="mt-3">
-                          <p className="text-xs text-gray-400 mb-2">{t.currentImages}</p>
-                          <div className="flex flex-wrap gap-2">
-                            {existingImages.map((image, index) => (
-                              <div key={`existing-${index}`} className="relative">
-                                <img
-                                  src={buildStorageUrl(image)}
-                                  alt={`Existing ${index + 1}`}
-                                  className="h-20 w-20 rounded-lg object-cover border-2 border-blue-500"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteExistingImage(image)}
-                                  className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-                                  aria-label={`Delete existing image ${index + 1}`}
+                          onFocus={() => setTaxDropdownOpen(true)}
+                          onBlur={() => setTimeout(() => setTaxDropdownOpen(false), 150)}
+                          placeholder={taxRates.length ? t.formTaxCode + '...' : 'Loading...'}
+                          autoComplete="off"
+                          className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        {formValues.taxCode && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormValues(cur => ({ ...cur, taxCode: '', taxRate: '' }));
+                              setTaxSearch('');
+                            }}
+                            className="absolute right-2 top-9.5 text-gray-500 hover:text-white"
+                            aria-label="Clear tax code"
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                        )}
+                        {taxDropdownOpen && taxRates.length > 0 && (() => {
+                          const q = taxSearch.toLowerCase();
+                          const filtered = taxRates.filter(tr =>
+                            !q ||
+                            tr.code.toLowerCase().includes(q) ||
+                            (tr.name ?? '').toLowerCase().includes(q) ||
+                            (tr.label ?? '').toLowerCase().includes(q)
+                          );
+                          if (!filtered.length) return null;
+                          return (
+                            <ul className="absolute z-50 mt-1 max-h-52 w-full overflow-y-auto rounded-lg border border-white/10 bg-gray-800 shadow-xl">
+                              {filtered.map(tr => (
+                                <li
+                                  key={tr.code}
+                                  onMouseDown={() => {
+                                    setFormValues(cur => ({
+                                      ...cur,
+                                      taxCode: tr.code,
+                                      taxRate: String(tr.rate),
+                                    }));
+                                    setTaxSearch(tr.label ?? (tr.name ? `${tr.name} (${tr.code})` : tr.code));
+                                    setTaxDropdownOpen(false);
+                                  }}
+                                  className={`flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-gray-700 ${formValues.taxCode === tr.code ? 'bg-blue-600/20 text-blue-300' : 'text-white'
+                                    }`}
                                 >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                  </svg>
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Show new previews */}
-                      {imagePreviews.length > 0 && (
-                        <div className="mt-3">
-                          <p className="text-xs text-gray-400 mb-2">{t.newUploads}</p>
-                          <div className="flex flex-wrap gap-2">
-                            {imagePreviews.map((preview, index) => (
-                              <img
-                                key={`preview-${index}`}
-                                src={preview}
-                                alt={`Preview ${index + 1}`}
-                                className="h-20 w-20 rounded-lg object-cover border-2 border-green-500"
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                                  <span className="flex flex-col min-w-0">
+                                    <span className="font-medium truncate">
+                                      {tr.label ?? tr.name ?? tr.code}
+                                    </span>
+                                    {(tr.label || tr.name) && (
+                                      <span className="text-xs text-gray-400">{tr.code}</span>
+                                    )}
+                                  </span>
+                                  <span className="ml-3 shrink-0 rounded-full bg-gray-700 px-2 py-0.5 text-xs text-gray-300">{formatTaxPct(tr.rate)}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          );
+                        })()}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-white/80">{t.formTaxRate} <span className="text-xs text-gray-500">{t.formTaxRateHint}</span></label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={formValues.taxRate}
+                          onChange={(event) =>
+                            setFormValues((current) => ({ ...current, taxRate: event.target.value }))
+                          }
+                          readOnly={taxRates.some(tr => tr.code === formValues.taxCode)}
+                          placeholder="0.24"
+                          className={`mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500${taxRates.some(tr => tr.code === formValues.taxCode) ? ' opacity-60 cursor-not-allowed' : ''
+                            }`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-white/80">{t.formQuantity}</label>
+                        <input
+                          type="number"
+                          value={formValues.quantity}
+                          onChange={(event) =>
+                            setFormValues((current) => ({ ...current, quantity: event.target.value }))
+                          }
+                          className={`mt-2 w-full rounded-lg border ${formErrors.quantity ? 'border-red-500' : 'border-white/10'
+                            } bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        />
+                        {formErrors.quantity && (
+                          <p className="mt-1 text-xs text-red-400">{formErrors.quantity}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-white/80">{t.formVisibility}</label>
+                        <select
+                          value={formValues.visibility}
+                          onChange={(event) =>
+                            setFormValues((current) => ({ ...current, visibility: event.target.value }))
+                          }
+                          className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="show">{t.visibilityShow}</option>
+                          <option value="hidden">{t.visibilityHidden}</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
-                    <button
-                      type="button"
-                      onClick={closeModal}
-                      disabled={submitting}
-                      className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
-                    >
-                      {t.cancel}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSubmit}
-                      disabled={submitting}
-                      className="w-full rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
-                    >
-                      {submitting
-                        ? (activeModal === 'create' ? t.creating : t.updating)
-                        : (activeModal === 'create' ? t.modalCreate : t.saveChanges)}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
+                    {/* Price summary */}
+                    {formValues.price.trim() && (
+                      (() => {
+                        const net = parseFloat(formValues.price);
+                        const saleNet = formValues.salePrice.trim() ? parseFloat(formValues.salePrice) : null;
+                        const rate = formValues.taxRate.trim() ? parseFloat(formValues.taxRate) : null;
+                        const effectiveRate = rate != null && !isNaN(rate) ? (rate > 1 ? rate / 100 : rate) : null;
+                        const grossPrice = !isNaN(net) && effectiveRate != null ? net * (1 + effectiveRate) : null;
+                        const grossSale = saleNet != null && !isNaN(saleNet) && effectiveRate != null ? saleNet * (1 + effectiveRate) : null;
+                        if (isNaN(net)) return null;
+                        return (
+                          <div className="rounded-lg border border-white/10 bg-gray-900/50 px-4 py-3 text-sm space-y-1.5">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t.pricePreview}</p>
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">{t.netPrice}</span>
+                              <span className="text-white font-medium">{formatPrice(net)}</span>
+                            </div>
+                            {saleNet != null && !isNaN(saleNet) && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">{t.netSalePrice}</span>
+                                <span className="text-yellow-400 font-medium">{formatPrice(saleNet)}</span>
+                              </div>
+                            )}
+                            {effectiveRate != null && (
+                              <>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">
+                                    {t.vatLabel}{formValues.taxCode ? ` (${formValues.taxCode})` : ''} {formatTaxPct(rate!)}
+                                  </span>
+                                  <span className="text-gray-300">{formatPrice(net * effectiveRate)}</span>
+                                </div>
+                                <div className="flex justify-between border-t border-white/10 pt-1.5">
+                                  <span className="text-gray-400">{t.grossPrice.replace('%vat%', t.vatLabel)}</span>
+                                  <span className="text-green-400 font-semibold">{formatPrice(grossPrice!)}</span>
+                                </div>
+                                {grossSale != null && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">{t.grossSalePrice.replace('%vat%', t.vatLabel)}</span>
+                                    <span className="text-yellow-400 font-semibold">{formatPrice(grossSale)}</span>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })()
+                    )}
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-sm font-medium text-white/80">
+                          {t.formFeaturedImage} <span className="text-xs text-gray-500">{t.formFeaturedImageHint}</span>
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFeaturedChange}
+                          className={`mt-2 w-full rounded-lg border ${formErrors.featured_image ? 'border-red-500' : 'border-white/10'
+                            } bg-gray-900 px-3 py-2 text-white file:mr-3 file:rounded-md file:border-0 file:bg-gray-700 file:px-3 file:py-1 file:text-white`}
+                        />
+                        {formErrors.featured_image && (
+                          <p className="mt-1 text-xs text-red-400">{formErrors.featured_image}</p>
+                        )}
+
+                        {/* Show existing featured image in edit mode */}
+                        {activeModal === 'edit' && existingFeaturedImage && !deleteFeaturedImage && (
+                          <div className="mt-3">
+                            <p className="text-xs text-gray-400 mb-2">{t.currentImage}</p>
+                            <div className="relative inline-block">
+                              <img
+                                src={buildStorageUrl(existingFeaturedImage)}
+                                alt="Existing featured"
+                                className="h-24 w-24 rounded-lg object-cover border-2 border-blue-500"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleDeleteExistingFeaturedImage}
+                                className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                                aria-label="Delete existing featured image"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Show new preview */}
+                        {featuredPreview && (
+                          <div className="mt-3">
+                            <p className="text-xs text-gray-400 mb-2">{t.newUpload}</p>
+                            <img
+                              src={featuredPreview}
+                              alt="Featured preview"
+                              className="h-24 w-24 rounded-lg object-cover border-2 border-green-500"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-white/80">
+                          {t.formImages} <span className="text-xs text-gray-500">{t.formImagesHint}</span>
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleImagesChange}
+                          className={`mt-2 w-full rounded-lg border ${formErrors.images ? 'border-red-500' : 'border-white/10'
+                            } bg-gray-900 px-3 py-2 text-white file:mr-3 file:rounded-md file:border-0 file:bg-gray-700 file:px-3 file:py-1 file:text-white`}
+                        />
+                        {formErrors.images && (
+                          <p className="mt-1 text-xs text-red-400">{formErrors.images}</p>
+                        )}
+
+                        {/* Show existing images in edit mode */}
+                        {activeModal === 'edit' && existingImages.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-xs text-gray-400 mb-2">{t.currentImages}</p>
+                            <div className="flex flex-wrap gap-2">
+                              {existingImages.map((image, index) => (
+                                <div key={`existing-${index}`} className="relative">
+                                  <img
+                                    src={buildStorageUrl(image)}
+                                    alt={`Existing ${index + 1}`}
+                                    className="h-20 w-20 rounded-lg object-cover border-2 border-blue-500"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteExistingImage(image)}
+                                    className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                                    aria-label={`Delete existing image ${index + 1}`}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Show new previews */}
+                        {imagePreviews.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-xs text-gray-400 mb-2">{t.newUploads}</p>
+                            <div className="flex flex-wrap gap-2">
+                              {imagePreviews.map((preview, index) => (
+                                <img
+                                  key={`preview-${index}`}
+                                  src={preview}
+                                  alt={`Preview ${index + 1}`}
+                                  className="h-20 w-20 rounded-lg object-cover border-2 border-green-500"
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
+                      <button
+                        type="button"
+                        onClick={closeModal}
+                        disabled={submitting}
+                        className="w-full rounded-lg border border-white/15 px-4 py-2 font-semibold text-white/90 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
+                      >
+                        {t.cancel}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                        className="w-full rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
+                      >
+                        {submitting
+                          ? (activeModal === 'create' ? t.creating : t.updating)
+                          : (activeModal === 'create' ? t.modalCreate : t.saveChanges)}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
             </div>
           </div>
           {showDeleteConfirm && (

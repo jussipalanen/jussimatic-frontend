@@ -14,9 +14,11 @@ interface LanguageSelectProps {
   onChange: (lang: Language) => void;
   /** Extra classes applied to the trigger button (padding, font-size, etc.) */
   className?: string;
+  /** Which edge of the trigger the dropdown aligns to. Default: 'right' */
+  dropdownAlign?: 'left' | 'right';
 }
 
-export default function LanguageSelect({ value, onChange, className }: LanguageSelectProps) {
+export default function LanguageSelect({ value, onChange, className, dropdownAlign = 'right' }: LanguageSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -65,7 +67,7 @@ export default function LanguageSelect({ value, onChange, className }: LanguageS
         <div
           role="listbox"
           aria-label="Select language"
-          className="absolute right-0 top-full mt-1 w-36 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden"
+          className={`absolute top-full mt-1 w-36 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden ${dropdownAlign === 'left' ? 'left-0' : 'right-0'}`}
         >
           {LANGUAGE_VALUES.map((lang) => (
             <button
@@ -74,11 +76,10 @@ export default function LanguageSelect({ value, onChange, className }: LanguageS
               role="option"
               aria-selected={value === lang}
               onClick={() => { onChange(lang); setOpen(false); }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors ${
-                value === lang
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors ${value === lang
                   ? 'bg-gray-700 text-white font-medium'
                   : 'text-gray-200 hover:bg-gray-700'
-              }`}
+                }`}
             >
               {(() => { const Flag = FLAG_COMPONENTS[lang]; return <Flag className="w-5 h-auto rounded-sm" title={t[lang]} />; })()}
               {t[lang]}
