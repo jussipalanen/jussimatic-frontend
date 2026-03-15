@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from './components/NavBar';
 import Breadcrumb from './components/Breadcrumb';
-import { DEFAULT_LANGUAGE, translations } from './i18n';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import type { Language } from './i18n';
 import { PROFICIENCY_LEVELS } from './constants';
 
@@ -181,9 +181,19 @@ export default function CVView() {
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uiLanguage, setUiLanguage] = useState<Language>(() => getStoredLanguage());
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      setUiLanguage((event as CustomEvent<Language>).detail);
+    };
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
 
   const cvLanguage = (resume?.lang ?? DEFAULT_LANGUAGE) as Language;
   const t = (translations[cvLanguage] ?? translations[DEFAULT_LANGUAGE]).cv;
+  const tUi = (translations[uiLanguage] ?? translations[DEFAULT_LANGUAGE]).cv;
 
   useEffect(() => {
     const endpoint = import.meta.env.VITE_CV_ENDPOINT as string | undefined;
@@ -223,8 +233,8 @@ export default function CVView() {
       <main className="max-w-4xl mx-auto px-4 pt-24 pb-20 sm:px-6">
         <div className="mb-8">
           <Breadcrumb
-            items={[{ label: 'Home', onClick: () => navigate('/') }]}
-            current="CV"
+            items={[{ label: tUi.breadcrumbHome, onClick: () => navigate('/') }]}
+            current={tUi.breadcrumbCurrent}
           />
         </div>
         {/* Loading */}

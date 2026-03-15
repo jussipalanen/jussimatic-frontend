@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { GB, FI } from 'country-flag-icons/react/3x2';
 import { translations, DEFAULT_LANGUAGE } from '../i18n';
 import type { Language } from '../i18n';
 
-const FLAGS: Record<Language, string> = { en: '🇬🇧', fi: '🇫🇮' };
+const FLAG_COMPONENTS: Record<Language, React.ComponentType<{ className?: string; title?: string }>> = {
+  en: GB,
+  fi: FI,
+};
 const LANGUAGE_VALUES: Language[] = ['en', 'fi'];
 
 interface LanguageSelectProps {
@@ -41,16 +45,20 @@ export default function LanguageSelect({ value, onChange, className }: LanguageS
           className ?? 'px-2 py-1 text-xs sm:text-sm',
         ].join(' ')}
       >
-        <span className="text-base leading-none" aria-hidden="true">{FLAGS[value]}</span>
-        <span className="hidden sm:inline">{t[value]}</span>
-        <svg
-          className={`hidden sm:block w-3 h-3 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        {(() => { const Flag = FLAG_COMPONENTS[value]; return <Flag className="w-5 h-auto rounded-sm" title={t[value]} />; })()}
+        {open && (
+          <>
+            <span>{t[value]}</span>
+            <svg
+              className="w-3 h-3 shrink-0 rotate-180"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </>
+        )}
       </button>
 
       {open && (
@@ -72,7 +80,7 @@ export default function LanguageSelect({ value, onChange, className }: LanguageS
                   : 'text-gray-200 hover:bg-gray-700'
               }`}
             >
-              <span className="text-base leading-none" aria-hidden="true">{FLAGS[lang]}</span>
+              {(() => { const Flag = FLAG_COMPONENTS[lang]; return <Flag className="w-5 h-auto rounded-sm" title={t[lang]} />; })()}
               {t[lang]}
             </button>
           ))}

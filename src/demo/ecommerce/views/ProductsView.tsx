@@ -1019,12 +1019,64 @@ function ProductsView() {
                         loading="lazy"
                       />
                     </div>
-                    <div>
-                      <h2 className="text-xl font-bold sm:text-2xl">{activeProduct.title}</h2>
-                      <p className="mt-2 text-sm text-gray-300 whitespace-pre-line">
+                    <h2 className="text-xl font-bold sm:text-2xl">{activeProduct.title}</h2>
+
+                    {/* Details table */}
+                    <div className="rounded-xl border border-white/10 bg-gray-900/50 overflow-hidden divide-y divide-white/10 text-sm">
+                      {/* Price row */}
+                      <div className="flex items-center justify-between gap-4 px-4 py-3">
+                        <span className="text-xs font-medium uppercase tracking-wider text-gray-500 shrink-0">{t.priceLabel}</span>
+                        <div className="text-right">
+                          {activeProduct.sale_price ? (
+                            <div className="flex items-baseline gap-2 flex-wrap justify-end">
+                              <span className="text-lg font-bold text-yellow-400">
+                                {activeProduct.tax_rate != null ? formatGrossPrice(activeProduct.sale_price, activeProduct.tax_rate) : formatPrice(activeProduct.sale_price)}
+                              </span>
+                              <span className="text-sm text-gray-500 line-through">
+                                {activeProduct.tax_rate != null ? formatGrossPrice(activeProduct.price, activeProduct.tax_rate) : formatPrice(activeProduct.price)}
+                              </span>
+                              <span className="rounded-full bg-yellow-500/15 px-2 py-0.5 text-xs font-semibold text-yellow-400 border border-yellow-500/30">SALE</span>
+                            </div>
+                          ) : (
+                            <span className="text-lg font-bold text-green-400">
+                              {activeProduct.tax_rate != null ? formatGrossPrice(activeProduct.price, activeProduct.tax_rate) : formatPrice(activeProduct.price)}
+                            </span>
+                          )}
+                          {activeProduct.tax_rate != null && (
+                            <p className="mt-0.5 text-xs text-gray-500">
+                              excl. {t.vatLabel} {formatTaxPct(activeProduct.tax_rate)}{activeProduct.tax_code && activeProduct.tax_code !== 'ZERO' ? ` · ${activeProduct.tax_code}` : ''}:
+                              {' '}{activeProduct.sale_price ? (
+                                <><span className="line-through text-gray-600">{formatPrice(activeProduct.price)}</span>{' → '}{formatPrice(activeProduct.sale_price)}</>
+                              ) : formatPrice(activeProduct.price)}
+                            </p>
+                          )}
+                          {!activeProduct.tax_rate && activeProduct.tax_code && (
+                            <p className="mt-0.5 text-xs text-gray-500">{t.taxLabel} {activeProduct.tax_code}</p>
+                          )}
+                        </div>
+                      </div>
+                      {/* Quantity row */}
+                      <div className="flex items-center justify-between px-4 py-3">
+                        <span className="text-xs font-medium uppercase tracking-wider text-gray-500">{t.quantityLabel}</span>
+                        <span className="font-medium text-white">{activeProduct.quantity}</span>
+                      </div>
+                      {/* Created row */}
+                      <div className="flex items-center justify-between px-4 py-3">
+                        <span className="text-xs font-medium uppercase tracking-wider text-gray-500">{t.createdLabel}</span>
+                        <span className="text-gray-300">{formatDate(activeProduct.created_at)}</span>
+                      </div>
+                      {/* Updated row */}
+                      <div className="flex items-center justify-between px-4 py-3">
+                        <span className="text-xs font-medium uppercase tracking-wider text-gray-500">{t.updatedLabel}</span>
+                        <span className="text-gray-300">{formatDate(activeProduct.updated_at)}</span>
+                      </div>
+                    </div>
+
+                    {activeProduct.description && (
+                      <p className="text-sm text-gray-300 whitespace-pre-line leading-relaxed">
                         {activeProduct.description}
                       </p>
-                    </div>
+                    )}
                     {activeProduct.images && activeProduct.images.length > 0 && (
                       <div className="flex flex-wrap gap-3">
                         {activeProduct.images.map((image, index) => (
@@ -1045,54 +1097,6 @@ function ProductsView() {
                         ))}
                       </div>
                     )}
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      {/* Price card */}
-                      <div className="sm:col-span-2 rounded-xl border border-white/10 bg-gray-900/50 px-4 py-3 flex items-center gap-4">
-                        <div className="flex-1">
-                          {activeProduct.sale_price ? (
-                            <div className="flex items-baseline gap-3 flex-wrap">
-                              <span className="text-2xl font-bold text-yellow-400">
-                                {activeProduct.tax_rate != null ? formatGrossPrice(activeProduct.sale_price, activeProduct.tax_rate) : formatPrice(activeProduct.sale_price)}
-                              </span>
-                              <span className="text-sm text-gray-500 line-through">
-                                {activeProduct.tax_rate != null ? formatGrossPrice(activeProduct.price, activeProduct.tax_rate) : formatPrice(activeProduct.price)}
-                              </span>
-                              <span className="rounded-full bg-yellow-500/15 px-2.5 py-0.5 text-xs font-semibold text-yellow-400 border border-yellow-500/30">SALE</span>
-                            </div>
-                          ) : (
-                            <span className="text-2xl font-bold text-green-400">
-                              {activeProduct.tax_rate != null ? formatGrossPrice(activeProduct.price, activeProduct.tax_rate) : formatPrice(activeProduct.price)}
-                            </span>
-                          )}
-                          {activeProduct.tax_rate != null && (
-                            <p className="mt-1 text-xs text-gray-500">
-                              excl. {t.vatLabel} {formatTaxPct(activeProduct.tax_rate)}{activeProduct.tax_code && activeProduct.tax_code !== 'ZERO' ? ` · ${activeProduct.tax_code}` : ''}:
-                              {' '}{activeProduct.sale_price ? (
-                                <><span className="line-through text-gray-600">{formatPrice(activeProduct.price)}</span>{' → '}{formatPrice(activeProduct.sale_price)}</>
-                              ) : formatPrice(activeProduct.price)}
-                            </p>
-                          )}
-                          {!activeProduct.tax_rate && activeProduct.tax_code && (
-                            <p className="mt-1 text-xs text-gray-500">{t.taxLabel} {activeProduct.tax_code}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        <span className="text-gray-400">{t.quantityLabel}</span> {activeProduct.quantity}
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        <span className="text-gray-400">{t.visibilityLabel}</span>{' '}
-                        {activeProduct.visibility ? t.visibilityShow : t.visibilityHidden}
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        <span className="text-gray-400">{t.createdLabel}</span>{' '}
-                        {formatDate(activeProduct.created_at)}
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        <span className="text-gray-400">{t.updatedLabel}</span>{' '}
-                        {formatDate(activeProduct.updated_at)}
-                      </div>
-                    </div>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <button
                         onClick={() => handleAddToCart(activeProduct)}

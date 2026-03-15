@@ -64,11 +64,35 @@ type ModalView = 'invoice' | 'order';
 let _lineKeyCounter = 0;
 function newLineKey() { return `line-${++_lineKeyCounter}`; }
 
+function toDateInputValue(value: string | null | undefined): string {
+  if (!value) return '';
+  // Parse ISO/YYYY-MM-DD and output D.M.YYYY
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    return `${parseInt(match[3])}.${parseInt(match[2])}.${match[1]}`;
+  }
+  const d = new Date(value);
+  if (!isNaN(d.getTime())) {
+    return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
+  }
+  return '';
+}
+
+function parseDisplayDateToISO(value: string): string {
+  if (!value) return '';
+  // Parse D.M.YYYY or DD.MM.YYYY
+  const match = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (!match) return '';
+  const dd = match[1].padStart(2, '0');
+  const mm = match[2].padStart(2, '0');
+  return `${match[3]}-${mm}-${dd}`;
+}
+
 function invoiceToFormData(invoice: Invoice): EditFormData {
   return {
     invoice_number: invoice.invoice_number ?? '',
     status: invoice.status ?? 'draft',
-    due_date: invoice.due_date ?? '',
+    due_date: toDateInputValue(invoice.due_date),
     customer_first_name: invoice.customer_first_name ?? '',
     customer_last_name: invoice.customer_last_name ?? '',
     customer_email: invoice.customer_email ?? '',
@@ -639,7 +663,7 @@ function AdminInvoicesView() {
     const payload: UpdateInvoiceData = {
       invoice_number: editForm.invoice_number || undefined,
       status: editForm.status,
-      due_date: editForm.due_date || null,
+      due_date: parseDisplayDateToISO(editForm.due_date) || null,
       customer_first_name: editForm.customer_first_name,
       customer_last_name: editForm.customer_last_name,
       customer_email: editForm.customer_email,
@@ -806,7 +830,7 @@ function AdminInvoicesView() {
       ...(orderId !== undefined ? { order_id: orderId } : {}),
       ...(createForm.invoice_number ? { invoice_number: createForm.invoice_number } : {}),
       status: createForm.status,
-      due_date: createForm.due_date || null,
+      due_date: parseDisplayDateToISO(createForm.due_date) || null,
       customer_first_name: createForm.customer_first_name,
       customer_last_name: createForm.customer_last_name,
       customer_email: createForm.customer_email,
@@ -1313,11 +1337,12 @@ function AdminInvoicesView() {
                   <fieldset>
                     <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.labelDueDateEdit}</legend>
                     <input
-                      type="date"
+                      type="text"
                       name="due_date"
                       value={editForm.due_date}
                       onChange={handleEditChange}
-                      className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="d.m.yyyy"
+                      className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </fieldset>
 
@@ -1816,11 +1841,12 @@ function AdminInvoicesView() {
                 <fieldset>
                   <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t.labelDueDateEdit}</legend>
                   <input
-                    type="date"
+                    type="text"
                     name="due_date"
                     value={createForm.due_date}
                     onChange={handleCreateFormChange}
-                    className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="d.m.yyyy"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </fieldset>
 

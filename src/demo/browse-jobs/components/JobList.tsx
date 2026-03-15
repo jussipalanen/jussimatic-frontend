@@ -5,6 +5,7 @@ interface JobListProps {
   jobs: VantaaJob[];
   loading: boolean;
   error: string | null;
+  viewMode: 'list' | 'grid';
   translations: {
     loading: string;
     empty: string;
@@ -15,7 +16,7 @@ interface JobListProps {
   };
 }
 
-export function JobList({ jobs, loading, error, translations }: JobListProps) {
+export function JobList({ jobs, loading, error, viewMode, translations }: JobListProps) {
   const handleApply = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
@@ -45,11 +46,12 @@ export function JobList({ jobs, loading, error, translations }: JobListProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
       {jobs.map((job) => (
         <JobCard
           key={job.id}
           job={job}
+          viewMode={viewMode}
           onApply={handleApply}
           translations={{
             organization: translations.organization,

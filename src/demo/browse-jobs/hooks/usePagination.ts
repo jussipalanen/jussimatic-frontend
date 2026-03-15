@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 interface UsePaginationReturn {
   currentPage: number;
@@ -58,9 +58,9 @@ export function usePagination(itemsPerPage: number = 5): UsePaginationReturn {
     return pages;
   };
 
-  const resetPage = () => {
+  const resetPage = useCallback(() => {
     setCurrentPage(1);
-  };
+  }, []);
 
   return {
     currentPage,

@@ -136,6 +136,7 @@ function AdminOrdersView() {
     phone: '',
     notes: '',
     status: 'pending',
+    lang: language as string,
   });
   const [editItems, setEditItems] = useState<Array<{
     product_id: number;
@@ -207,6 +208,10 @@ function AdminOrdersView() {
           );
 
           setOrders(enrichedOrders);
+          // Auto-open the first order's modal on page load
+          if (enrichedOrders.length > 0) {
+            setSelectedOrder(enrichedOrders[0]);
+          }
         } catch (err) {
           console.error('Failed to load orders:', err);
           setOrdersError(t.errLoadOrders);
@@ -248,17 +253,18 @@ function AdminOrdersView() {
       phone: selectedOrder.customer_phone ?? '',
       notes: selectedOrder.notes ?? '',
       status: selectedOrder.status ?? 'pending',
+      lang: language as string,
     });
     setEditItems(
       Array.isArray(selectedOrder.items)
         ? selectedOrder.items.map((item) => ({
-            product_id: item.product_id,
-            quantity: item.quantity,
-            tax_code: (item.tax_code as string | null | undefined) ?? '',
-            tax_rate: item.tax_rate != null ? String(item.tax_rate) : '',
-            product_title: item.product_title,
-            featured_image: item.featured_image,
-          }))
+          product_id: item.product_id,
+          quantity: item.quantity,
+          tax_code: (item.tax_code as string | null | undefined) ?? '',
+          tax_rate: item.tax_rate != null ? String(item.tax_rate) : '',
+          product_title: item.product_title,
+          featured_image: item.featured_image,
+        }))
         : []
     );
     setEditError(null);
@@ -308,17 +314,18 @@ function AdminOrdersView() {
           customer_last_name: editFormValues.lastname.trim(),
           customer_email: editFormValues.email.trim(),
           customer_phone: editFormValues.phone.trim(),
+          lang: editFormValues.lang,
           shipping_address: addressPayload,
           billing_address: addressPayload,
           status: editFormValues.status,
           notes: editFormValues.notes.trim() || undefined,
           items: Array.isArray(selectedOrder.items)
             ? editItems.map((item) => ({
-                product_id: item.product_id,
-                quantity: item.quantity,
-                tax_code: item.tax_code.trim() || null,
-                tax_rate: item.tax_rate.trim() ? parseFloat(item.tax_rate) : null,
-              }))
+              product_id: item.product_id,
+              quantity: item.quantity,
+              tax_code: item.tax_code.trim() || null,
+              tax_rate: item.tax_rate.trim() ? parseFloat(item.tax_rate) : null,
+            }))
             : undefined,
         },
         token
@@ -341,6 +348,11 @@ function AdminOrdersView() {
     } finally {
       setEditSubmitting(false);
     }
+  };
+
+  const getStatusLabel = (status: string | null | undefined) => {
+    if (!status) return 'N/A';
+    return orderStatusOptions.find((o) => o.value === status)?.label ?? status;
   };
 
   const cartCount = getCart().reduce((sum, item) => sum + item.quantity, 0);
@@ -415,13 +427,12 @@ function AdminOrdersView() {
                     <span className="font-semibold ml-1">{order.id ?? 'N/A'}</span>
                   </div>
                   <div className="text-sm">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      order.status === 'completed' ? 'bg-green-900/40 text-green-400 border border-green-500/30' :
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${order.status === 'completed' ? 'bg-green-900/40 text-green-400 border border-green-500/30' :
                       order.status === 'pending' ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-500/30' :
-                      order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
-                      'bg-gray-700 text-gray-300 border border-gray-600'
-                    }`}>
-                      {order.status ?? 'N/A'}
+                        order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
+                          'bg-gray-700 text-gray-300 border border-gray-600'
+                      }`}>
+                      {getStatusLabel(order.status)}
                     </span>
                   </div>
                   <div className="text-sm text-gray-400">
@@ -506,13 +517,12 @@ function AdminOrdersView() {
                 <div className="space-y-2">
                   <div className="text-sm">
                     <span className="text-gray-500">{t.labelStatus}</span>
-                    <span className={`ml-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                      selectedOrder.status === 'completed' ? 'bg-green-900/40 text-green-400 border border-green-500/30' :
+                    <span className={`ml-2 px-3 py-1 rounded-full text-xs font-semibold ${selectedOrder.status === 'completed' ? 'bg-green-900/40 text-green-400 border border-green-500/30' :
                       selectedOrder.status === 'pending' ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-500/30' :
-                      selectedOrder.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
-                      'bg-gray-700 text-gray-300 border border-gray-600'
-                    }`}>
-                      {selectedOrder.status ?? 'N/A'}
+                        selectedOrder.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
+                          'bg-gray-700 text-gray-300 border border-gray-600'
+                      }`}>
+                      {getStatusLabel(selectedOrder.status)}
                     </span>
                   </div>
                   <div className="text-sm text-gray-300">
@@ -809,6 +819,19 @@ function AdminOrdersView() {
                       {option.label}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white/80">{t.labelOrderLang}</label>
+                <select
+                  name="lang"
+                  value={editFormValues.lang}
+                  onChange={handleEditFormChange}
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="en">{translations.en.languages.en}</option>
+                  <option value="fi">{translations.en.languages.fi}</option>
                 </select>
               </div>
 
