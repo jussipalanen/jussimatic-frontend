@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { deleteResume, copyResume, exportResumePdf, exportResumeHtml, getResumes, updateResume } from '../../api/resumesApi';
 import type { Resume } from '../../api/resumesApi';
 import NavBar from '../../components/NavBar';
+import { Pagination } from '../../components/Pagination';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
 import type { Language } from '../../i18n';
 
@@ -339,46 +340,15 @@ function ResumesView() {
         )}
 
         {/* Pagination */}
-        {!loading && lastPage > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <button
-              onClick={() => loadResumes(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="flex items-center gap-1.5 text-sm text-white/70 hover:text-white bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-2 rounded-lg transition-colors border border-gray-700"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span className="hidden sm:inline">{t.pagePrev}</span>
-            </button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: lastPage }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => loadResumes(page)}
-                  className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
-                    page === currentPage
-                      ? 'bg-blue-600 text-white'
-                      : 'text-white/60 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => loadResumes(currentPage + 1)}
-              disabled={currentPage === lastPage}
-              className="flex items-center gap-1.5 text-sm text-white/70 hover:text-white bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-2 rounded-lg transition-colors border border-gray-700"
-            >
-              <span className="hidden sm:inline">{t.pageNext}</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+        {!loading && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={lastPage}
+            onPageChange={loadResumes}
+            pageNumbers={Array.from({ length: lastPage }, (_, i) => i + 1)}
+            previousLabel={t.pagePrev}
+            nextLabel={t.pageNext}
+          />
         )}
 
         {!loading && total > 0 && (

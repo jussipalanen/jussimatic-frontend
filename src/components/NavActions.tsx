@@ -84,7 +84,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
     if (token) {
       getMe()
         .then((data) => setUserData(data as NavUserData))
-        .catch(() => {});
+        .catch(() => { });
     }
   }, []);
 
@@ -222,18 +222,30 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
           )}
         </div>
 
-        {/* Animated background toggle — desktop only */}
+        {/* Animated background toggle */}
         <button
           onClick={() => setAnimatedBg((v) => !v)}
-          className={`hidden sm:flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
-            animatedBg ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/30 hover:text-white/60 hover:bg-white/10'
-          }`}
           aria-label={animatedBg ? t.landing.animatedBgDisable : t.landing.animatedBgEnable}
           title={animatedBg ? t.landing.animatedBgDisable : t.landing.animatedBgEnable}
+          aria-pressed={animatedBg}
+          className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${animatedBg
+              ? 'border-amber-400/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:border-amber-400/70'
+              : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
+            }`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-          </svg>
+          {animatedBg ? (
+            <>
+              <span className="absolute inset-0 rounded-lg bg-amber-400/20 blur-sm animate-pulse" />
+              <svg className="relative w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            </>
+          ) : (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              <line x1="4" y1="4" x2="20" y2="20" strokeLinecap="round" />
+            </svg>
+          )}
         </button>
 
         {/* Admin link — visible for admin/vendor roles only */}
@@ -257,35 +269,107 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
         {/* User menu or login button */}
         {isLoggedIn ? (
           <>
-          <div className="relative" ref={userMenuRef}>
-            <button
-              onClick={() => setShowUserMenu((v) => !v)}
-              className="flex items-center gap-1.5 text-sm text-white rounded-lg px-2 py-1.5 hover:bg-white/10 transition-colors border border-white/20"
-            >
-              <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
-                {getInitials()}
-              </div>
-              <span className="hidden sm:block max-w-30 truncate">{getFullName()}</span>
-              <svg
-                className={`hidden sm:block w-3 h-3 shrink-0 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setShowUserMenu((v) => !v)}
+                className="flex items-center gap-1.5 text-sm text-white rounded-lg px-2 py-1.5 hover:bg-white/10 transition-colors border border-white/20"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Desktop dropdown — absolute positioning is not affected by backdrop-filter */}
-            {showUserMenu && (
-              <div className="hidden sm:flex flex-col absolute top-full right-0 mt-1 w-60 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-700">
-                  <div className="font-medium text-white text-sm">{getFullName()}</div>
-                  {getEmail() && (
-                    <div className="text-xs text-white/60 mt-0.5 truncate">{getEmail()}</div>
-                  )}
+                <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                  {getInitials()}
                 </div>
+                <span className="hidden sm:block max-w-30 truncate">{getFullName()}</span>
+                <svg
+                  className={`hidden sm:block w-3 h-3 shrink-0 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
+              {/* Desktop dropdown — absolute positioning is not affected by backdrop-filter */}
+              {showUserMenu && (
+                <div className="hidden sm:flex flex-col absolute top-full right-0 mt-1 w-60 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-700">
+                    <div className="font-medium text-white text-sm">{getFullName()}</div>
+                    {getEmail() && (
+                      <div className="text-xs text-white/60 mt-0.5 truncate">{getEmail()}</div>
+                    )}
+                  </div>
+
+                  <div className="py-1">
+                    <button
+                      onClick={() => { setShowUserMenu(false); setShowEditModal(true); }}
+                      className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                    >
+                      <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {t.landing.editProfile}
+                    </button>
+
+                    <button
+                      onClick={() => { navigate('/profile/resumes'); setShowUserMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                    >
+                      <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      {t.landing.myResumes}
+                    </button>
+
+                    <button
+                      onClick={() => { navigate('/profile/invoices'); setShowUserMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                    >
+                      <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                      </svg>
+                      {t.landing.myInvoices}
+                    </button>
+                  </div>
+
+                  <div className="border-t border-gray-700 py-1">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                    >
+                      <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Mobile full-screen overlay — portaled to body to escape nav's backdrop-filter containing block */}
+            {showUserMenu && createPortal(
+              <div
+                ref={userMobileMenuRef}
+                className="fixed inset-0 z-50 sm:hidden flex flex-col bg-gray-900 overflow-y-auto"
+              >
+                <div className="px-4 border-b border-gray-700">
+                  <div className="flex items-center justify-between py-4">
+                    <div>
+                      <div className="font-medium text-white">{getFullName()}</div>
+                      {getEmail() && (
+                        <div className="text-xs text-white/60 mt-0.5">{getEmail()}</div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex items-center justify-center w-9 h-9 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                      aria-label={t.landing.close}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
                 <div className="py-1">
                   <button
                     onClick={() => { setShowUserMenu(false); setShowEditModal(true); }}
@@ -297,7 +381,6 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
                     </svg>
                     {t.landing.editProfile}
                   </button>
-
                   <button
                     onClick={() => { navigate('/profile/resumes'); setShowUserMenu(false); }}
                     className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
@@ -307,7 +390,6 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
                     </svg>
                     {t.landing.myResumes}
                   </button>
-
                   <button
                     onClick={() => { navigate('/profile/invoices'); setShowUserMenu(false); }}
                     className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
@@ -318,7 +400,6 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
                     {t.landing.myInvoices}
                   </button>
                 </div>
-
                 <div className="border-t border-gray-700 py-1">
                   <button
                     onClick={handleLogout}
@@ -327,81 +408,12 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
                     <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    Logout
+                    {t.landing.logout}
                   </button>
                 </div>
-              </div>
+              </div>,
+              document.body
             )}
-          </div>
-          {/* Mobile full-screen overlay — portaled to body to escape nav's backdrop-filter containing block */}
-          {showUserMenu && createPortal(
-            <div
-              ref={userMobileMenuRef}
-              className="fixed inset-0 z-50 sm:hidden flex flex-col bg-gray-900 overflow-y-auto"
-            >
-              <div className="px-4 border-b border-gray-700">
-                <div className="flex items-center justify-between py-4">
-                  <div>
-                    <div className="font-medium text-white">{getFullName()}</div>
-                    {getEmail() && (
-                      <div className="text-xs text-white/60 mt-0.5">{getEmail()}</div>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setShowUserMenu(false)}
-                    className="flex items-center justify-center w-9 h-9 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                    aria-label={t.landing.close}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div className="py-1">
-                <button
-                  onClick={() => { setShowUserMenu(false); setShowEditModal(true); }}
-                  className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                >
-                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {t.landing.editProfile}
-                </button>
-                <button
-                  onClick={() => { navigate('/profile/resumes'); setShowUserMenu(false); }}
-                  className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                >
-                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  {t.landing.myResumes}
-                </button>
-                <button
-                  onClick={() => { navigate('/profile/invoices'); setShowUserMenu(false); }}
-                  className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                >
-                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                  </svg>
-                  {t.landing.myInvoices}
-                </button>
-              </div>
-              <div className="border-t border-gray-700 py-1">
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                >
-                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  {t.landing.logout}
-                </button>
-              </div>
-            </div>,
-            document.body
-          )}
           </>
         ) : (
           <button
@@ -476,7 +488,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
           onSuccess={() => {
             getMe()
               .then((data) => setUserData(data as NavUserData))
-              .catch(() => {});
+              .catch(() => { });
           }}
           showRoleSelect={false}
         />

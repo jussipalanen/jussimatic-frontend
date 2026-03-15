@@ -8,6 +8,7 @@ import { getMe } from '../../../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
 import { getCart } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
+import { Pagination } from '../../../components/Pagination';
 import CountrySelect from '../../../components/CountrySelect';
 import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../../../i18n';
 import { fetchTaxRates } from '../../../api/productsApi';
@@ -16,20 +17,20 @@ import type { TaxRate } from '../../../api/productsApi';
 const ITEMS_PER_PAGE = 10;
 
 const DEFAULT_STATUS_OPTIONS: InvoiceStatusOption[] = [
-  { value: 'draft',     label: 'Draft',     color: 'gray' },
-  { value: 'issued',    label: 'Issued',    color: 'blue' },
-  { value: 'paid',      label: 'Paid',      color: 'green' },
+  { value: 'draft', label: 'Draft', color: 'gray' },
+  { value: 'issued', label: 'Issued', color: 'blue' },
+  { value: 'paid', label: 'Paid', color: 'green' },
   { value: 'cancelled', label: 'Cancelled', color: 'red' },
-  { value: 'unpaid',    label: 'Unpaid',    color: 'orange' },
-  { value: 'overdue',   label: 'Overdue',   color: 'rose' },
+  { value: 'unpaid', label: 'Unpaid', color: 'orange' },
+  { value: 'overdue', label: 'Overdue', color: 'rose' },
 ];
 
 const DEFAULT_ITEM_TYPE_OPTIONS: InvoiceItemTypeOption[] = [
-  { value: 'product',  label: 'Product' },
+  { value: 'product', label: 'Product' },
   { value: 'shipping', label: 'Shipping' },
   { value: 'discount', label: 'Discount' },
-  { value: 'fee',      label: 'Fee' },
-  { value: 'other',    label: 'Other' },
+  { value: 'fee', label: 'Fee' },
+  { value: 'other', label: 'Other' },
 ];
 
 type EditFormData = {
@@ -282,20 +283,20 @@ function buildInvoiceHTML(invoice: Invoice): string {
 
 function StatusBadge({ status, label, color }: { status: string; label?: string; color?: string }) {
   const colorMap: Record<string, string> = {
-    gray:   'bg-gray-600 text-gray-200',
-    blue:   'bg-blue-600 text-blue-100',
-    green:  'bg-green-600 text-green-100',
-    red:    'bg-red-700 text-red-100',
+    gray: 'bg-gray-600 text-gray-200',
+    blue: 'bg-blue-600 text-blue-100',
+    green: 'bg-green-600 text-green-100',
+    red: 'bg-red-700 text-red-100',
     orange: 'bg-orange-500 text-orange-100',
-    rose:   'bg-rose-700 text-rose-100',
+    rose: 'bg-rose-700 text-rose-100',
   };
   const legacyColors: Record<string, string> = {
-    draft:     'bg-gray-600 text-gray-200',
-    issued:    'bg-blue-600 text-blue-100',
-    paid:      'bg-green-600 text-green-100',
+    draft: 'bg-gray-600 text-gray-200',
+    issued: 'bg-blue-600 text-blue-100',
+    paid: 'bg-green-600 text-green-100',
     cancelled: 'bg-red-700 text-red-100',
-    unpaid:    'bg-orange-500 text-orange-100',
-    overdue:   'bg-rose-700 text-rose-100',
+    unpaid: 'bg-orange-500 text-orange-100',
+    overdue: 'bg-rose-700 text-rose-100',
   };
   const cls = (color ? colorMap[color] : legacyColors[status]) ?? 'bg-gray-600 text-gray-200';
   return (
@@ -1096,47 +1097,12 @@ function AdminInvoicesView() {
                   </p>
                 </div>
 
-                {totalPages > 1 && (
-                  <div className="flex flex-wrap justify-center items-center gap-2 mt-6">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="px-3 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                      aria-label="Previous page"
-                    >
-                      ←
-                    </button>
-
-                    {getPageNumbers().map((page, index) =>
-                      page === -1 ? (
-                        <span key={`ellipsis-${index}`} className="px-2 text-gray-500">
-                          ...
-                        </span>
-                      ) : (
-                        <button
-                          key={page}
-                          onClick={() => handlePageChange(page)}
-                          className={`px-4 py-2 rounded transition-colors ${
-                            currentPage === page
-                              ? 'bg-blue-600 text-white font-bold'
-                              : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      )
-                    )}
-
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                      aria-label="Next page"
-                    >
-                      →
-                    </button>
-                  </div>
-                )}
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  pageNumbers={getPageNumbers()}
+                />
               </>
             )}
           </>

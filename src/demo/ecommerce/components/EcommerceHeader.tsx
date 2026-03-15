@@ -110,21 +110,6 @@ function EcommerceHeader({
 
             {/* Mobile/tablet header controls — hidden on desktop */}
             <div className="lg:hidden flex items-center gap-2 shrink-0">
-              <LanguageSelect value={language} onChange={setLanguage} />
-              {isLoggedIn ? (
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-1.5 rounded-lg bg-red-600 px-2.5 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
-                  aria-label={t.logout}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                </button>
-              ) : (
-                <>
-                  <button onClick={() => { setAuthInitialTab('login'); setIsAuthModalOpen(true); }} className="rounded-lg border border-white/20 bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white hover:bg-white/20">{t.login}</button>
-                  <button onClick={() => { setAuthInitialTab('register'); setIsAuthModalOpen(true); }} className="rounded-lg bg-green-600 px-2.5 py-1.5 text-sm font-semibold text-white hover:bg-green-700">{t.register}</button>
-                </>
-              )}
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen((prev) => !prev)}
@@ -133,15 +118,15 @@ function EcommerceHeader({
                 aria-expanded={isMobileMenuOpen}
                 aria-controls="ecommerce-mobile-menu"
               >
-              {isMobileMenuOpen ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
+                {isMobileMenuOpen ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
               </button>
             </div>
 
@@ -215,7 +200,7 @@ function EcommerceHeader({
 
           {isMobileMenuOpen && (
             <div id="ecommerce-mobile-menu" className="mt-3 lg:hidden">
-              <div className="rounded-xl border border-white/10 bg-gray-900/95 backdrop-blur-sm overflow-hidden shadow-2xl">
+              <div className="rounded-xl border border-white/10 bg-gray-900/95 backdrop-blur-sm shadow-2xl">
 
                 {/* Page actions (e.g. search bar passed via actions prop) */}
                 {actions && (
@@ -302,7 +287,8 @@ function EcommerceHeader({
                 </div>
 
                 {/* Bottom bar: auth action */}
-                <div className="px-3 pb-3 flex items-center gap-2 border-t border-white/10 pt-3">
+                <div className="px-3 pb-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
+                  <LanguageSelect value={language} onChange={setLanguage} dropdownAlign="left" />
                   {isLoggedIn ? (
                     <button
                       onClick={handleLogout}
