@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteResume, copyResume, exportResumePdf, exportResumeHtml, getResumes, updateResume } from '../../api/resumesApi';
+import { deleteResume, copyResume, createResumeFromJson, exportResumePdf, exportResumeHtml, exportResumeJson, getResumes, updateResume } from '../../api/resumesApi';
 import type { Resume } from '../../api/resumesApi';
 import NavBar from '../../components/NavBar';
 import { Pagination } from '../../components/Pagination';
@@ -28,6 +28,8 @@ function ResumesView() {
   const [openExportMenuId, setOpenExportMenuId] = useState<number | null>(null);
   const [copyingId, setCopyingId] = useState<number | null>(null);
   const [settingPrimaryId, setSettingPrimaryId] = useState<number | null>(null);
+  const [importing, setImporting] = useState(false);
+  const importFileRef = useRef<HTMLInputElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -83,13 +85,14 @@ function ResumesView() {
     }
   };
 
-  const handleExport = async (id: number, format: 'pdf' | 'html') => {
+  const handleExport = async (id: number, format: 'pdf' | 'html' | 'json') => {
     setOpenExportMenuId(null);
     setExportingId(id);
     setExportError(null);
     try {
       if (format === 'pdf') await exportResumePdf(id);
-      else await exportResumeHtml(id);
+      else if (format === 'html') await exportResumeHtml(id);
+      else await exportResumeJson(id);
     } catch (err) {
       console.error(`Failed to export ${format.toUpperCase()}:`, err);
       setExportError(`${t.errExportResume}`);
@@ -109,6 +112,23 @@ function ResumesView() {
       setError(t.errSetPrimary);
     } finally {
       setSettingPrimaryId(null);
+    }
+  };
+
+  const handleImportJson = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setImporting(true);
+    setError(null);
+    try {
+      const created = await createResumeFromJson(file);
+      navigate(`/profile/resumes/${created.id}`);
+    } catch (err) {
+      console.error('Failed to import resume from JSON:', err);
+      setError(t.errImportResume);
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -138,15 +158,42 @@ function ResumesView() {
             <h1 className="text-2xl font-bold text-white">{t.pageTitle}</h1>
             <p className="text-sm text-white/50 mt-1">{t.pageSubtitle}</p>
           </div>
-          <button
-            onClick={() => navigate('/profile/resumes/new')}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span className="hidden sm:inline">{t.newResume}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <input
+              ref={importFileRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={handleImportJson}
+            />
+            <button
+              onClick={() => importFileRef.current?.click()}
+              disabled={importing}
+              className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 border border-gray-600 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors"
+              title={t.importJson}
+            >
+              {importing ? (
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+              )}
+              <span className="hidden sm:inline">{importing ? t.importing : t.importJson}</span>
+            </button>
+            <button
+              onClick={() => navigate('/profile/resumes/new')}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span className="hidden sm:inline">{t.newResume}</span>
+            </button>
+          </div>
         </div>
 
         {/* Error */}
@@ -274,6 +321,15 @@ function ResumesView() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                             </svg>
                             HTML
+                          </button>
+                          <button
+                            onClick={() => handleExport(resume.id, 'json')}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white hover:bg-gray-700 transition-colors"
+                          >
+                            <svg className="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            JSON
                           </button>
                         </div>
                       )}
