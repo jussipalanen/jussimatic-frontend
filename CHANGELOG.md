@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2026-03-15
+
+### Added
+- **Resume JSON export** (`GET /api/resumes/{id}/export/json`): Authenticated users can now export any resume as a structured JSON file directly from the **ResumeEdit form** (Export dropdown → JSON), the **Resumes list view** (per-card Export dropdown → JSON), and the **public Resume Tool demo** (Export dropdown → JSON, serialised client-side from the current form state without any API call).
+- **Resume JSON import — create new** (`POST /api/resumes/import/json`): An **Import JSON** button in the **Resumes list view** header opens a hidden file picker (`.json`). Uploading a file calls the new endpoint, creates a new resume, and navigates directly to its edit page.
+- **Resume JSON import — update existing** (`POST /api/resumes/{id}/import/json`): An **Import JSON** button in the **ResumeEdit form** toolbar uploads a `.json` file to overwrite the current resume, then reloads the form with the returned data.
+- **Resume Tool demo — JSON import**: The **Import JSON** button in the demo toolbar parses a `.json` file entirely in the browser (no API call) and populates the form. Supports the canonical export format (`{ version, exported_at, resume: {...} }`), Laravel-style `{ data: {...} }` wrappers, and plain objects.
+- **`show_skill_levels` toggle** in **ResumeEdit → Skills section**: A pill toggle controls whether proficiency dot indicators are rendered for skills in the CV view and export. Off by default.
+- **`show_language_levels` toggle** in **ResumeEdit → Languages section**: Same pill toggle for language proficiency dots. Off by default.
+- **`CVView` — conditional proficiency dots**: `show_skill_levels` and `show_language_levels` flags from the resume API response now gate the `<ProficiencyDots>` component in the Skills and Languages sections respectively.
+- **`resumesApi`** — new exported functions: `exportResumeJson`, `importResumeJson`, `createResumeFromJson`.
+- **i18n keys** (EN + FI): `errImportResume`, `importJson`, `importing`, `importSuccess`, `showSkillLevelsLabel`, `showLanguageLevelsLabel`, `showLevelsOn`, `showLevelsOff`.
+
+### Changed
+- **`Resume` interface** (`resumesApi.ts`): Added optional `show_skill_levels?: boolean` and `show_language_levels?: boolean` fields (automatically included in `ResumePayload` via the existing `Omit` type).
+- **`ResumeEdit` — Export dropdown**: Now contains three options — PDF, HTML, and JSON.
+- **`ResumesView` — Export dropdown**: Now contains three options — PDF, HTML, and JSON.
+- **`ResumeToolView` — Export dropdown**: Now contains three options — PDF, HTML, and JSON.
+- **i18n labels** `showSkillLevelsLabel` / `showLanguageLevelsLabel` updated to clarify they affect both the CV view and exports: *"Show skill levels in CV & export"* / *"Näytä taitotasot CV:ssä ja viennissä"*.
+
 ## [0.6.8] - 2026-03-15
 
 ### Added
