@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.6] - 2026-03-15
+
+### Changed
+- **Landing page profile photo — WebP conversion**: `face_ja.jpg` (JPEG) converted to `profile_image.webp` at 264×264 px using `cwebp`, reducing image weight. The file is now served from `public/` as the static path `/profile_image.webp`, avoiding the Vite asset pipeline for the image.
+- **`index.html` — preload hint**: Added `<link rel="preload" as="image" type="image/webp" href="/profile_image.webp" />` to `<head>` so the browser begins fetching the profile photo as early as possible, improving Largest Contentful Paint (LCP).
+- **`ShootingStars` — skip on touch devices**: Component detects touch-only devices via `window.matchMedia('(hover: none) and (pointer: coarse)')` at module load time and returns `null`, avoiding creating any DOM nodes on phones and tablets.
+- **`NavActions` — low-end device detection**: `isLowEndDevice()` heuristic checks `navigator.hardwareConcurrency` (≤2 cores) and `navigator.deviceMemory` (≤2 GB) on first visit. Animated background is automatically disabled on low-end devices; the preference is persisted to `localStorage` so it survives page reloads. Users can still toggle it manually.
+- **`App.css` — mobile animation budget**: Touch/coarse-pointer media query (`hover: none` + `pointer: coarse`) freezes star layers 1 & 3 (only the mid-speed layer 2 keeps drifting), hides all shooting stars and starlight flares, snaps the coin orbit to its final state, and stops the coin-shine sweep — cutting GPU paint work on mobile significantly.
+
 ## [0.6.5] - 2026-03-15
 
 ### Added
