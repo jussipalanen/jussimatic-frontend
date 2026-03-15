@@ -5,7 +5,7 @@ import type { Language } from './i18n';
 import { getVisitorsToday, getVisitorsTotal, trackVisitor } from './api/visitorsApi';
 import AuthModal from './AuthModal';
 import NavBar from './components/NavBar';
-import faceJa from './assets/face_ja.jpg';
+const faceJa = '/profile_image.webp';
 import ShootingStars from './components/ShootingStars';
 import { DEMOS } from './demos';
 
@@ -52,10 +52,17 @@ function LandingView() {
       }
     };
 
-    loadVisitorsStats();
+    let idleId: ReturnType<typeof setTimeout>;
+    if (typeof requestIdleCallback !== 'undefined') {
+      idleId = requestIdleCallback(() => { if (active) loadVisitorsStats(); }) as unknown as ReturnType<typeof setTimeout>;
+    } else {
+      idleId = setTimeout(() => { if (active) loadVisitorsStats(); }, 1000);
+    }
 
     return () => {
       active = false;
+      if (typeof requestIdleCallback !== 'undefined') cancelIdleCallback(idleId as unknown as number);
+      else clearTimeout(idleId);
     };
   }, []);
 
@@ -75,7 +82,11 @@ function LandingView() {
       }
     };
 
-    trackVisit();
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(() => trackVisit());
+    } else {
+      setTimeout(trackVisit, 1000);
+    }
   }, []);
 
   useEffect(() => {
@@ -285,10 +296,10 @@ function LandingView() {
       {/* Projects & Demos modal */}
       {showProjectsModal && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex flex-col lg:flex-row lg:items-center lg:justify-center lg:p-4 bg-black/70 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) setShowProjectsModal(false); }}
         >
-          <div className="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-gray-800 border border-gray-700 rounded-t-2xl sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
+          <div className="relative w-full flex-1 lg:flex-none lg:max-w-2xl lg:max-h-[85vh] bg-gray-800 lg:border lg:border-gray-700 rounded-none lg:rounded-xl shadow-2xl flex flex-col overflow-hidden">
             {/* Modal header */}
             <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-700 shrink-0">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
