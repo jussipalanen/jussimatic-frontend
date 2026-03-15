@@ -135,12 +135,12 @@ function CheckoutView() {
       const shippingAddress = useBillingForShipping
         ? billingAddress
         : {
-            street: formValues.shippingStreet.trim(),
-            city: formValues.shippingCity.trim(),
-            state: formValues.shippingState.trim(),
-            postal_code: formValues.shippingPostCode.trim(),
-            country: formValues.shippingCountry.trim(),
-          };
+          street: formValues.shippingStreet.trim(),
+          city: formValues.shippingCity.trim(),
+          state: formValues.shippingState.trim(),
+          postal_code: formValues.shippingPostCode.trim(),
+          country: formValues.shippingCountry.trim(),
+        };
 
       await createOrder({
         ...(userId !== undefined && { user_id: userId }),
@@ -148,6 +148,7 @@ function CheckoutView() {
         customer_last_name: formValues.lastname.trim(),
         customer_email: formValues.email.trim(),
         customer_phone: formValues.phone.trim(),
+        lang: language,
         shipping_address: shippingAddress,
         billing_address: billingAddress,
         items: cartItems.map((item) => ({
@@ -155,7 +156,7 @@ function CheckoutView() {
           quantity: item.quantity,
         })),
         notes: formValues.notes.trim() || undefined,
-      }, language);
+      });
 
       clearCart();
       setCartItems([]);

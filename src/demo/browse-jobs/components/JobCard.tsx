@@ -2,6 +2,7 @@ import type { VantaaJob } from '../types';
 
 interface JobCardProps {
   job: VantaaJob;
+  viewMode: 'list' | 'grid';
   onApply: (url: string) => void;
   translations: {
     organization: string;
@@ -23,11 +24,18 @@ function formatDate(dateString: string): string {
   return `${day}.${month}.${year}`;
 }
 
-export function JobCard({ job, onApply, translations }: JobCardProps) {
+export function JobCard({ job, viewMode, onApply, translations }: JobCardProps) {
+  const isGrid = viewMode === 'grid';
   return (
-    <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-750 transition-colors">
-      <h3 className="text-xl font-semibold mb-2">{job.tyotehtava}</h3>
-      <div className="space-y-1 text-gray-300">
+    <div
+      className={`bg-gray-800 rounded-lg hover:bg-gray-750 transition-colors flex flex-col ${
+        isGrid ? 'p-4' : 'p-4 sm:p-6'
+      }`}
+    >
+      <h3 className={`font-semibold mb-2 ${isGrid ? 'text-base' : 'text-lg sm:text-xl'}`}>
+        {job.tyotehtava}
+      </h3>
+      <div className={`space-y-1 text-gray-300 grow ${isGrid ? 'text-sm' : 'text-sm sm:text-base'}`}>
         <p>
           <span className="text-gray-400">{translations.organization}:</span>{' '}
           {job.organisaatio.split(' ').length > 100
@@ -53,7 +61,9 @@ export function JobCard({ job, onApply, translations }: JobCardProps) {
               e.preventDefault();
               onApply(job.linkki);
             }}
-            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+            className={`bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors ${
+              isGrid ? 'block text-center w-full' : 'inline-block'
+            }`}
           >
             {translations.apply}
           </a>

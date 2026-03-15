@@ -90,6 +90,7 @@ export const translations = {
       apply: 'Apply',
       previousPage: 'Previous page',
       nextPage: 'Next page',
+      results: 'results',
     },
     chat: {
       title: 'Chat',
@@ -651,6 +652,7 @@ export const translations = {
       labelCity: 'City',
       labelCountry: 'Country',
       labelOrderStatus: 'Order status',
+      labelOrderLang: 'Order language',
       labelNotes: 'Notes',
       lineTaxTitle: 'Line Item Tax',
       taxRateHint: 'Tax rate is a decimal, e.g. 0.24 = 24%',
@@ -912,8 +914,10 @@ export const translations = {
       gpa: 'GPA',
       errLoad: 'Failed to load CV. Please try again later.',
       errMissingEndpoint: 'CV endpoint is not configured (VITE_CV_ENDPOINT missing).',
+      breadcrumbHome: 'Home',
+      breadcrumbCurrent: 'CV',
     },
-    footer: 'Built by Jussi Alanen. Source code available on GitHub.',
+    footer: 'Built by Jussi Alanen. Source code available on GitHub',
   },
   fi: {
     landing: {
@@ -961,6 +965,7 @@ export const translations = {
       apply: 'Hae paikkaa',
       previousPage: 'Edellinen sivu',
       nextPage: 'Seuraava sivu',
+      results: 'tulosta',
     },
     chat: {
       title: 'Keskustelu',
@@ -1522,6 +1527,7 @@ export const translations = {
       labelCity: 'Kaupunki',
       labelCountry: 'Maa',
       labelOrderStatus: 'Tilauksen tila',
+      labelOrderLang: 'Tilauksen kieli',
       labelNotes: 'Muistiinpanot',
       lineTaxTitle: 'Rivin vero',
       taxRateHint: 'Veroprosentti on desimaali, esim. 0.24 = 24%',
@@ -1783,6 +1789,8 @@ export const translations = {
       gpa: 'Arvosana',
       errLoad: 'CV:n lataaminen epäonnistui. Yritä uudelleen.',
       errMissingEndpoint: 'CV-päätepistettä ei ole määritetty (VITE_CV_ENDPOINT puuttuu).',
+      breadcrumbHome: 'Etusivu',
+      breadcrumbCurrent: 'CV',
     },
     footer: 'Kaikki oikeudet pidätetään.'
   },

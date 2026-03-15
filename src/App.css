@@ -360,14 +360,6 @@ body::after {
   filter:
     drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55))
     drop-shadow(0 0 22px rgba(251, 191, 36, 0.45));
-  will-change: filter;
-  transition: filter 0.25s ease;
-}
-
-.coin-orbit:hover {
-  filter:
-    drop-shadow(0 8px 24px rgba(0, 0, 0, 0.65))
-    drop-shadow(0 0 48px rgba(251, 191, 36, 0.95));
 }
 
 /* Ground shadow cast below the coin */
@@ -389,12 +381,8 @@ body::after {
   position: relative;
   transform-style: preserve-3d;
   animation: coinFlip 3.8s linear infinite;
-  animation-play-state: paused;
-  will-change: transform;
-}
-
-.coin-orbit:hover .coin-wrapper {
   animation-play-state: running;
+  will-change: transform;
 }
 
 .coin-face {
@@ -500,10 +488,6 @@ body::after {
   background-size: 300% 300%;
   background-position: -100% 0;
   animation: coinShine 4.5s ease-in-out infinite;
-  animation-play-state: paused;
-}
-
-.coin-orbit:hover .coin-shine {
   animation-play-state: running;
 }
 
@@ -554,9 +538,19 @@ body::after {
     opacity: 1;
   }
 
-  /* Stop coin shine sweep */
+  /* Coin auto-spins by default — no overrides needed for touch */
+}
+
+/* Low-tier touch devices: keep coin static to save resources.
+   (update: slow) targets e-ink / very slow rendering environments;
+   (prefers-reduced-data) targets data-saver mode. */
+@media (hover: none) and (pointer: coarse) and (update: slow) {
+  .coin-wrapper {
+    animation-play-state: paused;
+  }
+
   .coin-shine {
-    animation: none;
+    animation-play-state: paused;
     opacity: 0;
   }
 }

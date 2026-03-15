@@ -282,66 +282,72 @@ function AdminUsersView() {
         )}
 
         {!loading && !error && !authError && rows.length > 0 && (
-          <div className="mx-auto max-w-5xl overflow-x-auto rounded-lg border border-gray-700">
-            <table className="w-full min-w-[700px] text-left bg-gray-800">
-              <thead className="bg-gray-850 border-b border-gray-700">
-                <tr className="text-xs uppercase tracking-wider text-gray-400">
-                  <th className="px-6 py-3">{t.colId}</th>
-                  <th className="px-6 py-3">{t.colUsername}</th>
-                  <th className="px-6 py-3">{t.colFirstName}</th>
-                  <th className="px-6 py-3">{t.colLastName}</th>
-                  <th className="px-6 py-3">{t.colEmail}</th>
-                  <th className="px-6 py-3">{t.colRole}</th>
-                  <th className="px-6 py-3 text-right">{t.colActions}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-700">
-                {rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-750 transition-colors">
-                    <td className="px-6 py-4 text-gray-400 font-mono text-sm">{row.numericId ?? 'N/A'}</td>
-                    <td className="px-6 py-4 text-gray-200">{row.username}</td>
-                    <td className="px-6 py-4 text-gray-200">{row.firstName}</td>
-                    <td className="px-6 py-4 text-gray-200">{row.lastName}</td>
-                    <td className="px-6 py-4 text-gray-300">{row.email}</td>
-                    <td className="px-6 py-4 text-gray-300">{row.roleLabel}</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="inline-flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleEditClick(row)}
-                          disabled={row.numericId === null || !canManageUsers}
-                          className="rounded-lg border border-gray-600 px-3 py-1.5 text-sm font-semibold text-gray-300 hover:bg-gray-700/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                          title={
-                            !canManageUsers
-                              ? t.titleNoPermEdit
-                              : row.numericId === null
-                                ? t.titleMissingId
-                                : t.titleEditUser
-                          }
-                        >
-                          {t.btnEdit}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteClick(row)}
-                          disabled={row.numericId === null || row.numericId === currentUserId || !canManageUsers}
-                          className="rounded-lg border border-red-500/60 px-3 py-1.5 text-sm font-semibold text-red-300 hover:bg-red-600/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                          title={
-                            !canManageUsers
-                              ? t.titleNoPermDel
-                              : row.numericId === currentUserId
-                                ? t.titleDelSelf
-                                : undefined
-                          }
-                        >
-                          {t.btnDelete}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mx-auto max-w-4xl flex flex-col gap-3">
+            {rows.map((row) => {
+              const initials = [row.firstName, row.lastName]
+                .filter((s) => s && s !== 'N/A')
+                .map((s) => s[0].toUpperCase())
+                .join('') || '?';
+              const roleColor =
+                row.role === 'admin' || row.role === 'administrator'
+                  ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30'
+                  : row.role === 'vendor'
+                    ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
+                    : 'bg-gray-700/50 text-gray-400 border border-gray-600/40';
+              const isSelf = row.numericId === currentUserId;
+
+              return (
+                <div
+                  key={row.id}
+                  className="flex items-center gap-4 rounded-xl border border-gray-700 bg-gray-800 px-5 py-4 hover:border-gray-600 transition-colors"
+                >
+                  {/* Avatar */}
+                  <div className="shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold text-white select-none">
+                    {initials}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-white truncate">{row.fullName !== 'N/A' ? row.fullName : row.username}</span>
+                      {isSelf && (
+                        <span className="text-xs rounded-full bg-green-600/20 text-green-400 border border-green-500/30 px-2 py-0.5">{t.labelYou ?? 'You'}</span>
+                      )}
+                      <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${roleColor}`}>{row.roleLabel}</span>
+                    </div>
+                    <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-sm text-gray-400">
+                      {row.username !== 'N/A' && <span>@{row.username}</span>}
+                      {row.email !== 'N/A' && <span className="truncate">{row.email}</span>}
+                      {row.numericId !== null && <span className="font-mono text-xs text-gray-500">#{row.numericId}</span>}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  {canManageUsers && (
+                    <div className="shrink-0 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEditClick(row)}
+                        disabled={row.numericId === null}
+                        className="rounded-lg border border-gray-600 px-3 py-1.5 text-sm font-semibold text-gray-300 hover:bg-gray-700/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title={row.numericId === null ? t.titleMissingId : t.titleEditUser}
+                      >
+                        {t.btnEdit}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteClick(row)}
+                        disabled={row.numericId === null || isSelf}
+                        className="rounded-lg border border-red-500/60 px-3 py-1.5 text-sm font-semibold text-red-300 hover:bg-red-600/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title={isSelf ? t.titleDelSelf : undefined}
+                      >
+                        {t.btnDelete}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

@@ -34,7 +34,10 @@ function BrowseJobsView() {
     handleClearSearch,
   } = useJobsFilter(jobs);
 
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
   const pagination = usePagination(5);
+  const { resetPage } = pagination;
 
   // Persist language preference
   useEffect(() => {
@@ -43,8 +46,8 @@ function BrowseJobsView() {
 
   // Reset pagination when filters change
   useEffect(() => {
-    pagination.resetPage();
-  }, [filteredJobs, pagination]);
+    resetPage();
+  }, [filteredJobs, resetPage]);
 
   const totalPages = pagination.getTotalPages(filteredJobs.length);
   const paginatedJobs = pagination.paginatedItems(filteredJobs) as VantaaJob[];
@@ -79,7 +82,49 @@ function BrowseJobsView() {
             />
           )}
 
+          {!loading && !error && (
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm text-gray-400">
+                {filteredJobs.length} {t.jobs.results}
+              </span>
+              <div className="flex gap-1">
+              <button
+                onClick={() => setViewMode('list')}
+                aria-label="List view"
+                className={`p-2 rounded transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                aria-label="Grid view"
+                className={`p-2 rounded transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                </svg>
+              </button>
+              </div>
+            </div>
+          )}
+
           <JobList
+            viewMode={viewMode}
             jobs={paginatedJobs}
             loading={loading}
             error={error}

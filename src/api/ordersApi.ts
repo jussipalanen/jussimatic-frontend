@@ -16,6 +16,7 @@ export interface CreateOrderData {
   customer_last_name: string;
   customer_email: string;
   customer_phone: string;
+  lang?: string;
   shipping_address: {
     street: string;
     city: string;
@@ -37,8 +38,8 @@ export interface CreateOrderData {
   notes?: string;
 }
 
-export async function createOrder(data: CreateOrderData, lang?: string): Promise<unknown> {
-  const url = lang ? buildUrl(`orders?lang=${encodeURIComponent(lang)}`) : buildUrl('orders');
+export async function createOrder(data: CreateOrderData): Promise<unknown> {
+  const url = buildUrl('orders');
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -59,6 +60,7 @@ export interface UpdateOrderData {
   customer_last_name: string;
   customer_email: string;
   customer_phone: string;
+  lang?: string;
   shipping_address: {
     street: string;
     city: string;

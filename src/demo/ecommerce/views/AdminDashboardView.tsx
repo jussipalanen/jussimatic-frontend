@@ -108,46 +108,37 @@ function AdminDashboardView() {
               <p className="text-gray-300">{t.subtitle}</p>
             </div>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-gray-700 bg-gray-900/60 p-5">
-                <h3 className="text-lg font-semibold text-white">{t.ordersTitle}</h3>
-                <p className="text-sm text-gray-400 mt-2">{t.ordersDesc}</p>
-                <button
-                  onClick={() => navigate('/demo/ecommerce/admin/orders')}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition-colors"
-                >
-                  {t.goToOrders}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-              <div className="rounded-xl border border-gray-700 bg-gray-900/60 p-5">
-                <h3 className="text-lg font-semibold text-white">{t.usersTitle}</h3>
-                <p className="text-sm text-gray-400 mt-2">{t.usersDesc}</p>
-                <button
-                  onClick={() => navigate('/demo/ecommerce/admin/users')}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition-colors"
-                >
-                  {t.goToUsers}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-              <div className="rounded-xl border border-gray-700 bg-gray-900/60 p-5">
-                <h3 className="text-lg font-semibold text-white">{t.invoicesTitle}</h3>
-                <p className="text-sm text-gray-400 mt-2">{t.invoicesDesc}</p>
-                <button
-                  onClick={() => navigate('/demo/ecommerce/admin/invoices')}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition-colors"
-                >
-                  {t.goToInvoices}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <button
+                onClick={() => navigate('/demo/ecommerce/admin/orders')}
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-blue-500/60 hover:bg-blue-600/10 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-blue-400 group-hover:text-blue-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span className="text-base font-semibold text-white">{t.ordersTitle}</span>
+                <span className="text-sm text-gray-400">{t.ordersDesc}</span>
+              </button>
+              <button
+                onClick={() => navigate('/demo/ecommerce/admin/users')}
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-purple-500/60 hover:bg-purple-600/10 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-400 group-hover:text-purple-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <span className="text-base font-semibold text-white">{t.usersTitle}</span>
+                <span className="text-sm text-gray-400">{t.usersDesc}</span>
+              </button>
+              <button
+                onClick={() => navigate('/demo/ecommerce/admin/invoices')}
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-green-500/60 hover:bg-green-600/10 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-green-400 group-hover:text-green-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span className="text-base font-semibold text-white">{t.invoicesTitle}</span>
+                <span className="text-sm text-gray-400">{t.invoicesDesc}</span>
+              </button>
             </div>
           </div>
         )}
