@@ -496,6 +496,50 @@ function ResumeToolView() {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
+
+  const handleImportJson = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setImportError(null);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const raw = JSON.parse(ev.target?.result as string);
+        // Handle wrapped formats: { resume: {...} }, { data: {...} }, or plain object
+        const p = raw?.resume ?? raw?.data ?? raw;
+        setForm({
+          ...EMPTY_FORM,
+          title: p.title ?? '',
+          full_name: p.full_name ?? '',
+          email: p.email ?? '',
+          phone: p.phone ?? '',
+          location: p.location ?? '',
+          linkedin_url: p.linkedin_url ?? '',
+          portfolio_url: p.portfolio_url ?? '',
+          github_url: p.github_url ?? '',
+          language: p.language ?? '',
+          photo: p.photo ?? '',
+          theme: p.theme ?? '',
+          template: p.template ?? '',
+          summary: p.summary ?? '',
+          work_experiences: (p.work_experiences ?? []).map((e: object) => ({ ...e, _id: uid() })),
+          educations: (p.educations ?? []).map((e: object) => ({ ...e, _id: uid() })),
+          skills: (p.skills ?? []).map((e: object) => ({ ...e, _id: uid() })),
+          projects: (p.projects ?? []).map((e: object) => ({ ...e, technologies: (e as { technologies?: string[] }).technologies ?? [], _id: uid() })),
+          certifications: (p.certifications ?? []).map((e: object) => ({ ...e, _id: uid() })),
+          languages: (p.languages ?? []).map((e: object) => ({ ...e, _id: uid() })),
+          awards: (p.awards ?? []).map((e: object) => ({ ...e, _id: uid() })),
+          recommendations: (p.recommendations ?? []).map((e: object) => ({ ...e, _id: uid() })),
+        });
+      } catch {
+        setImportError(t.errImportResume);
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const patch = (partial: Partial<FormData>) => setForm((prev) => ({ ...prev, ...partial }));
 
@@ -572,8 +616,20 @@ function ResumeToolView() {
   });
 
   // ---- Export --------------------------------------------------------------
-  const handleExport = async (format: 'pdf' | 'html') => {
+  const handleExport = async (format: 'pdf' | 'html' | 'json') => {
     setExportMenuOpen(false);
+
+    if (format === 'json') {
+      const payload = buildPayload();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${form.title || 'resume'}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      return;
+    }
 
     if (!form.language) {
       setError(t.errLanguageRequired);
@@ -856,6 +912,26 @@ function ResumeToolView() {
         {/* Page header */}
         <div className="flex items-center justify-end mb-4 flex-wrap gap-3">
           <div className="flex items-center gap-2">
+            {/* Import JSON button */}
+            <input
+              ref={importFileRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={handleImportJson}
+            />
+            <button
+              type="button"
+              onClick={() => importFileRef.current?.click()}
+              className="flex items-center gap-2 border border-gray-600 hover:border-gray-500 text-white/70 hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              title={t.importJson}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              <span className="hidden sm:inline">{t.importJson}</span>
+            </button>
+
             {/* Clear button */}
             <button
               type="button"
@@ -909,11 +985,20 @@ function ResumeToolView() {
                     <svg className="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
                     HTML
                   </button>
+                  <button onClick={() => handleExport('json')} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white hover:bg-gray-700 transition-colors">
+                    <svg className="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                    JSON
+                  </button>
                 </div>
               )}
             </div>
           </div>
         </div>
+
+        {/* Import error */}
+        {importError && (
+          <div className="mb-4 rounded-lg bg-red-900/40 border border-red-700 px-4 py-3 text-sm text-red-300">{importError}</div>
+        )}
 
         {/* Demo notice */}
         <div className="mb-5 rounded-lg border border-blue-500/30 bg-blue-900/20 px-4 py-3 text-sm text-blue-300 flex items-start gap-2">

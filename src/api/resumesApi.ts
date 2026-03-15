@@ -120,6 +120,8 @@ export interface Resume {
   recommendations?: Recommendation[];
   is_public?: boolean;
   code?: string | null;
+  show_skill_levels?: boolean;
+  show_language_levels?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -306,4 +308,64 @@ export async function exportResumeHtml(id: number): Promise<void> {
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank', 'noopener,noreferrer');
   setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+export async function exportResumeJson(id: number): Promise<void> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(buildUrl(`resumes/${id}/export/json`), {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to export JSON: ${response.status}`);
+  }
+  const data = await response.json();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `resume-${id}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+export async function importResumeJson(id: number, file: File): Promise<Resume> {
+  const token = localStorage.getItem('auth_token');
+  const fd = new FormData();
+  fd.append('file', file);
+  const response = await fetch(buildUrl(`resumes/${id}/import/json`), {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: fd,
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(`Failed to import JSON: ${response.status}`);
+  }
+  return data as Resume;
+}
+
+export async function createResumeFromJson(file: File): Promise<Resume> {
+  const token = localStorage.getItem('auth_token');
+  const fd = new FormData();
+  fd.append('file', file);
+  const response = await fetch(buildUrl('resumes/import/json'), {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: fd,
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(`Failed to create resume from JSON: ${response.status}`);
+  }
+  return data as Resume;
 }

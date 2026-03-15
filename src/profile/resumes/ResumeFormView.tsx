@@ -10,6 +10,8 @@ import {
   createResume,
   exportResumePdf,
   exportResumeHtml,
+  exportResumeJson,
+  importResumeJson,
   getExportOptions,
   getResume,
   updateResume,
@@ -51,6 +53,8 @@ interface FormData {
   language: string;
   is_primary: boolean;
   is_public: boolean;
+  show_skill_levels: boolean;
+  show_language_levels: boolean;
   code: string;
   theme: string;
   template: string;
@@ -691,6 +695,8 @@ function ResumeFormView() {
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const importFileRef = useRef<HTMLInputElement>(null);
   const [copying, setCopying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -728,6 +734,8 @@ function ResumeFormView() {
     language: '',
     is_primary: false,
     is_public: false,
+    show_skill_levels: false,
+    show_language_levels: false,
     code: '',
     theme: '',
     template: '',
@@ -769,6 +777,8 @@ function ResumeFormView() {
           language: resume.language ?? '',
           is_primary: resume.is_primary ?? false,
           is_public: resume.is_public ?? false,
+          show_skill_levels: resume.show_skill_levels ?? false,
+          show_language_levels: resume.show_language_levels ?? false,
           code: resume.code ?? '',
           theme: resume.theme ?? '',
           template: resume.template ?? '',
@@ -854,19 +864,40 @@ function ResumeFormView() {
   const recHandlers = makeRepeatableHandlers('recommendations', EMPTY_RECOMMENDATION);
 
   // ---- Submit ---------------------------------------------------------------
-  const handleExport = async (format: 'pdf' | 'html') => {
+  const handleExport = async (format: 'pdf' | 'html' | 'json') => {
     if (!id) return;
     setExportMenuOpen(false);
     setExporting(true);
     setError(null);
     try {
       if (format === 'pdf') await exportResumePdf(Number(id));
-      else await exportResumeHtml(Number(id));
+      else if (format === 'html') await exportResumeHtml(Number(id));
+      else await exportResumeJson(Number(id));
     } catch (err) {
       console.error(`Failed to export ${format.toUpperCase()}:`, err);
       setError(t.errExportResume);
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleImportJson = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !id) return;
+    e.target.value = '';
+    setImporting(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const updated = await importResumeJson(Number(id), file);
+      // Reload page to reflect imported data
+      navigate(`/profile/resumes/${updated.id}`, { replace: true });
+      window.location.reload();
+    } catch (err) {
+      console.error('Failed to import JSON:', err);
+      setError(t.errImportResume);
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -909,6 +940,8 @@ function ResumeFormView() {
         language: form.language || undefined,
         is_primary: form.is_primary,
         is_public: form.is_public,
+        show_skill_levels: form.show_skill_levels,
+        show_language_levels: form.show_language_levels,
         code: form.code.trim() || null,
         theme: form.theme || undefined,
         template: form.template || undefined,
@@ -1152,6 +1185,22 @@ function ResumeFormView() {
       case 'skills':
         return (
           <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className={LABEL_CLS + ' mb-0'}>{t.showSkillLevelsLabel}</label>
+              <button
+                type="button"
+                onClick={() => patch({ show_skill_levels: !form.show_skill_levels })}
+                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border transition-colors ${form.show_skill_levels
+                    ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                    : 'border-gray-600 text-white/40 hover:text-white/70 hover:border-gray-500'
+                  }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={form.show_skill_levels ? 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' : 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21'} />
+                </svg>
+                {form.show_skill_levels ? t.showLevelsOn : t.showLevelsOff}
+              </button>
+            </div>
             {form.skills.map((item, i) => (
               <RepeatableItem
                 key={item._id}
@@ -1323,6 +1372,22 @@ function ResumeFormView() {
       case 'languages':
         return (
           <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className={LABEL_CLS + ' mb-0'}>{t.showLanguageLevelsLabel}</label>
+              <button
+                type="button"
+                onClick={() => patch({ show_language_levels: !form.show_language_levels })}
+                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border transition-colors ${form.show_language_levels
+                    ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                    : 'border-gray-600 text-white/40 hover:text-white/70 hover:border-gray-500'
+                  }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={form.show_language_levels ? 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' : 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21'} />
+                </svg>
+                {form.show_language_levels ? t.showLevelsOn : t.showLevelsOff}
+              </button>
+            </div>
             {form.languages.map((item, i) => (
               <RepeatableItem
                 key={item._id}
@@ -1597,9 +1662,53 @@ function ResumeFormView() {
                       </svg>
                       HTML
                     </button>
+                    <button
+                      onClick={() => handleExport('json')}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white hover:bg-gray-700 transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      JSON
+                    </button>
                   </div>
                 )}
               </div>
+            )}
+            {isEditing && (
+              <>
+                <input
+                  ref={importFileRef}
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={handleImportJson}
+                />
+                <button
+                  type="button"
+                  onClick={() => importFileRef.current?.click()}
+                  disabled={importing || saving}
+                  className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors border border-gray-600"
+                  title={t.importJson}
+                >
+                  {importing ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      <span className="hidden sm:inline">{t.importing}</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      <span className="hidden sm:inline">{t.importJson}</span>
+                    </>
+                  )}
+                </button>
+              </>
             )}
             {/* Primary toggle */}
             <button
