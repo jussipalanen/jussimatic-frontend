@@ -316,6 +316,7 @@ function AdminInvoicesView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminInvoices;
+  const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
   const [statusOptions, setStatusOptions] = useState<InvoiceStatusOption[]>(DEFAULT_STATUS_OPTIONS);
   const [itemTypeOptions, setItemTypeOptions] = useState<InvoiceItemTypeOption[]>(DEFAULT_ITEM_TYPE_OPTIONS);
 
@@ -922,7 +923,7 @@ function AdminInvoicesView() {
                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
               />
             </svg>
-            <p className="text-lg text-yellow-300 mb-4">{authError}</p>
+            <p className="text-lg text-yellow-300 mb-4">{authError === PERMISSION_MESSAGE ? tDash.permissionDenied : authError}</p>
             {authError !== PERMISSION_MESSAGE && (
               <button
                 onClick={() => navigate('/demo/ecommerce/products')}

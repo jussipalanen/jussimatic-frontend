@@ -155,7 +155,7 @@ function AdminBlogsView() {
         {/* Auth error */}
         {authError && (
           <div className="mx-auto max-w-2xl rounded-lg border border-yellow-500/30 bg-yellow-900/20 p-6 text-center">
-            <p className="text-lg text-yellow-300 mb-4">{authError}</p>
+            <p className="text-lg text-yellow-300 mb-4">{authError === PERMISSION_MESSAGE ? tDash.permissionDenied : authError}</p>
             {authError !== PERMISSION_MESSAGE && (
               <button
                 onClick={() => navigate('/demo/ecommerce/products')}

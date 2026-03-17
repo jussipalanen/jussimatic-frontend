@@ -25,6 +25,7 @@ import CVView from './CVView'
 import BlogsView from './blogs/BlogsView'
 import BlogView from './blogs/BlogView'
 import BlogCategoriesView from './blogs/BlogCategoriesView'
+import NotFoundView from './NotFoundView'
 
 function App() {
   return (
@@ -61,6 +62,7 @@ function App() {
           <Route path="/blogs" element={<BlogsView />} />
           <Route path="/blogs/:id" element={<BlogView />} />
           <Route path="/reset-password" element={<ResetPasswordView />} />
+          <Route path="*" element={<NotFoundView />} />
         </Routes>
       </>
     </Router>
