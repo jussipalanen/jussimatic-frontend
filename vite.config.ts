@@ -16,6 +16,9 @@ export default defineConfig(({ mode }) => {
       globals: true,
       setupFiles: ['./src/test/setup.ts'],
     },
+    optimizeDeps: {
+      include: ['country-flag-icons/react/3x2'],
+    },
     plugins: [
       react(),
       {

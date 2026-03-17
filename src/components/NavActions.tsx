@@ -251,7 +251,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
         {/* Admin link — visible for admin/vendor roles only */}
         {isLoggedIn && userData && (() => { const access = getRoleAccess(userData); return access.isAdmin || access.isVendor; })() && (
           <button
-            onClick={() => navigate('/demo/ecommerce/admin')}
+            onClick={() => navigate('/admin')}
             className="hidden sm:flex items-center justify-center w-8 h-8 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
             aria-label="Admin dashboard"
             title="Admin dashboard"

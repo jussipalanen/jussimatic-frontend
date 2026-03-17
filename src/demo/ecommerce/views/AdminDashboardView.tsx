@@ -108,9 +108,9 @@ function AdminDashboardView() {
               <p className="text-gray-300">{t.subtitle}</p>
             </div>
 
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <button
-                onClick={() => navigate('/demo/ecommerce/admin/orders')}
+                onClick={() => navigate('/admin/orders')}
                 className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-blue-500/60 hover:bg-blue-600/10 transition-all"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-blue-400 group-hover:text-blue-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,7 +120,7 @@ function AdminDashboardView() {
                 <span className="text-sm text-gray-400">{t.ordersDesc}</span>
               </button>
               <button
-                onClick={() => navigate('/demo/ecommerce/admin/users')}
+                onClick={() => navigate('/admin/users')}
                 className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-purple-500/60 hover:bg-purple-600/10 transition-all"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-400 group-hover:text-purple-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -130,7 +130,7 @@ function AdminDashboardView() {
                 <span className="text-sm text-gray-400">{t.usersDesc}</span>
               </button>
               <button
-                onClick={() => navigate('/demo/ecommerce/admin/invoices')}
+                onClick={() => navigate('/admin/invoices')}
                 className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-green-500/60 hover:bg-green-600/10 transition-all"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-green-400 group-hover:text-green-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,6 +138,16 @@ function AdminDashboardView() {
                 </svg>
                 <span className="text-base font-semibold text-white">{t.invoicesTitle}</span>
                 <span className="text-sm text-gray-400">{t.invoicesDesc}</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/blogs')}
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-purple-500/60 hover:bg-purple-600/10 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-400 group-hover:text-purple-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v8a2 2 0 01-2 2zM9 12h6M9 16h4" />
+                </svg>
+                <span className="text-base font-semibold text-white">{t.blogsTitle}</span>
+                <span className="text-sm text-gray-400">{t.blogsDesc}</span>
               </button>
             </div>
           </div>

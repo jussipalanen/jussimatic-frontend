@@ -229,7 +229,7 @@ function AdminUsersView() {
     <div className="min-h-screen bg-gray-900 text-white">
       <EcommerceHeader
         title={t.title}
-        backTo="/demo/ecommerce/admin"
+        backTo="/admin"
         backLabel={translations[language].adminDashboard.title}
         cartCount={cartCount}
         activeNav="admin-dashboard"
