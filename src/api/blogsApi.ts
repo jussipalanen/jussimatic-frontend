@@ -111,9 +111,10 @@ function buildBlogFormData(data: BlogFormData): FormData {
   if (data.excerpt) formData.append('excerpt', data.excerpt);
   if (data.featured_image_file) {
     formData.append('featured_image', data.featured_image_file);
-  } else if (data.featured_image !== undefined) {
-    formData.append('featured_image', data.featured_image);
+  } else if (data.featured_image === '') {
+    formData.append('featured_image', '');
   }
+  // If featured_image is a non-empty string (existing path), skip it — backend keeps the existing value
   if (data.tags && data.tags.length > 0) {
     data.tags.forEach((tag) => formData.append('tags[]', tag));
   }
