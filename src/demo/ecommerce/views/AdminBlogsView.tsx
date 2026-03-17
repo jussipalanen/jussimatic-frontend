@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getBlogs, deleteBlog } from '../../../api/blogsApi';
+import { getAllBlogs, deleteBlog } from '../../../api/blogsApi';
 import type { Blog } from '../../../api/blogsApi';
 import { getMe } from '../../../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
-import { getCart } from '../../../utils/cartUtils';
-import EcommerceHeader from '../components/EcommerceHeader';
+import AdminHeader from '../components/AdminHeader';
 import { Pagination } from '../../../components/Pagination';
 import { BlogFormModal } from '../../../components/BlogFormModal';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
@@ -63,8 +62,6 @@ function AdminBlogsView() {
   const [blogToDelete, setBlogToDelete] = useState<Blog | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const cartCount = getCart().reduce((sum, item) => sum + item.quantity, 0);
-
   useEffect(() => {
     const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
     window.addEventListener('jussimatic-language-change', handler);
@@ -91,7 +88,7 @@ function AdminBlogsView() {
     setLoading(true);
     setError(null);
     try {
-      const res = await getBlogs(page, ITEMS_PER_PAGE);
+      const res = await getAllBlogs(page, ITEMS_PER_PAGE);
       setBlogs(res.data);
       setTotalPages(res.last_page);
     } catch (err) {
@@ -148,12 +145,10 @@ function AdminBlogsView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <EcommerceHeader
+      <AdminHeader
         title={t.title}
         backTo="/admin"
         backLabel={tDash.title}
-        cartCount={cartCount}
-        activeNav="admin-dashboard"
       />
 
       <main className="container mx-auto px-4 py-8">

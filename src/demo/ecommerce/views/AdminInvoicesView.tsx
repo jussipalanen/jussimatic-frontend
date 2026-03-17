@@ -6,8 +6,7 @@ import { fetchOrderById, fetchAllOrders } from '../../../api/ordersApi';
 import type { Order } from '../../../api/ordersApi';
 import { getMe } from '../../../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
-import { getCart } from '../../../utils/cartUtils';
-import EcommerceHeader from '../components/EcommerceHeader';
+import AdminHeader from '../components/AdminHeader';
 import { Pagination } from '../../../components/Pagination';
 import CountrySelect from '../../../components/CountrySelect';
 import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../../../i18n';
@@ -898,16 +897,12 @@ function AdminInvoicesView() {
     }, 500);
   };
 
-  const cartCount = getCart().reduce((sum, item) => sum + item.quantity, 0);
-
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <EcommerceHeader
+      <AdminHeader
         title={t.title}
         backTo="/admin"
         backLabel={translations[language].adminDashboard.title}
-        cartCount={cartCount}
-        activeNav="admin-dashboard"
       />
 
       <main className="container mx-auto px-4 py-8">

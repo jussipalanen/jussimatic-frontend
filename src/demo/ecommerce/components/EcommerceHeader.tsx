@@ -12,8 +12,8 @@ type NavKey = 'products' | 'cart' | 'my-orders' | 'my-profile' | 'admin-dashboar
 
 interface EcommerceHeaderProps {
   title: string;
-  backTo: string;
-  backLabel: string;
+  backTo?: string;
+  backLabel?: string;
   cartCount?: number;
   activeNav?: NavKey;
   actions?: ReactNode;
@@ -322,18 +322,20 @@ function EcommerceHeader({
         </div>
       </header>
 
-      <div className="container mx-auto px-4 pt-4">
-        <button
-          onClick={() => navigate(backTo)}
-          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors"
-          aria-label={backLabel}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          {backLabel}
-        </button>
-      </div>
+      {backTo && backLabel && (
+        <div className="container mx-auto px-4 pt-4">
+          <button
+            onClick={() => navigate(backTo)}
+            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+            aria-label={backLabel}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            {backLabel}
+          </button>
+        </div>
+      )}
 
       <AuthModal
         isOpen={isAuthModalOpen}

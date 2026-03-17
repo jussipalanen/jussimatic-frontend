@@ -28,6 +28,7 @@ export interface Blog {
   user_id: number;
   blog_category_id: number;
   title: string;
+  slug?: string;
   excerpt?: string | null;
   content?: string | null;
   featured_image?: string | null;
@@ -47,10 +48,29 @@ export interface BlogsResponse {
   total: number;
 }
 
-export async function getBlogs(page: number = 1, perPage: number = 10): Promise<BlogsResponse> {
-  const response = await fetch(buildUrl(`blogs?page=${page}&per_page=${perPage}`), {
+export async function getBlogs(page: number = 1, perPage: number = 10, sortBy: string = 'created_at', sortOrder: 'asc' | 'desc' = 'desc'): Promise<BlogsResponse> {
+  const response = await fetch(buildUrl(`blogs?page=${page}&per_page=${perPage}&sort=${sortBy}&order=${sortOrder}`), {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      data && typeof data === 'object' && 'message' in data && typeof (data as { message?: unknown }).message === 'string'
+        ? (data as { message: string }).message
+        : `API request failed: ${response.status} ${response.statusText}`;
+    throw new Error(message);
+  }
+
+  return data as BlogsResponse;
+}
+
+export async function getAllBlogs(page: number = 1, perPage: number = 10, sortBy: string = 'created_at', sortOrder: 'asc' | 'desc' = 'desc'): Promise<BlogsResponse> {
+  const response = await fetch(buildUrl(`admin/blogs?page=${page}&per_page=${perPage}&sort=${sortBy}&order=${sortOrder}`), {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
   });
 
   const data = await response.json().catch(() => null);
@@ -69,6 +89,7 @@ export async function getBlogs(page: number = 1, perPage: number = 10): Promise<
 export interface BlogFormData {
   title: string;
   content: string;
+  slug?: string;
   excerpt?: string;
   featured_image?: string;
   featured_image_file?: File;
@@ -86,6 +107,7 @@ function buildBlogFormData(data: BlogFormData): FormData {
   const formData = new FormData();
   formData.append('title', data.title);
   formData.append('content', data.content);
+  if (data.slug) formData.append('slug', data.slug);
   if (data.excerpt) formData.append('excerpt', data.excerpt);
   if (data.featured_image_file) {
     formData.append('featured_image', data.featured_image_file);
@@ -178,4 +200,85 @@ export async function getBlog(id: number): Promise<Blog> {
   }
 
   return data as Blog;
+}
+
+// Blog Categories API
+export interface BlogCategoryFormData {
+  name: string;
+  slug?: string;
+}
+
+export async function getCategories(): Promise<BlogCategory[]> {
+  const response = await fetch(buildUrl('blog-categories'), {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      data && typeof data === 'object' && 'message' in data && typeof (data as { message?: unknown }).message === 'string'
+        ? (data as { message: string }).message
+        : `API request failed: ${response.status} ${response.statusText}`;
+    throw new Error(message);
+  }
+
+  return (data?.data ?? data) as BlogCategory[];
+}
+
+export async function createCategory(data: BlogCategoryFormData): Promise<BlogCategory> {
+  const response = await fetch(buildUrl('blog-categories'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+
+  const json = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      json && typeof json === 'object' && 'message' in json && typeof (json as { message?: unknown }).message === 'string'
+        ? (json as { message: string }).message
+        : `API request failed: ${response.status} ${response.statusText}`;
+    throw new Error(message);
+  }
+
+  return (json?.data ?? json) as BlogCategory;
+}
+
+export async function updateCategory(id: number, data: BlogCategoryFormData): Promise<BlogCategory> {
+  const response = await fetch(buildUrl(`blog-categories/${id}`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+
+  const json = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      json && typeof json === 'object' && 'message' in json && typeof (json as { message?: unknown }).message === 'string'
+        ? (json as { message: string }).message
+        : `API request failed: ${response.status} ${response.statusText}`;
+    throw new Error(message);
+  }
+
+  return (json?.data ?? json) as BlogCategory;
+}
+
+export async function deleteCategory(id: number): Promise<void> {
+  const response = await fetch(buildUrl(`blog-categories/${id}`), {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+  });
+
+  if (!response.ok) {
+    const json = await response.json().catch(() => null);
+    const message =
+      json && typeof json === 'object' && 'message' in json && typeof (json as { message?: unknown }).message === 'string'
+        ? (json as { message: string }).message
+        : `API request failed: ${response.status} ${response.statusText}`;
+    throw new Error(message);
+  }
 }

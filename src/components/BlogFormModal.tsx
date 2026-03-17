@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { createBlog, updateBlog } from '../api/blogsApi';
-import type { Blog, BlogFormData } from '../api/blogsApi';
+import { createBlog, updateBlog, getCategories } from '../api/blogsApi';
+import type { Blog, BlogFormData, BlogCategory } from '../api/blogsApi';
 import { RichTextEditor } from './RichTextEditor';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
@@ -13,25 +13,38 @@ function buildImageUrl(path: string) {
 
 interface BlogFormState {
   title: string;
+  slug: string;
   excerpt: string;
   content: string;
   featured_image: string;
   featured_image_file?: File;
-  tags: string;
+  tags: string[];
+  tagInput: string;
   blog_category_id?: number;
   visibility: boolean;
 }
 
 const EMPTY_FORM: BlogFormState = {
   title: '',
+  slug: '',
   excerpt: '',
   content: '',
   featured_image: '',
   featured_image_file: undefined,
-  tags: '',
+  tags: [],
+  tagInput: '',
   blog_category_id: undefined,
   visibility: true,
 };
+
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 interface BlogFormModalProps {
   /** Pass a Blog to edit, null to create */
@@ -48,7 +61,12 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
+  const [categorySearch, setCategorySearch] = useState('');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
@@ -56,16 +74,44 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
     return () => window.removeEventListener('jussimatic-language-change', handler);
   }, []);
 
+  // Fetch categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await getCategories();
+        setCategories(data);
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
+        setShowCategoryDropdown(false);
+      }
+    };
+    if (showCategoryDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showCategoryDropdown]);
+
   // Populate form when editing
   useEffect(() => {
     if (blog) {
       setForm({
         title: blog.title,
+        slug: blog.slug ?? '',
         excerpt: blog.excerpt ?? '',
         content: blog.content ?? '',
         featured_image: blog.featured_image ?? '',
         featured_image_file: undefined,
-        tags: blog.tags ? blog.tags.join(', ') : '',
+        tags: blog.tags ? [...blog.tags] : [],
+        tagInput: '',
         blog_category_id: blog.blog_category_id,
         visibility: blog.visibility,
       });
@@ -75,7 +121,15 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
       setImagePreview(null);
     }
     setFormError(null);
+    setSlugManuallyEdited(false);
   }, [blog]);
+
+  // Auto-generate slug when title changes if slug hasn't been manually edited
+  useEffect(() => {
+    if (!slugManuallyEdited && form.title.trim()) {
+      setForm((f) => ({ ...f, slug: generateSlug(f.title) }));
+    }
+  }, [form.title, slugManuallyEdited]);
 
   const close = () => {
     if (submitting) return;
@@ -100,19 +154,42 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleAddTag = (tag: string) => {
+    const trimmedTag = tag.trim().toLowerCase();
+    if (trimmedTag && !form.tags.includes(trimmedTag)) {
+      setForm((f) => ({ ...f, tags: [...f.tags, trimmedTag], tagInput: '' }));
+    } else {
+      setForm((f) => ({ ...f, tagInput: '' }));
+    }
+  };
+
+  const handleRemoveTag = (index: number) => {
+    setForm((f) => ({
+      ...f,
+      tags: f.tags.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      handleAddTag(form.tagInput);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) { setFormError(t.errTitleRequired); return; }
     setSubmitting(true);
     setFormError(null);
     try {
-      const rawTags = form.tags.trim();
       const payload: BlogFormData = {
         title: form.title.trim(),
+        slug: form.slug.trim() || undefined,
         content: form.content.trim(),
         excerpt: form.excerpt.trim() || undefined,
         featured_image_file: form.featured_image_file,
-        tags: rawTags ? rawTags.split(',').map((tag) => tag.trim()).filter(Boolean) : undefined,
+        tags: form.tags.length > 0 ? form.tags : undefined,
         blog_category_id: form.blog_category_id,
         visibility: form.visibility,
       };
@@ -165,6 +242,33 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
               className={inputCls}
               placeholder={t.placeholderTitle}
               required
+            />
+          </div>
+
+          {/* Slug */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className={labelCls}>{t.labelSlug}</label>
+              <button
+                type="button"
+                onClick={() => {
+                  setForm((f) => ({ ...f, slug: generateSlug(f.title) }));
+                  setSlugManuallyEdited(true);
+                }}
+                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                Auto-generate
+              </button>
+            </div>
+            <input
+              type="text"
+              value={form.slug}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, slug: e.target.value }));
+                setSlugManuallyEdited(true);
+              }}
+              className={inputCls}
+              placeholder={t.placeholderSlug}
             />
           </div>
 
@@ -233,28 +337,113 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
             )}
           </div>
 
-          {/* Category ID + Tags */}
+          {/* Category + Tags */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>{t.labelCategoryId}</label>
-              <input
-                type="number"
-                min={1}
-                value={form.blog_category_id ?? ''}
-                onChange={(e) => setForm((f) => ({ ...f, blog_category_id: e.target.value ? Number(e.target.value) : undefined }))}
-                className={inputCls}
-                placeholder="1"
-              />
+              <div ref={categoryDropdownRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                  className={`${inputCls} flex items-center justify-between w-full text-left`}
+                >
+                  <span>
+                    {form.blog_category_id
+                      ? categories.find((c) => c.id === form.blog_category_id)?.name || 'Select category'
+                      : 'Select category'}
+                  </span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                    />
+                  </svg>
+                </button>
+                {showCategoryDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-600 rounded-lg shadow-lg z-50">
+                    <input
+                      type="text"
+                      placeholder="Search categories..."
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-800 text-white text-sm border-b border-gray-700 focus:outline-none placeholder-gray-500"
+                    />
+                    <div className="max-h-48 overflow-y-auto">
+                      {categories
+                        .filter((c) => c.name.toLowerCase().includes(categorySearch.toLowerCase()))
+                        .map((category) => (
+                          <button
+                            key={category.id}
+                            type="button"
+                            onClick={() => {
+                              setForm((f) => ({ ...f, blog_category_id: category.id }));
+                              setShowCategoryDropdown(false);
+                              setCategorySearch('');
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-800 transition-colors ${form.blog_category_id === category.id ? 'bg-blue-900/30 text-blue-400' : 'text-gray-200'
+                              }`}
+                          >
+                            {category.name}
+                          </button>
+                        ))}
+                      {categories.filter((c) => c.name.toLowerCase().includes(categorySearch.toLowerCase())).length === 0 && (
+                        <div className="px-3 py-2 text-sm text-gray-400 text-center">No categories found</div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm((f) => ({ ...f, blog_category_id: undefined }));
+                        setShowCategoryDropdown(false);
+                        setCategorySearch('');
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-400 hover:bg-gray-800 transition-colors border-t border-gray-700 text-center"
+                    >
+                      Clear selection
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <label className={labelCls}>{t.labelTags}</label>
-              <input
-                type="text"
-                value={form.tags}
-                onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
-                className={inputCls}
-                placeholder={t.placeholderTags}
-              />
+              <div className="rounded-lg border border-gray-600 bg-gray-900 p-3 flex flex-wrap gap-2">
+                {form.tags.map((tag, index) => (
+                  <div
+                    key={index}
+                    className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors group"
+                  >
+                    <span>{tag}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(index)}
+                      className="ml-1 text-blue-200 hover:text-white transition-colors"
+                      title="Remove tag"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                <input
+                  type="text"
+                  value={form.tagInput}
+                  onChange={(e) => setForm((f) => ({ ...f, tagInput: e.target.value }))}
+                  onKeyDown={handleTagInputKeyDown}
+                  onBlur={() => {
+                    if (form.tagInput.trim()) {
+                      handleAddTag(form.tagInput);
+                    }
+                  }}
+                  className="flex-1 min-w-[120px] bg-transparent text-white placeholder-gray-500 outline-none text-sm"
+                  placeholder={form.tags.length === 0 ? t.placeholderTags : 'Add tag...'}
+                  disabled={submitting}
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Press Enter or comma to add tags</p>
             </div>
           </div>
 
@@ -265,14 +454,12 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
               role="switch"
               aria-checked={form.visibility}
               onClick={() => setForm((f) => ({ ...f, visibility: !f.visibility }))}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
-                form.visibility ? 'bg-green-600' : 'bg-gray-600'
-              }`}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${form.visibility ? 'bg-green-600' : 'bg-gray-600'
+                }`}
             >
               <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-                  form.visibility ? 'translate-x-5' : 'translate-x-0'
-                }`}
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${form.visibility ? 'translate-x-5' : 'translate-x-0'
+                  }`}
               />
             </button>
             <span className="text-sm text-gray-300">
