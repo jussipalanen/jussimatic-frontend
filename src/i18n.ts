@@ -994,6 +994,7 @@ export const translations = {
       previousPage: 'Previous page',
       nextPage: 'Next page',
       perPage: 'Per page',
+      blogNotFound: 'Blog post not found.',
     },
     notFound: {
       heading: 'Page not found',
@@ -1952,6 +1953,7 @@ export const translations = {
       previousPage: 'Edellinen sivu',
       nextPage: 'Seuraava sivu',
       perPage: 'Per sivu',
+      blogNotFound: 'Blogipostausta ei löydy.',
     },
     notFound: {
       heading: 'Sivua ei löydy',

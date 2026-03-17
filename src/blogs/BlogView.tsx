@@ -40,12 +40,12 @@ function BlogView() {
       setLoading(true);
       setError(null);
       try {
-        const res = await getBlog(Number(id));
+        const res = await getBlog(id);
         if (!active) return;
         setBlog(res);
       } catch (err) {
         if (!active) return;
-        setError(err instanceof Error ? err.message : t.blog.errorLoading);
+        setError(err instanceof Error && err.message === 'NOT_FOUND' ? 'NOT_FOUND' : (err instanceof Error ? err.message : t.blog.errorLoading));
       } finally {
         if (active) setLoading(false);
       }
@@ -96,7 +96,7 @@ function BlogView() {
 
           {error && !loading && (
             <div className="bg-red-900/30 border border-red-700 rounded-lg p-4">
-              <p className="text-red-400">{error}</p>
+              <p className="text-red-400">{error === 'NOT_FOUND' ? t.blog.blogNotFound : error}</p>
             </div>
           )}
 

@@ -202,7 +202,7 @@ function BlogsView() {
                 >
                   {blog.featured_image && (
                     <button
-                      onClick={() => navigate(`/blogs/${blog.id}`)}
+                      onClick={() => navigate(`/blogs/${blog.slug ?? blog.id}`)}
                       className="w-full cursor-pointer"
                     >
                       <img
@@ -214,7 +214,7 @@ function BlogsView() {
                   )}
                   <div className="p-5">
                     <button
-                      onClick={() => navigate(`/blogs/${blog.id}`)}
+                      onClick={() => navigate(`/blogs/${blog.slug ?? blog.id}`)}
                       className="w-full text-left hover:opacity-80 transition-opacity cursor-pointer"
                     >
                       <h2 className="text-lg font-semibold text-white mb-2">{blog.title}</h2>

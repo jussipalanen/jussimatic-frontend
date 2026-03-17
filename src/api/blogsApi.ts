@@ -183,7 +183,7 @@ export async function deleteBlog(id: number): Promise<void> {
   }
 }
 
-export async function getBlog(id: number): Promise<Blog> {
+export async function getBlog(id: number | string): Promise<Blog> {
   const response = await fetch(buildUrl(`blogs/${id}`), {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
@@ -192,6 +192,7 @@ export async function getBlog(id: number): Promise<Blog> {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
+    if (response.status === 404) throw new Error('NOT_FOUND');
     const message =
       data && typeof data === 'object' && 'message' in data && typeof (data as { message?: unknown }).message === 'string'
         ? (data as { message: string }).message

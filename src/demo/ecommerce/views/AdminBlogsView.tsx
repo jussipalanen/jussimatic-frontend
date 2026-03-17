@@ -249,7 +249,7 @@ function AdminBlogsView() {
                     <div className="shrink-0 flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => navigate(`/blogs/${blog.id}`)}
+                        onClick={() => navigate(`/blogs/${blog.slug ?? blog.id}`)}
                         className="rounded-lg border border-blue-500/60 px-3 py-1.5 text-sm font-semibold text-blue-300 hover:bg-blue-600/20 transition-colors"
                       >
                         {t.btnView}
