@@ -188,6 +188,7 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
         slug: form.slug.trim() || undefined,
         content: form.content.trim(),
         excerpt: form.excerpt.trim() || undefined,
+        featured_image: form.featured_image,
         featured_image_file: form.featured_image_file,
         tags: form.tags.length > 0 ? form.tags : undefined,
         blog_category_id: form.blog_category_id,
