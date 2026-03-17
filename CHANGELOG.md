@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2026-03-17
+
+### Added
+- **`AdminHeader` component** (`src/demo/ecommerce/components/AdminHeader.tsx`): New standalone header for all admin views. Uses `NavActions` (language selector, user menu, projects dropdown) instead of the ecommerce-specific nav buttons. Displays `APP_NAME` as a clickable link to `/` and the page title as a breadcrumb.
+- **`APP_NAME` constant** (`src/constants.ts`): Single source of truth for the application name "Jussimatic".
+- **`getAllBlogs` API function** (`src/api/blogsApi.ts`): Authenticated call to `GET /api/admin/blogs` that returns all blogs regardless of visibility. Used by `AdminBlogsView` so the admin list shows both published and draft posts.
+- **404 Not Found page** (`src/NotFoundView.tsx`): Rendered for any unmatched route via a catch-all `path="*"` in `App.tsx`. Includes a "Go to homepage" button. Fully translated (EN/FI).
+- **Blog category admin view** (`/admin/blog-categories`): `BlogCategoriesView` rewritten to match the admin layout — uses `AdminHeader`, `bg-gray-900`, same auth error flow and list item style as other admin views.
+- **Blog slug routing**: `getBlog()` now accepts `string | number`. `BlogsView` and `AdminBlogsView` navigate to `/blogs/${blog.slug ?? blog.id}`. `BlogView` passes the raw route param to support both numeric IDs and slugs.
+- **i18n keys** (EN + FI):
+  - `adminDashboard.permissionDenied` — translated permission error shown across all admin and order views instead of the hardcoded English string.
+  - `notFound.heading`, `notFound.description`, `notFound.goHome` — 404 page strings.
+  - `blog.blogNotFound` — shown in `BlogView` when the API returns 404 for a blog post.
+
+### Changed
+- **`AdminHeader` — app title clickable**: Clicking "Jussimatic" navigates to `/`.
+- **Admin sub-view back buttons**: `AdminBlogsView`, `AdminUsersView`, `AdminInvoicesView`, `AdminOrdersView` back to `/admin`; `AdminDashboardView` back to `/`.
+- **`AdminBlogsView`**: Now calls `getAllBlogs` (authenticated, `/api/admin/blogs`) instead of the public `getBlogs`, so draft/private posts are visible in the admin list.
+
+### Fixed
+- **`BlogCategoriesView` build error**: Removed reference to undefined i18n key `blogCategoriesDesc` that caused TypeScript build failure in CI.
+- **`BlogCategoriesView` unused `navigate`**: Removed unused `useNavigate` import and variable.
+- **`BlogFormModal` — featured image removal**: `featured_image` path now included in the update payload. `buildBlogFormData` sends the string path (or empty string) when no new file is provided, allowing the backend to clear the image on save.
+- **`BlogFormModal` — `any` cast removed**: `(blog as any).slug` replaced with `blog.slug` since `slug` is already typed on the `Blog` interface.
+
 ## [0.7.0] - 2026-03-15
 
 ### Added
