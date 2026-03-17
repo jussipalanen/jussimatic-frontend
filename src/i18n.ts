@@ -488,6 +488,11 @@ export const translations = {
       sectionLanguages: 'Languages',
       sectionAwards: 'Awards & Achievements',
       sectionRecommendations: 'Recommendations',
+      sectionPreview: 'Preview PDF',
+      previewLoadBtn: 'Load Preview',
+      previewLoading: 'Loading preview…',
+      previewErrLoad: 'Failed to load preview. Please try again.',
+      previewNotSaved: 'Save the resume first to preview it.',
       // Personal section fields
       fieldResumeTitle: 'Resume Title *',
       fieldResumeTitlePlaceholder: 'e.g. Software Engineer CV',
@@ -575,6 +580,7 @@ export const translations = {
       // Primary resume
       primaryBadge: 'Primary',
       setPrimary: 'Set as Primary',
+      setPrimaryConfirm: 'Set this as your primary resume?',
       fieldIsPrimary: 'Set as primary resume',
       errSetPrimary: 'Failed to set primary resume. Please try again.',
       // Theme & template
@@ -1447,6 +1453,11 @@ export const translations = {
       sectionLanguages: 'Kielet',
       sectionAwards: 'Palkinnot ja saavutukset',
       sectionRecommendations: 'Suositukset',
+      sectionPreview: 'Esikatselu PDF',
+      previewLoadBtn: 'Lataa esikatselu',
+      previewLoading: 'Ladataan esikatselua…',
+      previewErrLoad: 'Esikatselun lataus epäonnistui. Yritä uudelleen.',
+      previewNotSaved: 'Tallenna ansioluettelo ensin esikatselua varten.',
       // Personal section fields
       fieldResumeTitle: 'Ansioluettelon otsikko *',
       fieldResumeTitlePlaceholder: 'esim. Ohjelmistokehittäjän CV',
@@ -1534,6 +1545,7 @@ export const translations = {
       // Primary resume
       primaryBadge: 'Ensisijainen',
       setPrimary: 'Aseta ensisijaiseksi',
+      setPrimaryConfirm: 'Asetetaanko tämä ensisijaiseksi ansioluetteloksi?',
       fieldIsPrimary: 'Aseta ensisijaiseksi ansioluetteloksi',
       errSetPrimary: 'Ensisijaisen ansioluettelon asettaminen epäonnistui. Yritä uudelleen.',
       // Theme & template

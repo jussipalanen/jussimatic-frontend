@@ -8,6 +8,7 @@ import {
   exportResumePdfPublic,
   exportResumeHtmlPublic,
   getExportOptions,
+  previewResumePdfPublic,
 } from '../../api/resumesApi';
 import type {
   Award,
@@ -20,6 +21,7 @@ import type {
   ResumeLanguage,
   ResumePayload,
   ResumeSkill,
+  TemplateThemeOption,
   WorkExperience,
 } from '../../api/resumesApi';
 import DemoHeader from '../../components/DemoHeader';
@@ -44,6 +46,8 @@ interface FormData {
   photo: string; // base64 data URL
   theme: string;
   template: string;
+  show_skill_levels: boolean;
+  show_language_levels: boolean;
   summary: string;
   work_experiences: WithId<WorkExperience>[];
   educations: WithId<Education>[];
@@ -68,6 +72,8 @@ const EMPTY_FORM: FormData = {
   photo: '',
   theme: '',
   template: '',
+  show_skill_levels: false,
+  show_language_levels: false,
   summary: '',
   work_experiences: [],
   educations: [],
@@ -126,7 +132,8 @@ type SectionKey =
   | 'certifications'
   | 'languages'
   | 'awards'
-  | 'recommendations';
+  | 'recommendations'
+  | 'preview';
 
 // SECTIONS is built inside the component to use translations
 
@@ -332,12 +339,12 @@ function listMove<T>(arr: T[], index: number, direction: -1 | 1): T[] {
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
 
-function PersonalSection({ data, onChange, t, themes, templates, languages }: {
+function PersonalSection({ data, onChange, t, templates, templateThemes, languages }: {
   data: FormData;
   onChange: (partial: Partial<FormData>) => void;
   t: (typeof translations)[typeof DEFAULT_LANGUAGE]['resumes'];
-  themes: ExportOption[];
   templates: ExportOption[];
+  templateThemes: Record<string, TemplateThemeOption[]>;
   languages: ExportOption[];
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -395,25 +402,60 @@ function PersonalSection({ data, onChange, t, themes, templates, languages }: {
           ))}
         </select>
       </div>
-      {/* Template */}
-      <div>
-        <label className={LABEL_CLS}>{t.fieldTemplate} *</label>
-        <select value={data.template} onChange={(e) => onChange({ template: e.target.value })} className={INPUT_CLS}>
-          <option value="">{t.fieldTemplatePlaceholder}</option>
-          {templates.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-      </div>
-      {/* Theme color */}
-      <div>
-        <label className={LABEL_CLS}>{t.fieldTheme} *</label>
-        <select value={data.theme} onChange={(e) => onChange({ theme: e.target.value })} className={INPUT_CLS}>
-          <option value="">{t.fieldThemePlaceholder}</option>
-          {themes.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+      {/* Template + Theme picker */}
+      <div className="sm:col-span-2 space-y-4">
+        <div>
+          <label className={LABEL_CLS}>{t.fieldTemplate} *</label>
+          <div className="flex gap-3 flex-wrap">
+            {templates.map((tpl) => {
+              const isActive = data.template === tpl.value;
+              const firstTheme = templateThemes[tpl.value]?.[0]?.value;
+              const keepTheme = data.theme && templateThemes[tpl.value]?.some((th) => th.value === data.theme);
+              return (
+                <button
+                  key={tpl.value}
+                  type="button"
+                  onClick={() => onChange({ template: tpl.value, theme: keepTheme ? data.theme : firstTheme ?? '' })}
+                  className={`px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors ${isActive
+                    ? 'bg-blue-600 border-blue-500 text-white'
+                    : 'border-gray-600 text-white/60 hover:text-white hover:border-gray-500'
+                  }`}
+                >
+                  {tpl.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div>
+          <label className={LABEL_CLS}>{t.fieldTheme} *</label>
+          <div className="flex flex-wrap gap-2">
+            {data.template && templateThemes[data.template]?.length
+              ? templateThemes[data.template].map((theme) => {
+                  const isActive = data.theme === theme.value;
+                  return (
+                    <button
+                      key={theme.value}
+                      type="button"
+                      onClick={() => onChange({ theme: theme.value })}
+                      title={theme.value}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all capitalize ${isActive
+                        ? 'border-white/50 ring-2 ring-white/30 text-white'
+                        : 'border-gray-600 text-white/60 hover:border-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
+                        style={{ backgroundColor: theme.accent }}
+                      />
+                      {theme.value}
+                    </button>
+                  );
+                })
+              : <p className="text-xs text-white/40">{t.fieldTemplatePlaceholder}</p>
+            }
+          </div>
+        </div>
       </div>
       {/* Profile photo */}
       <div>
@@ -487,14 +529,18 @@ function ResumeToolView() {
     { key: 'languages', label: t.sectionLanguages },
     { key: 'awards', label: t.sectionAwards },
     { key: 'recommendations', label: t.sectionRecommendations },
+    { key: 'preview' as SectionKey, label: t.sectionPreview },
   ];
 
   const [activeSection, setActiveSection] = useState<SectionKey>('personal');
   const [form, setForm] = useState<FormData>({ ...EMPTY_FORM });
-  const [exportOptions, setExportOptions] = useState<ExportOptions>({ themes: [], templates: [], languages: [], skill_categories: [], skill_proficiencies: [], language_proficiencies: [], spoken_languages: [] });
+  const [exportOptions, setExportOptions] = useState<ExportOptions>({ themes: [], templates: [], template_themes: {}, languages: [], skill_categories: [], skill_proficiencies: [], language_proficiencies: [], spoken_languages: [] });
   const [exporting, setExporting] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
@@ -524,6 +570,8 @@ function ResumeToolView() {
           photo: p.photo ?? '',
           theme: p.theme ?? '',
           template: p.template ?? '',
+          show_skill_levels: p.show_skill_levels ?? false,
+          show_language_levels: p.show_language_levels ?? false,
           summary: p.summary ?? '',
           work_experiences: (p.work_experiences ?? []).map((e: object) => ({ ...e, _id: uid() })),
           educations: (p.educations ?? []).map((e: object) => ({ ...e, _id: uid() })),
@@ -595,6 +643,8 @@ function ResumeToolView() {
     photo: form.photo || undefined,
     theme: form.theme || undefined,
     template: form.template || undefined,
+    show_skill_levels: form.show_skill_levels,
+    show_language_levels: form.show_language_levels,
     summary: form.summary || undefined,
     work_experiences: form.work_experiences.map(({ _id, ...rest }, i) => ({
       ...rest,
@@ -614,6 +664,32 @@ function ResumeToolView() {
     })),
     recommendations: form.recommendations.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
   });
+
+  // ---- Preview -------------------------------------------------------------
+  const loadPreview = async () => {
+    setPreviewLoading(true);
+    setPreviewError(null);
+    if (previewPdfUrl) {
+      URL.revokeObjectURL(previewPdfUrl);
+      setPreviewPdfUrl(null);
+    }
+    try {
+      const url = await previewResumePdfPublic(buildPayload());
+      setPreviewPdfUrl(url);
+    } catch {
+      setPreviewError(t.previewErrLoad);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === 'preview') loadPreview();
+    return () => {
+      if (activeSection !== 'preview' && previewPdfUrl) URL.revokeObjectURL(previewPdfUrl);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
 
   // ---- Export --------------------------------------------------------------
   const handleExport = async (format: 'pdf' | 'html' | 'json') => {
@@ -679,7 +755,7 @@ function ResumeToolView() {
   const renderSection = () => {
     switch (activeSection) {
       case 'personal':
-        return <PersonalSection data={form} onChange={patch} t={t} themes={exportOptions.themes} templates={exportOptions.templates} languages={exportOptions.languages} />;
+        return <PersonalSection data={form} onChange={patch} t={t} templates={exportOptions.templates} templateThemes={exportOptions.template_themes} languages={exportOptions.languages} />;
 
       case 'summary':
         return (
@@ -746,6 +822,22 @@ function ResumeToolView() {
       case 'skills':
         return (
           <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className={LABEL_CLS + ' mb-0'}>{t.showSkillLevelsLabel}</label>
+              <button
+                type="button"
+                onClick={() => patch({ show_skill_levels: !form.show_skill_levels })}
+                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border transition-colors ${form.show_skill_levels
+                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                  : 'border-gray-600 text-white/40 hover:text-white/70 hover:border-gray-500'
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={form.show_skill_levels ? 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' : 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21'} />
+                </svg>
+                {form.show_skill_levels ? t.showLevelsOn : t.showLevelsOff}
+              </button>
+            </div>
             {form.skills.map((item, i) => (
               <RepeatableItem key={item._id} item={item} index={i} total={form.skills.length} onUpdate={skillHandlers.update} onRemove={skillHandlers.remove} onMove={skillHandlers.move}>
                 {(it, upd) => (
@@ -819,6 +911,22 @@ function ResumeToolView() {
       case 'languages':
         return (
           <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className={LABEL_CLS + ' mb-0'}>{t.showLanguageLevelsLabel}</label>
+              <button
+                type="button"
+                onClick={() => patch({ show_language_levels: !form.show_language_levels })}
+                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border transition-colors ${form.show_language_levels
+                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                  : 'border-gray-600 text-white/40 hover:text-white/70 hover:border-gray-500'
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={form.show_language_levels ? 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' : 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21'} />
+                </svg>
+                {form.show_language_levels ? t.showLevelsOn : t.showLevelsOff}
+              </button>
+            </div>
             {form.languages.map((item, i) => (
               <RepeatableItem key={item._id} item={item} index={i} total={form.languages.length} onUpdate={langHandlers.update} onRemove={langHandlers.remove} onMove={langHandlers.move}>
                 {(it, upd) => (
@@ -887,6 +995,60 @@ function ResumeToolView() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               {t.addRecommendation}
             </button>
+          </div>
+        );
+
+      case 'preview':
+        return (
+          <div className="space-y-4">
+            {previewError && (
+              <div className="flex flex-col items-center gap-4 py-6">
+                <div className="rounded-lg bg-red-900/40 border border-red-700 px-4 py-3 text-sm text-red-300 w-full">
+                  {previewError}
+                </div>
+                <button
+                  type="button"
+                  onClick={loadPreview}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {t.previewLoadBtn}
+                </button>
+              </div>
+            )}
+            {previewLoading && (
+              <div className="flex justify-center py-20">
+                <svg className="w-8 h-8 text-white/30 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                <span className="ml-3 text-sm text-white/50 self-center">{t.previewLoading}</span>
+              </div>
+            )}
+            {previewPdfUrl && !previewLoading && (
+              <div className="space-y-3">
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={loadPreview}
+                    className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {t.previewLoadBtn}
+                  </button>
+                </div>
+                <iframe
+                  src={previewPdfUrl}
+                  title="Resume PDF Preview"
+                  className="w-full rounded-lg border border-gray-600"
+                  style={{ height: '80vh' }}
+                />
+              </div>
+            )}
           </div>
         );
 

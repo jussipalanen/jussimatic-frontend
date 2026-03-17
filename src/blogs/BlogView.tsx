@@ -61,7 +61,14 @@ function BlogView() {
   };
 
   const renderContent = (content: string) => {
-    return DOMPurify.sanitize(content, {
+    const isPlainText = !/<[a-z][\s\S]*>/i.test(content);
+    const html = isPlainText
+      ? content
+          .split(/\n\n+/)
+          .map((para) => `<p>${para.replace(/\n/g, '<br>')}</p>`)
+          .join('')
+      : content.replace(/(<p>(\s|&nbsp;)*<\/p>\s*){2,}/gi, '<p></p>');
+    return DOMPurify.sanitize(html, {
       ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'b', 'strong', 'i', 'em', 'p', 'br', 'a', 'blockquote', 'code', 'pre', 'img'],
       ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'src', 'alt'],
     });
@@ -134,7 +141,7 @@ function BlogView() {
                 {/* Content */}
                 {blog.content ? (
                   <div
-                    className="prose prose-invert prose-sm max-w-none text-gray-300 leading-relaxed"
+                    className="prose prose-invert max-w-none text-gray-300 leading-relaxed prose-p:mb-5 prose-headings:mt-6 prose-headings:mb-3"
                     dangerouslySetInnerHTML={{ __html: renderContent(blog.content) }}
                   />
                 ) : blog.excerpt ? (

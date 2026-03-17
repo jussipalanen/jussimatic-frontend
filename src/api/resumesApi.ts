@@ -129,7 +129,8 @@ export interface Resume {
 export type ResumePayload = Omit<Resume, 'id' | 'created_at' | 'updated_at' | 'photo'> & { photo?: string | null };
 
 export interface ExportOption { value: string; label: string; }
-export interface ExportOptions { themes: ExportOption[]; templates: ExportOption[]; languages: ExportOption[]; skill_categories: ExportOption[]; skill_proficiencies: ExportOption[]; language_proficiencies: ExportOption[]; spoken_languages: ExportOption[]; }
+export interface TemplateThemeOption { value: string; accent: string; bg: string; }
+export interface ExportOptions { themes: ExportOption[]; templates: ExportOption[]; template_themes: Record<string, TemplateThemeOption[]>; languages: ExportOption[]; skill_categories: ExportOption[]; skill_proficiencies: ExportOption[]; language_proficiencies: ExportOption[]; spoken_languages: ExportOption[]; }
 
 export async function getExportOptions(lang?: string): Promise<ExportOptions> {
   const base = buildUrl('resumes/export/options');
@@ -243,6 +244,19 @@ export async function copyResume(id: number): Promise<Resume> {
   return createResume(payload);
 }
 
+export async function previewResumePdfPublic(payload: ResumePayload): Promise<string> {
+  const response = await fetch(buildUrl('resumes/preview/pdf'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/pdf' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to preview PDF: ${response.status}`);
+  }
+  const blob = new Blob([await response.blob()], { type: 'application/pdf' });
+  return URL.createObjectURL(blob);
+}
+
 export async function exportResumePdfPublic(payload: ResumePayload): Promise<void> {
   const response = await fetch(buildUrl('resumes/export/pdf'), {
     method: 'POST',
@@ -330,6 +344,30 @@ export async function exportResumeJson(id: number): Promise<void> {
   a.download = `resume-${id}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+export interface ResumePreviewSignedUrl {
+  pdf_url: string;
+  html_url: string;
+  expires_at: string;
+}
+
+export async function getResumePreviewSignedUrl(id: number, theme?: string): Promise<ResumePreviewSignedUrl> {
+  const token = localStorage.getItem('auth_token');
+  const base = buildUrl(`resumes/${id}/preview/signed-url`);
+  const url = theme ? `${base}?theme=${encodeURIComponent(theme)}` : base;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch preview signed URL: ${response.status}`);
+  }
+  return data as ResumePreviewSignedUrl;
 }
 
 export async function importResumeJson(id: number, file: File): Promise<Resume> {
