@@ -30,7 +30,7 @@ export interface Blog {
   title: string;
   excerpt?: string | null;
   content?: string | null;
-  feature_image?: string | null;
+  featured_image?: string | null;
   tags?: string[] | null;
   visibility: boolean;
   created_at: string;
@@ -70,8 +70,8 @@ export interface BlogFormData {
   title: string;
   content: string;
   excerpt?: string;
-  feature_image?: string;
-  feature_image_file?: File;
+  featured_image?: string;
+  featured_image_file?: File;
   tags?: string[];
   blog_category_id?: number;
   visibility?: boolean;
@@ -87,8 +87,8 @@ function buildBlogFormData(data: BlogFormData): FormData {
   formData.append('title', data.title);
   formData.append('content', data.content);
   if (data.excerpt) formData.append('excerpt', data.excerpt);
-  if (data.feature_image_file) {
-    formData.append('feature_image', data.feature_image_file);
+  if (data.featured_image_file) {
+    formData.append('featured_image', data.featured_image_file);
   }
   if (data.tags && data.tags.length > 0) {
     data.tags.forEach((tag) => formData.append('tags[]', tag));

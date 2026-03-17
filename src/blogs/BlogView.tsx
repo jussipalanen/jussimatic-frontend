@@ -103,9 +103,9 @@ function BlogView() {
           {!loading && !error && blog && (
             <article className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
               {/* Feature image */}
-              {blog.feature_image && (
+              {blog.featured_image && (
                 <img
-                  src={buildImageUrl(blog.feature_image)}
+                  src={buildImageUrl(blog.featured_image)}
                   alt={blog.title}
                   className="w-full h-56 object-cover"
                 />
