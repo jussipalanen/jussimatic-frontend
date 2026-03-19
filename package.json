@@ -13,7 +13,8 @@
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
     "test:watch": "vitest",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docker:dev": "docker compose up --build frontend-dev"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.18",
