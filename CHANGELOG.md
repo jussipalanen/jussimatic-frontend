@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 2026-03-19
+
+### Added
+- **Terraform infrastructure** (`terraform/`): New directory managing all GCP resources — Artifact Registry repository, Cloud Run service, Secret Manager secrets (`VITE_GOOGLE_CLIENT_ID`, `VITE_JUSSI_AIBOT_API_KEY`), required API enablement, and IAM bindings for the Cloud Build and Cloud Run service accounts.
+- **`terraform/.gitignore`**: Excludes state files (`*.tfstate`, `*.tfstate.*`), `.terraform/`, `.terraform.lock.hcl`, and `*.tfvars` from version control.
+- **Resume Edit — PDF preview tab**: Auto-loads a PDF preview (via signed URL → blob) when the Preview tab is opened; no button click required.
+- **Resume Edit — auto-save**: Form changes are debounced (1.5 s) and saved automatically while editing; a spinning/checkmark indicator shows save status.
+- **Resume Edit — visual template & theme picker**: Replaces dropdowns with clickable buttons and colour swatches populated from `/api/resumes/export/options`.
+- **Resume Edit — Set as Primary confirmation**: Clicking "Set as Primary" now shows an inline confirmation step before applying.
+- **Resume Tool (demo) — PDF preview tab**: Auto-loads preview via `POST /api/resumes/preview/pdf` (no auth required).
+- **Resume Tool (demo) — visual template & theme picker**: Same picker as the edit form, reads from export options endpoint.
+- **Resume List — Set as Primary confirmation**: Same inline confirmation pattern as the edit form.
+
+### Changed
+- **Resume Edit — header layout**: Breadcrumb on its own row, action buttons on the row below for better readability and mobile friendliness.
+- **Blog post — rich content rendering**: Improved paragraph spacing, detects plain text vs HTML, converts blank lines to visible spacing. Headings, blockquote, code blocks, inline code, links, lists, `hr`, and images all styled via `blog-content.css`.
+- **Blog post styles extracted**: Scoped blog styles moved from inline to `blog-content.css`.
+- **`RichTextEditor` — paragraph spacing**: Increased margins between paragraphs in the editor for better readability.
+- **`RichTextEditor` styles extracted**: Inline `<style>` block moved to `rich-text-editor.css`.
+- **README — Infrastructure section**: Documents Terraform resources, getting-started steps, and the full Cloud Build → Cloud Run deployment flow.
+- **README — Cleanup section**: Docker teardown, build artifact removal, and `terraform destroy` instructions.
+- **README — accordion sections**: "Local & Docker" commands, "Deployment & Cloud" commands, "npm scripts", and "Environment Variables" are now collapsible `<details>` blocks.
+- **README — missing `dev` commands documented**: `deploy`, `get-env`, `set-env`, and `secrets` added with descriptions and examples.
+
+### Fixed
+- **Resume Edit — export dropdown z-index**: Dropdown was clipped behind other elements; fixed with `flex-wrap` and raised `z-index`.
+- **Blog featured image "must be a file"**: Fixed `FormData` serialisation — existing image path is no longer re-sent on edit, preventing backend validation error.
+- **Blog content `div` structure**: Corrected wrapper element structure for blog post content rendering.
+
+### Security
+- **Terraform IAM — `iam.serviceAccountUser` scoped**: Binding changed from project-wide (`google_project_iam_member`) to SA-scoped (`google_service_account_iam_member`), preventing Cloud Build from impersonating any service account in the project.
+- **`vite_cv_endpoint` marked `sensitive`**: Variable flagged `sensitive = true` in Terraform since the CV endpoint URL may carry auth tokens in query parameters.
+
 ## [0.8.0] - 2026-03-17
 
 ### Added
