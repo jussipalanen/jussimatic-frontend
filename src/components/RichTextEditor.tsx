@@ -1,6 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect } from 'react';
+import './rich-text-editor.css';
 
 interface RichTextEditorProps {
   value: string;
@@ -79,22 +80,6 @@ export function RichTextEditor({ value, onChange, placeholder, disabled }: RichT
 
       {/* Editor area */}
       <div className="relative rich-text-editor-content">
-        <style>{`
-          .rich-text-editor-content .tiptap h1 { font-size: 1.5rem; font-weight: 700; margin: 0.75rem 0 0.5rem; }
-          .rich-text-editor-content .tiptap h2 { font-size: 1.25rem; font-weight: 700; margin: 0.75rem 0 0.5rem; }
-          .rich-text-editor-content .tiptap h3 { font-size: 1.1rem; font-weight: 600; margin: 0.75rem 0 0.5rem; }
-          .rich-text-editor-content .tiptap p { margin: 0.4rem 0; }
-          .rich-text-editor-content .tiptap ul { list-style: disc; padding-left: 1.5rem; margin: 0.4rem 0; }
-          .rich-text-editor-content .tiptap ol { list-style: decimal; padding-left: 1.5rem; margin: 0.4rem 0; }
-          .rich-text-editor-content .tiptap blockquote { border-left: 3px solid #4b5563; padding-left: 0.75rem; color: #9ca3af; margin: 0.5rem 0; }
-          .rich-text-editor-content .tiptap code { background: #1f2937; border-radius: 3px; padding: 0.1em 0.3em; font-size: 0.85em; font-family: monospace; }
-          .rich-text-editor-content .tiptap pre { background: #1f2937; border-radius: 6px; padding: 0.75rem 1rem; margin: 0.5rem 0; overflow-x: auto; }
-          .rich-text-editor-content .tiptap pre code { background: none; padding: 0; }
-          .rich-text-editor-content .tiptap hr { border-color: #374151; margin: 0.75rem 0; }
-          .rich-text-editor-content .tiptap strong { font-weight: 700; }
-          .rich-text-editor-content .tiptap em { font-style: italic; }
-          .rich-text-editor-content .tiptap s { text-decoration: line-through; }
-        `}</style>
         {editor && editor.isEmpty && placeholder && (
           <p className="pointer-events-none absolute left-3 top-2 text-sm text-gray-500 select-none">{placeholder}</p>
         )}

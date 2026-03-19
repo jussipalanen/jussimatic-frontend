@@ -14,6 +14,7 @@ import {
   importResumeJson,
   getExportOptions,
   getResume,
+  getResumePreviewSignedUrl,
   updateResume,
   uploadResumePhoto,
 } from '../../api/resumesApi';
@@ -28,6 +29,7 @@ import type {
   ResumeLanguage,
   ResumePayload,
   ResumeSkill,
+  TemplateThemeOption,
   WorkExperience,
 } from '../../api/resumesApi';
 import NavBar from '../../components/NavBar';
@@ -118,7 +120,8 @@ type SectionKey =
   | 'certifications'
   | 'languages'
   | 'awards'
-  | 'recommendations';
+  | 'recommendations'
+  | 'preview';
 
 // SECTIONS is built inside the component to use translations
 
@@ -390,8 +393,8 @@ function PersonalSection({
   onChange,
   onPhotoChange,
   onRemovePhoto,
-  themes,
   templates,
+  templateThemes,
   languages,
   username,
   t,
@@ -401,8 +404,8 @@ function PersonalSection({
   onChange: (partial: Partial<FormData>) => void;
   onPhotoChange: (file: File | null) => void;
   onRemovePhoto: () => void;
-  themes: ExportOption[];
   templates: ExportOption[];
+  templateThemes: Record<string, TemplateThemeOption[]>;
   languages: ExportOption[];
   username: string;
   t: (typeof translations)[typeof DEFAULT_LANGUAGE]['resumes'];
@@ -471,26 +474,63 @@ function PersonalSection({
         </select>
       </div>
 
-      {/* Template */}
-      <div>
-        <label className={LABEL_CLS}>{t.fieldTemplate}</label>
-        <select value={data.template} onChange={(e) => onChange({ template: e.target.value })} className={INPUT_CLS}>
-          <option value="">{t.fieldTemplatePlaceholder}</option>
-          {templates.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-      </div>
+      {/* Template + Theme picker */}
+      <div className="sm:col-span-2 space-y-4">
+        {/* Template selection */}
+        <div>
+          <label className={LABEL_CLS}>{t.fieldTemplate}</label>
+          <div className="flex gap-3 flex-wrap">
+            {templates.map((tpl) => {
+              const isActive = data.template === tpl.value;
+              const firstTheme = templateThemes[tpl.value]?.[0]?.value;
+              const keepTheme = data.theme && templateThemes[tpl.value]?.some((th) => th.value === data.theme);
+              return (
+                <button
+                  key={tpl.value}
+                  type="button"
+                  onClick={() => onChange({ template: tpl.value, theme: keepTheme ? data.theme : firstTheme ?? '' })}
+                  className={`px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors ${isActive
+                    ? 'bg-blue-600 border-blue-500 text-white'
+                    : 'border-gray-600 text-white/60 hover:text-white hover:border-gray-500'
+                  }`}
+                >
+                  {tpl.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-      {/* Theme color */}
-      <div>
-        <label className={LABEL_CLS}>{t.fieldTheme}</label>
-        <select value={data.theme} onChange={(e) => onChange({ theme: e.target.value })} className={INPUT_CLS}>
-          <option value="">{t.fieldThemePlaceholder}</option>
-          {themes.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+        {/* Theme swatches */}
+        <div>
+          <label className={LABEL_CLS}>{t.fieldTheme}</label>
+          <div className="flex flex-wrap gap-2">
+            {data.template && templateThemes[data.template]?.length
+              ? templateThemes[data.template].map((theme) => {
+                  const isActive = data.theme === theme.value;
+                  return (
+                    <button
+                      key={theme.value}
+                      type="button"
+                      onClick={() => onChange({ theme: theme.value })}
+                      title={theme.value}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all capitalize ${isActive
+                        ? 'border-white/50 ring-2 ring-white/30 text-white'
+                        : 'border-gray-600 text-white/60 hover:border-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
+                        style={{ backgroundColor: theme.accent }}
+                      />
+                      {theme.value}
+                    </button>
+                  );
+                })
+              : <p className="text-xs text-white/40">{t.fieldTemplatePlaceholder}</p>
+            }
+          </div>
+        </div>
       </div>
 
       {/* Photo upload */}
@@ -670,6 +710,7 @@ function ResumeFormView() {
     { key: 'languages', label: t.sectionLanguages },
     { key: 'awards', label: t.sectionAwards },
     { key: 'recommendations', label: t.sectionRecommendations },
+    ...(isEditing ? [{ key: 'preview' as SectionKey, label: t.sectionPreview }] : []),
   ];
 
   useEffect(() => {
@@ -681,7 +722,7 @@ function ResumeFormView() {
     return () => window.removeEventListener('jussimatic-language-change', handler);
   }, []);
 
-  const VALID_SECTIONS = new Set<SectionKey>(['personal', 'summary', 'work_experiences', 'educations', 'skills', 'projects', 'certifications', 'languages', 'awards', 'recommendations']);
+  const VALID_SECTIONS = new Set<SectionKey>(['personal', 'summary', 'work_experiences', 'educations', 'skills', 'projects', 'certifications', 'languages', 'awards', 'recommendations', 'preview']);
   const hashSection = window.location.hash.replace('#', '') as SectionKey;
   const [activeSection, setActiveSection] = useState<SectionKey>(
     VALID_SECTIONS.has(hashSection) ? hashSection : 'personal'
@@ -690,7 +731,7 @@ function ResumeFormView() {
     setActiveSection(key);
     window.location.hash = key;
   };
-  const [exportOptions, setExportOptions] = useState<ExportOptions>({ themes: [], templates: [], languages: [], skill_categories: [], skill_proficiencies: [], language_proficiencies: [], spoken_languages: [] });
+  const [exportOptions, setExportOptions] = useState<ExportOptions>({ themes: [], templates: [], template_themes: {}, languages: [], skill_categories: [], skill_proficiencies: [], language_proficiencies: [], spoken_languages: [] });
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -703,6 +744,46 @@ function ResumeFormView() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [removePhoto, setRemovePhoto] = useState(false);
   const [username, setUsername] = useState('');
+  const [confirmPrimary, setConfirmPrimary] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const [autoSaved, setAutoSaved] = useState(false);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const formInitialized = useRef(false);
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+
+  const loadPreview = async () => {
+    setPreviewLoading(true);
+    setPreviewError(null);
+    if (previewPdfUrl) {
+      URL.revokeObjectURL(previewPdfUrl);
+      setPreviewPdfUrl(null);
+    }
+    try {
+      const { pdf_url } = await getResumePreviewSignedUrl(Number(id), form.theme || undefined);
+      const res = await fetch(pdf_url);
+      if (!res.ok) throw new Error(`${res.status}`);
+      const blob = await res.blob();
+      setPreviewPdfUrl(URL.createObjectURL(blob));
+    } catch {
+      setPreviewError(t.previewErrLoad);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === 'preview' && isEditing) {
+      loadPreview();
+    }
+    return () => {
+      if (activeSection !== 'preview' && previewPdfUrl) {
+        URL.revokeObjectURL(previewPdfUrl);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
 
   useEffect(() => {
     getMe()
@@ -816,6 +897,7 @@ function ResumeFormView() {
         setError(t.errLoadResume);
       } finally {
         setLoading(false);
+        formInitialized.current = true;
       }
     };
 
@@ -916,6 +998,56 @@ function ResumeFormView() {
     }
   };
 
+  const buildPayload = (): ResumePayload => ({
+    title: form.title,
+    full_name: form.full_name,
+    email: form.email,
+    phone: form.phone || undefined,
+    location: form.location || undefined,
+    linkedin_url: form.linkedin_url || undefined,
+    portfolio_url: form.portfolio_url || undefined,
+    github_url: form.github_url || undefined,
+    language: form.language || undefined,
+    is_primary: form.is_primary,
+    is_public: form.is_public,
+    show_skill_levels: form.show_skill_levels,
+    show_language_levels: form.show_language_levels,
+    code: form.code.trim() || null,
+    theme: form.theme || undefined,
+    template: form.template || undefined,
+    summary: form.summary || undefined,
+    ...(removePhoto && !photoFile ? { photo: null } : {}),
+    work_experiences: form.work_experiences.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
+    educations: form.educations.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
+    skills: form.skills.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
+    projects: form.projects.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
+    certifications: form.certifications.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
+    languages: form.languages.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
+    awards: form.awards.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
+    recommendations: form.recommendations.map(({ _id, ...rest }, i) => ({ ...rest, sort_order: i })),
+  });
+
+  useEffect(() => {
+    if (!isEditing || !formInitialized.current) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    setAutoSaved(false);
+    autoSaveTimer.current = setTimeout(async () => {
+      if (!form.language) return;
+      setAutoSaving(true);
+      try {
+        await updateResume(Number(id), buildPayload());
+        setAutoSaved(true);
+        setTimeout(() => setAutoSaved(false), 3000);
+      } catch {
+        // silently ignore auto-save errors
+      } finally {
+        setAutoSaving(false);
+      }
+    }, 1500);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.language) {
@@ -928,58 +1060,7 @@ function ResumeFormView() {
     setSuccessMsg(null);
 
     try {
-      const payload: ResumePayload = {
-        title: form.title,
-        full_name: form.full_name,
-        email: form.email,
-        phone: form.phone || undefined,
-        location: form.location || undefined,
-        linkedin_url: form.linkedin_url || undefined,
-        portfolio_url: form.portfolio_url || undefined,
-        github_url: form.github_url || undefined,
-        language: form.language || undefined,
-        is_primary: form.is_primary,
-        is_public: form.is_public,
-        show_skill_levels: form.show_skill_levels,
-        show_language_levels: form.show_language_levels,
-        code: form.code.trim() || null,
-        theme: form.theme || undefined,
-        template: form.template || undefined,
-        summary: form.summary || undefined,
-        ...(removePhoto && !photoFile ? { photo: null } : {}),
-        work_experiences: form.work_experiences.map(({ _id, ...rest }, i) => ({
-          ...rest,
-          sort_order: i,
-        })),
-        educations: form.educations.map(({ _id, ...rest }, i) => ({
-          ...rest,
-          sort_order: i,
-        })),
-        skills: form.skills.map(({ _id, ...rest }, i) => ({
-          ...rest,
-          sort_order: i,
-        })),
-        projects: form.projects.map(({ _id, ...rest }, i) => ({
-          ...rest,
-          sort_order: i,
-        })),
-        certifications: form.certifications.map(({ _id, ...rest }, i) => ({
-          ...rest,
-          sort_order: i,
-        })),
-        languages: form.languages.map(({ _id, ...rest }, i) => ({
-          ...rest,
-          sort_order: i,
-        })),
-        awards: form.awards.map(({ _id, ...rest }, i) => ({
-          ...rest,
-          sort_order: i,
-        })),
-        recommendations: form.recommendations.map(({ _id, ...rest }, i) => ({
-          ...rest,
-          sort_order: i,
-        })),
-      };
+      const payload = buildPayload();
 
       if (isEditing) {
         const saved = await updateResume(Number(id), payload);
@@ -1019,8 +1100,8 @@ function ResumeFormView() {
             onChange={patch}
             onPhotoChange={setPhotoFile}
             onRemovePhoto={() => setRemovePhoto(true)}
-            themes={exportOptions.themes}
             templates={exportOptions.templates}
+            templateThemes={exportOptions.template_themes}
             languages={exportOptions.languages}
             username={username}
             t={t}
@@ -1553,6 +1634,60 @@ function ResumeFormView() {
           </div>
         );
 
+      case 'preview':
+        return (
+          <div className="space-y-4">
+            {previewError && (
+              <div className="flex flex-col items-center gap-4 py-6">
+                <div className="rounded-lg bg-red-900/40 border border-red-700 px-4 py-3 text-sm text-red-300 w-full">
+                  {previewError}
+                </div>
+                <button
+                  type="button"
+                  onClick={loadPreview}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {t.previewLoadBtn}
+                </button>
+              </div>
+            )}
+            {previewLoading && (
+              <div className="flex justify-center py-20">
+                <svg className="w-8 h-8 text-white/30 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                <span className="ml-3 text-sm text-white/50 self-center">{t.previewLoading}</span>
+              </div>
+            )}
+            {previewPdfUrl && !previewLoading && (
+              <div className="space-y-3">
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={loadPreview}
+                    className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {t.previewLoadBtn}
+                  </button>
+                </div>
+                <iframe
+                  src={previewPdfUrl}
+                  title="Resume PDF Preview"
+                  className="w-full rounded-lg border border-gray-600"
+                  style={{ height: '80vh' }}
+                />
+              </div>
+            )}
+          </div>
+        );
+
       default:
         return null;
     }
@@ -1566,8 +1701,9 @@ function ResumeFormView() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 pb-12">
         {/* Page header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
+        <div className="mb-6">
+          {/* Breadcrumb row */}
+          <div className="flex items-center gap-3 mb-3">
             <button
               onClick={() => navigate('/profile/resumes')}
               className="text-white/50 hover:text-white transition-colors flex items-center gap-1.5 text-sm"
@@ -1578,12 +1714,30 @@ function ResumeFormView() {
               {t.backToResumes}
             </button>
             <span className="text-white/30">/</span>
-            <h1 className="text-lg font-semibold text-white">
+            <h1 className="text-lg font-semibold text-white truncate">
               {isEditing ? (form.title || t.editResume) : t.newResumeTitle}
             </h1>
+            {autoSaving && (
+              <span className="flex items-center gap-1.5 text-xs text-white/40 shrink-0">
+                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                {t.saving}
+              </span>
+            )}
+            {autoSaved && !autoSaving && (
+              <span className="flex items-center gap-1 text-xs text-green-400/70 shrink-0">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {t.saved}
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+          {/* Action buttons row */}
+          <div className="flex items-center gap-2 flex-wrap">
             {isEditing && (
               <button
                 type="button"
@@ -1598,14 +1752,14 @@ function ResumeFormView() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
-                    <span className="hidden sm:inline">{t.copying2}</span>
+                    <span className="">{t.copying2}</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    <span className="hidden sm:inline">{t.copy}</span>
+                    <span className="">{t.copy}</span>
                   </>
                 )}
               </button>
@@ -1613,7 +1767,7 @@ function ResumeFormView() {
             {isEditing && (
               <div className="relative">
                 {exportMenuOpen && (
-                  <div className="fixed inset-0 z-10" onClick={() => setExportMenuOpen(false)} />
+                  <div className="fixed inset-0 z-40" onClick={() => setExportMenuOpen(false)} />
                 )}
                 <button
                   type="button"
@@ -1628,14 +1782,14 @@ function ResumeFormView() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                       </svg>
-                      <span className="hidden sm:inline">{t.exporting}</span>
+                      <span className="">{t.exporting}</span>
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span className="hidden sm:inline">{t.export}</span>
+                      <span className="">{t.export}</span>
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
@@ -1643,7 +1797,7 @@ function ResumeFormView() {
                   )}
                 </button>
                 {exportMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 z-20 min-w-28">
+                  <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 z-50 min-w-28">
                     <button
                       onClick={() => handleExport('pdf')}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white hover:bg-gray-700 transition-colors"
@@ -1697,34 +1851,54 @@ function ResumeFormView() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                       </svg>
-                      <span className="hidden sm:inline">{t.importing}</span>
+                      <span className="">{t.importing}</span>
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                       </svg>
-                      <span className="hidden sm:inline">{t.importJson}</span>
+                      <span className="">{t.importJson}</span>
                     </>
                   )}
                 </button>
               </>
             )}
             {/* Primary toggle */}
-            <button
-              type="button"
-              onClick={() => patch({ is_primary: !form.is_primary })}
-              className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border transition-colors ${form.is_primary
-                ? 'bg-amber-500/20 border-amber-500/60 text-amber-400'
-                : 'border-gray-600 text-white/50 hover:text-white hover:border-gray-500'
-                }`}
-              title={t.fieldIsPrimary}
-            >
-              <svg className="w-4 h-4" fill={form.is_primary ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
-              <span className="hidden sm:inline">{t.setPrimary}</span>
-            </button>
+            {confirmPrimary ? (
+              <div className="flex items-center gap-2 bg-amber-900/30 border border-amber-600/50 rounded-lg px-3 py-2">
+                <span className="text-xs text-amber-300 hidden sm:inline">{t.setPrimaryConfirm}</span>
+                <button
+                  type="button"
+                  onClick={() => { patch({ is_primary: true }); setConfirmPrimary(false); }}
+                  className="text-xs font-medium text-white bg-amber-600 hover:bg-amber-500 px-2.5 py-1 rounded transition-colors"
+                >
+                  {t.yes}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmPrimary(false)}
+                  className="text-xs font-medium text-white/60 hover:text-white px-2.5 py-1 rounded transition-colors"
+                >
+                  {t.cancel}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { if (!form.is_primary) setConfirmPrimary(true); }}
+                className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border transition-colors ${form.is_primary
+                  ? 'bg-amber-500/20 border-amber-500/60 text-amber-400'
+                  : 'border-gray-600 text-white/50 hover:text-white hover:border-gray-500'
+                  }`}
+                title={t.fieldIsPrimary}
+              >
+                <svg className="w-4 h-4" fill={form.is_primary ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+                <span className="">{t.setPrimary}</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={handleSubmit}
@@ -1737,14 +1911,14 @@ function ResumeFormView() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
-                  <span className="hidden sm:inline">{t.exporting}</span>
+                  <span className="">{t.exporting}</span>
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="hidden sm:inline">{t.saveResume}</span>
+                  <span className="">{t.saveResume}</span>
                 </>
               )}
             </button>

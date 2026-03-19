@@ -6,6 +6,7 @@ import NavBar from '../components/NavBar';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 import DOMPurify from 'dompurify';
+import './blog-content.css';
 
 const STORAGE_BASE_URL = (import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
 
@@ -61,8 +62,19 @@ function BlogView() {
   };
 
   const renderContent = (content: string) => {
-    return DOMPurify.sanitize(content, {
-      ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'b', 'strong', 'i', 'em', 'p', 'br', 'a', 'blockquote', 'code', 'pre', 'img'],
+    const isPlainText = !/<[a-z][\s\S]*>/i.test(content);
+    const html = isPlainText
+      ? content
+          .split(/\n\n+/)
+          .map((para) => `<p>${para.replace(/\n/g, '<br>')}</p>`)
+          .join('')
+      : content
+          // Collapse 3+ consecutive empty paragraphs to 2
+          .replace(/(<p>(\s|&nbsp;)*<\/p>\s*){3,}/gi, '<p><br></p><p><br></p>')
+          // Give single empty paragraphs a <br> so they render with visible height
+          .replace(/<p>(\s|&nbsp;)*<\/p>/gi, '<p><br></p>');
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'b', 'strong', 'i', 'em', 's', 'p', 'br', 'a', 'blockquote', 'code', 'pre', 'img', 'hr'],
       ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'src', 'alt'],
     });
   };
@@ -134,7 +146,7 @@ function BlogView() {
                 {/* Content */}
                 {blog.content ? (
                   <div
-                    className="prose prose-invert prose-sm max-w-none text-gray-300 leading-relaxed"
+                    className="blog-content"
                     dangerouslySetInnerHTML={{ __html: renderContent(blog.content) }}
                   />
                 ) : blog.excerpt ? (

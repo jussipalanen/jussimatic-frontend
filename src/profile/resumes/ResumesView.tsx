@@ -28,6 +28,7 @@ function ResumesView() {
   const [openExportMenuId, setOpenExportMenuId] = useState<number | null>(null);
   const [copyingId, setCopyingId] = useState<number | null>(null);
   const [settingPrimaryId, setSettingPrimaryId] = useState<number | null>(null);
+  const [confirmPrimaryId, setConfirmPrimaryId] = useState<number | null>(null);
   const [importing, setImporting] = useState(false);
   const importFileRef = useRef<HTMLInputElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -353,22 +354,40 @@ function ResumesView() {
                       <span className="hidden sm:inline">{copyingId === resume.id ? t.copying : t.copy}</span>
                     </button>
                     {!resume.is_primary && (
-                      <button
-                        onClick={() => handleSetPrimary(resume.id)}
-                        disabled={settingPrimaryId === resume.id}
-                        className="flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 bg-amber-900/20 hover:bg-amber-900/40 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                        title={t.setPrimary}
-                      >
-                        {settingPrimaryId === resume.id ? (
-                          <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                          </svg>
-                        ) : (
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
-                        )}
-                        <span className="hidden sm:inline">{t.setPrimary}</span>
-                      </button>
+                      confirmPrimaryId === resume.id ? (
+                        <div className="flex items-center gap-2 bg-amber-900/30 border border-amber-600/50 rounded-lg px-3 py-1.5">
+                          <span className="text-xs text-amber-300 hidden sm:inline">{t.setPrimaryConfirm}</span>
+                          <button
+                            onClick={() => { setConfirmPrimaryId(null); handleSetPrimary(resume.id); }}
+                            className="text-xs font-medium text-white bg-amber-600 hover:bg-amber-500 px-2.5 py-1 rounded transition-colors"
+                          >
+                            {t.yes}
+                          </button>
+                          <button
+                            onClick={() => setConfirmPrimaryId(null)}
+                            className="text-xs font-medium text-white/60 hover:text-white px-2.5 py-1 rounded transition-colors"
+                          >
+                            {t.cancel}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmPrimaryId(resume.id)}
+                          disabled={settingPrimaryId === resume.id}
+                          className="flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 bg-amber-900/20 hover:bg-amber-900/40 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                          title={t.setPrimary}
+                        >
+                          {settingPrimaryId === resume.id ? (
+                            <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                          )}
+                          <span className="hidden sm:inline">{t.setPrimary}</span>
+                        </button>
+                      )
                     )}
                     <button
                       onClick={() => navigate(`/profile/resumes/${resume.id}/edit`)}
