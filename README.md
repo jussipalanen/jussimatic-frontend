@@ -45,13 +45,33 @@ This project includes a `dev` script to simplify common development tasks.
 
 ### Available Commands
 
-- `up` — Start Docker Compose development environment
-- `rebuild` — Rebuild and restart Docker Compose (detached, force-recreate)
-- `down` — Stop Docker Compose
-- `logs` — Show Docker Compose logs
-- `build` — Build Docker image
-- `restart` — Restart Docker Compose
-- `local` — Start local development server without Docker (default)
+<details>
+<summary><strong>Local & Docker</strong></summary>
+
+| Command | Description |
+|---|---|
+| `./dev` | Start local development server (default) |
+| `./dev local` | Start local development server without Docker |
+| `./dev up` | Start Docker Compose development environment |
+| `./dev rebuild` | Rebuild and restart Docker Compose (detached, force-recreate) |
+| `./dev down` | Stop Docker Compose |
+| `./dev logs` | Show Docker Compose logs |
+| `./dev build` | Build Docker image |
+| `./dev restart` | Restart Docker Compose |
+
+</details>
+
+<details>
+<summary><strong>Deployment & Cloud</strong></summary>
+
+| Command | Description |
+|---|---|
+| `./dev deploy [env-file]` | Submit a Cloud Build using variables from `.env.production`. Pass a custom env file as the second argument. `TAG_NAME` must be set in the env file or exported. |
+| `./dev get-env [--yaml\|--json]` | Print env vars of the live Cloud Run revision |
+| `./dev set-env [env-file]` | Update Cloud Run revision env vars from `.env.production` without rebuilding |
+| `./dev secrets [env-file] [KEY]` | Sync secrets to GCP Secret Manager from `.env.production`. Optionally pass a custom env file and/or a single key to sync. |
+
+</details>
 
 ### Examples
 
@@ -67,9 +87,21 @@ This project includes a `dev` script to simplify common development tasks.
 
 # View logs
 ./dev logs
+
+# Deploy a tagged release to Cloud Run
+TAG_NAME=v1.0.0 ./dev deploy
+
+# Update only env vars on the live service (no rebuild)
+./dev set-env
+
+# Sync a single secret to Secret Manager
+./dev secrets .env.production VITE_GOOGLE_CLIENT_ID
 ```
 
 ## Scripts
+
+<details>
+<summary><strong>npm scripts</strong></summary>
 
 | Command | Description |
 |---|---|
@@ -81,6 +113,8 @@ This project includes a `dev` script to simplify common development tasks.
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run preview` | Preview production build locally |
 
+</details>
+
 ## CI
 
 GitHub Actions (`.github/workflows/ci.yml`) runs three parallel jobs on every push and pull request to `main` and `dev-*` branches:
@@ -90,6 +124,9 @@ GitHub Actions (`.github/workflows/ci.yml`) runs three parallel jobs on every pu
 - **Build** — `npm run build`
 
 ## Environment Variables
+
+<details>
+<summary><strong>All variables</strong></summary>
 
 Copy `.env.example` to `.env.local` and set the values for your environment:
 
@@ -110,11 +147,92 @@ VITE_GOOGLE_CLIENT_ID=your-google-client-id-here.apps.googleusercontent.com
 # Python AI CV review backend
 VITE_JUSSI_AIBOT_API_URL=https://your-aibot-url-here
 
+# API key for the AI CV review backend
+VITE_JUSSI_AIBOT_API_KEY=your-api-key-here
+
+# App title shown in browser tab and search results (optional, has default)
+VITE_APP_TITLE=Jussimatic - Portfolio by Jussi Alanen
+
+# App description shown in search results and social sharing (optional, has default)
+VITE_APP_DESCRIPTION=...
+
 # CV page data endpoint
 VITE_CV_ENDPOINT=https://your-cv-endpoint-here
+```
+
+> **Note:** `VITE_GOOGLE_CLIENT_ID` and `VITE_JUSSI_AIBOT_API_KEY` are injected at build time from GCP Secret Manager and do not need to be set locally for production builds.
+
+</details>
+
+## Infrastructure
+
+The GCP infrastructure is managed with Terraform under `terraform/`.
+
+### Resources
+
+| Resource | Name |
+|---|---|
+| Artifact Registry | `jussimatic-frontend` |
+| Cloud Run | `jussimatic-frontend-production` |
+| Secret Manager | `JUSSIMATIC_FRONTEND_VITE_GOOGLE_CLIENT_ID` |
+| Secret Manager | `JUSSIMATIC_FRONTEND_VITE_JUSSI_AIBOT_API_KEY` |
+| Region | `europe-north1` |
+| Project | `client-jussimatic` |
+
+### Getting started with Terraform
+
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+After `apply`, populate the secrets (one-time):
+
+```bash
+echo -n "your-google-client-id" | gcloud secrets versions add JUSSIMATIC_FRONTEND_VITE_GOOGLE_CLIENT_ID --data-file=-
+echo -n "your-api-key"          | gcloud secrets versions add JUSSIMATIC_FRONTEND_VITE_JUSSI_AIBOT_API_KEY --data-file=-
+```
+
+Or use the `dev` script to sync from `.env.production`:
+
+```bash
+./dev secrets
+```
+
+### Deployment flow
+
+1. Push a Git tag (e.g. `v1.0.0`) — Cloud Build triggers automatically, or run `./dev deploy`.
+2. Cloud Build uses Kaniko to build and push the Docker image to Artifact Registry.
+3. Cloud Build deploys the new image to the Cloud Run service.
+4. To update env vars without a rebuild: `./dev set-env`.
+
+## Cleanup
+
+To tear down local development environments:
+
+```bash
+# Stop Docker Compose and remove containers
+./dev down
+
+# Remove Docker Compose containers, volumes, and networks
+docker compose down --volumes --remove-orphans
+
+# Remove local build artifacts
+rm -rf dist
+
+# Remove node_modules and reinstall from scratch
+rm -rf node_modules && npm install
+```
+
+To destroy the GCP infrastructure (irreversible — use with care):
+
+```bash
+cd terraform
+terraform destroy
 ```
 
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for release history.
-
