@@ -7,7 +7,7 @@ function readStoredMessages(): ChatMessage[] {
   if (typeof window === 'undefined') return [];
 
   try {
-    const stored = window.localStorage.getItem(MESSAGES_STORAGE_KEY);
+    const stored = window.sessionStorage.getItem(MESSAGES_STORAGE_KEY);
     const parsed = stored ? JSON.parse(stored) : [];
     return Array.isArray(parsed) ? (parsed as ChatMessage[]) : [];
   } catch {
@@ -22,7 +22,7 @@ export function usePersistedMessages() {
     if (typeof window === 'undefined') return;
 
     try {
-      window.localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(messages));
+      window.sessionStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(messages));
     } catch {
       // Ignore storage errors.
     }
@@ -34,7 +34,7 @@ export function usePersistedMessages() {
     if (typeof window === 'undefined') return;
 
     try {
-      window.localStorage.removeItem(MESSAGES_STORAGE_KEY);
+      window.sessionStorage.removeItem(MESSAGES_STORAGE_KEY);
     } catch {
       // Ignore storage errors.
     }

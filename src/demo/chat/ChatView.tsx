@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ask } from '../../api/chatApi';
+import { ask, getSuggestions } from '../../api/chatApi';
 import {
   DEFAULT_LANGUAGE,
   getStoredLanguage,
@@ -24,9 +24,16 @@ function ChatView() {
   const { messages, setMessages, clearMessages } = usePersistedMessages();
   const endOfListRef = useRef<HTMLDivElement | null>(null);
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
     setStoredLanguage(language);
+  }, [language]);
+
+  useEffect(() => {
+    getSuggestions(language).then((data) => {
+      setSuggestions(data.length > 0 ? data : suggestions);
+    });
   }, [language]);
 
   useEffect(() => {
@@ -37,10 +44,10 @@ function ChatView() {
     setMessages((prev) => [...prev, nextMessage]);
   };
 
-  const handleSend = async () => {
-    if (!message.trim() || isLoading) return;
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || isLoading) return;
 
-    const userMessage = message.trim();
+    const userMessage = text.trim();
     const userMessageObj: ChatMessage = {
       id: Date.now(),
       text: userMessage,
@@ -51,10 +58,11 @@ function ChatView() {
     appendMessage(userMessageObj);
     setMessage('');
     setIsLoading(true);
+
     setShowTips(false);
 
     try {
-      const response = await ask(language, userMessage);
+      const response = await ask(userMessage);
       const botText = getBotText(response, t.chat.noResponse);
 
       const botImages = Array.isArray(response?.images)
@@ -83,16 +91,18 @@ function ChatView() {
     }
   };
 
+  const handleSend = () => void sendMessage(message);
+
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      void handleSend();
+      handleSend();
     }
   };
 
   const handleTipClick = (example: string) => {
-    setMessage(example);
     setShowTips(false);
+    void sendMessage(example);
   };
 
   const handleCopy = async (msg: ChatMessage) => {
@@ -126,7 +136,7 @@ function ChatView() {
               <p className="text-lg font-medium mb-2">{t.chat.empty}</p>
               <p className="text-sm text-gray-400 mb-5">{t.chat.quickStart}</p>
               <div className="flex flex-wrap gap-2 justify-center">
-                {t.chat.exampleQuestions.map((example, index) => (
+                {suggestions.map((example, index) => (
                   <button
                     key={index}
                     onClick={() => handleTipClick(example)}
@@ -246,7 +256,7 @@ function ChatView() {
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {t.chat.exampleQuestions.map((example, index) => (
+                  {suggestions.map((example, index) => (
                     <button
                       key={index}
                       onClick={() => handleTipClick(example)}

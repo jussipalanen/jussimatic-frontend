@@ -331,6 +331,14 @@ body::after {
   list-style: decimal;
 }
 
+.bot-message img {
+  max-width: 280px;
+  max-height: 200px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0.5rem;
+}
+
 @keyframes fade-in-message {
   from {
     opacity: 0;
