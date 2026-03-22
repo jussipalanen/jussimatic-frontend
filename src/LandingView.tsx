@@ -362,7 +362,7 @@ function LandingView() {
                       </svg>
                       <div className="flex flex-col">
                         <span className="font-semibold text-base">{t.landing[demo.labelKey]}</span>
-                        {demo.subtitle && <span className="text-xs text-gray-400">{demo.subtitle}</span>}
+                        <span className="text-xs text-gray-400">{t.landing[demo.subtitleKey]}</span>
                       </div>
                       <svg className="w-4 h-4 ml-auto text-white/30 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </div>
@@ -392,7 +392,7 @@ function LandingView() {
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <span className="font-semibold text-sm text-white leading-tight">{t.landing[demo.labelKey]}</span>
-                        {demo.subtitle && <span className="text-xs text-gray-400 leading-tight">{demo.subtitle}</span>}
+                        <span className="text-xs text-gray-400 leading-tight">{t.landing[demo.subtitleKey]}</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {demo.badges.slice(0, 2).map((badge) => (
