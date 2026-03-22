@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2026-03-22
+
+### Added
+- **AI chat — `[photo]` / `[image]` tag support**: The bot reply parser now converts `[photo]url[/photo]` and `[image]url[/image]` custom tags into `<img>` elements with `alt="Photo"` / `alt="Image"` respectively, allowing the AI backend to embed images inline in chat replies.
+
+### Changed
+- **AI chat — inline image styling**: Images inside bot replies now render with a portrait-friendly max size (200×240 px), `object-fit: cover`, rounded corners (`0.75rem`), a drop shadow, and a subtle border matching the dark bubble theme.
+- **AI chat — image spacing**: Each inline image has `1.75rem` top and bottom margin, and image-only paragraphs are centre-aligned.
+
 ## [1.1.0] - 2026-03-22
 
 ### Added
