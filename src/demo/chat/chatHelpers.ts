@@ -32,8 +32,14 @@ export const sanitizeHtml = (value: string) =>
     ALLOWED_ATTR,
   });
 
+const parseCustomTags = (value: string) =>
+  value
+    .replace(/\[photo\](.*?)\[\/photo\]/gi, '![Photo]($1)')
+    .replace(/\[image\](.*?)\[\/image\]/gi, '![Image]($1)');
+
 export const formatBotHtml = (value: string) => {
-  const html = marked.parse(value, { breaks: true, gfm: true });
+  const parsed = parseCustomTags(value);
+  const html = marked.parse(parsed, { breaks: true, gfm: true });
   return sanitizeHtml(String(html));
 };
 
