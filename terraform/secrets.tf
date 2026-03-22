@@ -17,7 +17,7 @@ resource "google_secret_manager_secret" "google_client_id" {
 
 resource "google_secret_manager_secret" "aibot_api_key" {
   project   = var.project_id
-  secret_id = "JUSSIMATIC_FRONTEND_VITE_JUSSI_AIBOT_API_KEY"
+  secret_id = "JUSSIMATIC_FRONTEND_VITE_JUSSI_AIBOT_AI_SECRET_KEY"
 
   replication {
     auto {}

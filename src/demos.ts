@@ -7,7 +7,17 @@ export type DemoLabelKey =
   | 'ecommerceCta'
   | 'aiCvCta'
   | 'resumeBuilderCta'
-  | 'invoiceToolCta';
+  | 'invoiceToolCta'
+  | 'jussispaceRentalCta';
+
+export type DemoSubtitleKey =
+  | 'chatSubtitle'
+  | 'jobsSubtitle'
+  | 'ecommerceSubtitle'
+  | 'aiCvSubtitle'
+  | 'resumeBuilderSubtitle'
+  | 'invoiceToolSubtitle'
+  | 'jussispaceRentalSubtitle';
 
 export interface DemoBadge {
   label: string;
@@ -20,8 +30,10 @@ export interface DemoBadge {
 export interface Demo {
   id: string;
   path: string;
+  externalUrl?: string;
   /** Key into translations[lang].landing – used until the API provides its own labels. */
   labelKey: DemoLabelKey;
+  subtitleKey: DemoSubtitleKey;
   /** Tailwind text-color class for the icon (e.g. "text-blue-400"). */
   iconColor: string;
   /** SVG <path> `d` attribute, rendered with strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}. */
@@ -34,6 +46,7 @@ export const DEMOS: Demo[] = [
     id: 'chat',
     path: '/chat',
     labelKey: 'chatCta',
+    subtitleKey: 'chatSubtitle',
     iconColor: 'text-blue-400',
     iconPath:
       'M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
@@ -47,6 +60,7 @@ export const DEMOS: Demo[] = [
     id: 'browse-jobs',
     path: '/demo/browse-jobs',
     labelKey: 'jobsCta',
+    subtitleKey: 'jobsSubtitle',
     iconColor: 'text-green-400',
     iconPath:
       'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
@@ -60,6 +74,7 @@ export const DEMOS: Demo[] = [
     id: 'ecommerce',
     path: '/demo/ecommerce/products',
     labelKey: 'ecommerceCta',
+    subtitleKey: 'ecommerceSubtitle',
     iconColor: 'text-purple-400',
     iconPath: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
     badges: [
@@ -76,6 +91,7 @@ export const DEMOS: Demo[] = [
     id: 'ai-cv-review',
     path: '/demo/ai-cv-review',
     labelKey: 'aiCvCta',
+    subtitleKey: 'aiCvSubtitle',
     iconColor: 'text-orange-400',
     iconPath: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
     badges: [
@@ -89,6 +105,7 @@ export const DEMOS: Demo[] = [
     id: 'resume-tool',
     path: '/demo/resume-tool',
     labelKey: 'resumeBuilderCta',
+    subtitleKey: 'resumeBuilderSubtitle',
     iconColor: 'text-teal-400',
     iconPath:
       'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
@@ -100,9 +117,26 @@ export const DEMOS: Demo[] = [
     ],
   },
   {
+    id: 'jussispace-rental',
+    path: '',
+    externalUrl: 'https://jussispace-production.lab.jussialanen.com/',
+    labelKey: 'jussispaceRentalCta',
+    subtitleKey: 'jussispaceRentalSubtitle',
+    iconColor: 'text-cyan-400',
+    iconPath:
+      'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+    badges: [
+      { label: 'Node.js', colorClass: 'bg-green-600/20 text-green-300 font-semibold' },
+      { label: 'MySQL', colorClass: 'bg-cyan-500/15 text-cyan-300 font-semibold' },
+      { label: 'AWS', colorClass: 'bg-orange-400/15 text-orange-300 font-semibold' },
+      { label: 'API', colorClass: 'bg-teal-500/15 text-teal-300 font-medium' },
+    ],
+  },
+  {
     id: 'invoice-tool',
     path: '/demo/invoice-tool',
     labelKey: 'invoiceToolCta',
+    subtitleKey: 'invoiceToolSubtitle',
     iconColor: 'text-yellow-400',
     iconPath:
       'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',

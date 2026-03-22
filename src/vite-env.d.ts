@@ -4,7 +4,7 @@ interface ImportMetaEnv {
   readonly VITE_JUSSIMATIC_BACKEND_API_BASE_URL: string;
   readonly VITE_JUSSILOG_BACKEND_API_BASE_URL: string;
   readonly VITE_JUSSI_AIBOT_API_URL: string;
-  readonly VITE_JUSSI_AIBOT_API_KEY: string;
+  readonly VITE_JUSSI_AIBOT_AI_SECRET_KEY: string;
   readonly VITE_GOOGLE_CLIENT_ID?: string;
   readonly VITE_ECOMMERCE_MAIN_TITLE?: string;
   readonly VITE_APP_TITLE?: string;

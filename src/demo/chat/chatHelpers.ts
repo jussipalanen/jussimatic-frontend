@@ -21,9 +21,10 @@ const ALLOWED_TAGS = [
   'blockquote',
   'code',
   'pre',
+  'img',
 ];
 
-const ALLOWED_ATTR = ['href', 'title', 'target', 'rel'];
+const ALLOWED_ATTR = ['href', 'title', 'target', 'rel', 'src', 'alt'];
 
 export const sanitizeHtml = (value: string) =>
   DOMPurify.sanitize(value, {
@@ -66,6 +67,9 @@ export const getBotText = (response: unknown, fallback: string) => {
   if (typeof response !== 'object' || response === null) return fallback;
 
   const typed = response as Record<string, unknown>;
+  const replyText = getTextFromUnknown(typed.reply);
+  if (replyText) return replyText;
+
   const answerText = getTextFromUnknown(typed.answer);
   if (answerText) return answerText;
 
