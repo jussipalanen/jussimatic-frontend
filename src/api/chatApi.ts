@@ -3,8 +3,26 @@ if (!API_BASE_URL) {
   throw new Error('VITE_JUSSILOG_BACKEND_API_BASE_URL environment variable is not set');
 }
 
+const AIBOT_API_URL = import.meta.env.VITE_JUSSI_AIBOT_API_URL;
+if (!AIBOT_API_URL) {
+  throw new Error('VITE_JUSSI_AIBOT_API_URL environment variable is not set');
+}
+
+const AIBOT_API_KEY = import.meta.env.VITE_JUSSI_AIBOT_AI_SECRET_KEY;
+if (!AIBOT_API_KEY) {
+  throw new Error('VITE_JUSSI_AIBOT_AI_SECRET_KEY environment variable is not set');
+}
+
+interface HistoryEntry {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 interface AskRequest {
-  question: string;
+  handler: 'jussimatic-ai-cv-chat';
+  message: string;
+  language: string;
+  history: HistoryEntry[];
 }
 
 export async function getSuggestions(language: string): Promise<string[]> {
@@ -25,22 +43,22 @@ export async function getSuggestions(language: string): Promise<string[]> {
 }
 
 interface AskResponse {
-  // Add response fields based on your API response structure
-  response?: string;
+  reply?: string;
   [key: string]: unknown;
 }
 
-/**
- * Send a question to the Jussimatic API
- * @param language - The language code (e.g., "en")
- * @param question - The question from the user
- * @returns API response
- */
-export async function ask(question: string): Promise<AskResponse> {
-  const url = `${API_BASE_URL}agent/resume/ask`;
+export async function ask(
+  message: string,
+  language: string,
+  history: HistoryEntry[],
+): Promise<AskResponse> {
+  const url = `${AIBOT_API_URL}/ai/chat`;
 
   const requestBody: AskRequest = {
-    question,
+    handler: 'jussimatic-ai-cv-chat',
+    message,
+    language,
+    history,
   };
 
   try {
@@ -48,6 +66,7 @@ export async function ask(question: string): Promise<AskResponse> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AIBOT_API_KEY}`,
       },
       body: JSON.stringify(requestBody),
     });

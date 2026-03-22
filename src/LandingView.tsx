@@ -353,14 +353,17 @@ function LandingView() {
                 {DEMOS.map((demo) => (
                   <button
                     key={demo.id}
-                    onClick={() => { navigate(demo.path); setShowProjectsModal(false); }}
+                    onClick={() => { if (demo.externalUrl) { window.open(demo.externalUrl, '_blank', 'noopener,noreferrer'); } else { navigate(demo.path); } setShowProjectsModal(false); }}
                     className="w-full text-left px-4 sm:px-6 py-4 text-sm text-white hover:bg-gray-700/60 flex flex-col gap-2 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <svg className={`w-5 h-5 shrink-0 ${demo.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={demo.iconPath} />
                       </svg>
-                      <span className="font-semibold text-base">{t.landing[demo.labelKey]}</span>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-base">{t.landing[demo.labelKey]}</span>
+                        {demo.subtitle && <span className="text-xs text-gray-400">{demo.subtitle}</span>}
+                      </div>
                       <svg className="w-4 h-4 ml-auto text-white/30 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </div>
                     <div className="flex flex-wrap gap-1.5 pl-8">
@@ -379,7 +382,7 @@ function LandingView() {
                   {DEMOS.map((demo) => (
                     <button
                       key={demo.id}
-                      onClick={() => { navigate(demo.path); setShowProjectsModal(false); }}
+                      onClick={() => { if (demo.externalUrl) { window.open(demo.externalUrl, '_blank', 'noopener,noreferrer'); } else { navigate(demo.path); } setShowProjectsModal(false); }}
                       className="flex flex-col items-start gap-3 p-4 bg-gray-700/40 hover:bg-gray-700/80 border border-white/5 hover:border-white/15 rounded-xl transition-colors cursor-pointer text-left"
                     >
                       <div className={`w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0 ${demo.iconColor}`}>
@@ -387,7 +390,10 @@ function LandingView() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={demo.iconPath} />
                         </svg>
                       </div>
-                      <span className="font-semibold text-sm text-white leading-tight">{t.landing[demo.labelKey]}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-sm text-white leading-tight">{t.landing[demo.labelKey]}</span>
+                        {demo.subtitle && <span className="text-xs text-gray-400 leading-tight">{demo.subtitle}</span>}
+                      </div>
                       <div className="flex flex-wrap gap-1">
                         {demo.badges.slice(0, 2).map((badge) => (
                           <span key={badge.label} className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-xs ${badge.colorClass}`}>

@@ -67,6 +67,9 @@ export const getBotText = (response: unknown, fallback: string) => {
   if (typeof response !== 'object' || response === null) return fallback;
 
   const typed = response as Record<string, unknown>;
+  const replyText = getTextFromUnknown(typed.reply);
+  if (replyText) return replyText;
+
   const answerText = getTextFromUnknown(typed.answer);
   if (answerText) return answerText;
 

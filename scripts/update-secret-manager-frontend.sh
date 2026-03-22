@@ -23,7 +23,7 @@ ENV_FILE="${ENV_FILE:-.env.production}"
 # Only sensitive values belong here.
 SECRET_KEYS=(
   "VITE_GOOGLE_CLIENT_ID"
-  "VITE_JUSSI_AIBOT_API_KEY"
+  "VITE_JUSSI_AIBOT_AI_SECRET_KEY"
 )
 # ──────────────────────────────────────────────────────────────────────────────
 

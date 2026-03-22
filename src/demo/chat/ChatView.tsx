@@ -62,7 +62,11 @@ function ChatView() {
     setShowTips(false);
 
     try {
-      const response = await ask(userMessage);
+      const history = messages.map((m) => ({
+        role: (m.isUser ? 'user' : 'assistant') as 'user' | 'assistant',
+        content: m.text,
+      }));
+      const response = await ask(userMessage, language, history);
       const botText = getBotText(response, t.chat.noResponse);
 
       const botImages = Array.isArray(response?.images)

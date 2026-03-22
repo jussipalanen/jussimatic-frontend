@@ -1,12 +1,12 @@
 const API_BASE_URL = import.meta.env.VITE_JUSSI_AIBOT_API_URL;
-const API_KEY = import.meta.env.VITE_JUSSI_AIBOT_API_KEY;
+const API_KEY = import.meta.env.VITE_JUSSI_AIBOT_AI_SECRET_KEY;
 
 if (!API_BASE_URL) {
   throw new Error('VITE_JUSSI_AIBOT_API_URL environment variable is not set');
 }
 
 if (!API_KEY) {
-  throw new Error('VITE_JUSSI_AIBOT_API_KEY environment variable is not set');
+  throw new Error('VITE_JUSSI_AIBOT_AI_SECRET_KEY environment variable is not set');
 }
 
 function buildUrl(path: string) {
@@ -40,7 +40,7 @@ export async function reviewCV(file: File): Promise<CVReviewResponse> {
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'X-API-key': API_KEY,
+      'Authorization': `Bearer ${API_KEY}`,
     },
     body: formData,
   });

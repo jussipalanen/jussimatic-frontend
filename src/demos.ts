@@ -7,7 +7,8 @@ export type DemoLabelKey =
   | 'ecommerceCta'
   | 'aiCvCta'
   | 'resumeBuilderCta'
-  | 'invoiceToolCta';
+  | 'invoiceToolCta'
+  | 'jussispaceRentalCta';
 
 export interface DemoBadge {
   label: string;
@@ -20,8 +21,10 @@ export interface DemoBadge {
 export interface Demo {
   id: string;
   path: string;
+  externalUrl?: string;
   /** Key into translations[lang].landing – used until the API provides its own labels. */
   labelKey: DemoLabelKey;
+  subtitle?: string;
   /** Tailwind text-color class for the icon (e.g. "text-blue-400"). */
   iconColor: string;
   /** SVG <path> `d` attribute, rendered with strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}. */
@@ -97,6 +100,22 @@ export const DEMOS: Demo[] = [
       { label: 'PHP', colorClass: 'bg-indigo-400/15 text-indigo-300 font-semibold' },
       { label: 'Laravel', colorClass: 'bg-red-400/15 text-red-300 font-semibold' },
       { label: 'PDF Export', colorClass: 'bg-green-500/15 text-green-300 font-medium' },
+    ],
+  },
+  {
+    id: 'jussispace-rental',
+    path: '',
+    externalUrl: 'https://jussispace-production.lab.jussialanen.com/',
+    labelKey: 'jussispaceRentalCta',
+    subtitle: 'Rental apartment and office space system',
+    iconColor: 'text-cyan-400',
+    iconPath:
+      'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+    badges: [
+      { label: 'Node.js', colorClass: 'bg-green-600/20 text-green-300 font-semibold' },
+      { label: 'MySQL', colorClass: 'bg-cyan-500/15 text-cyan-300 font-semibold' },
+      { label: 'AWS', colorClass: 'bg-orange-400/15 text-orange-300 font-semibold' },
+      { label: 'API', colorClass: 'bg-teal-500/15 text-teal-300 font-medium' },
     ],
   },
   {
