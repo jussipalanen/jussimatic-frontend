@@ -8,7 +8,8 @@ All notable changes to this project will be documented in this file.
 - **JussiSpace project card**: New external demo entry in the Projects & Demos modal linking to the rental apartment and office space system (`jussispace-production.lab.jussialanen.com`). Opens in a new tab. Badges: Node.js, MySQL, AWS, API.
 - **Demo subtitles**: All 7 project/demo cards now display a short translated description below the title in both English and Finnish. Subtitle keys added to `t.landing` in `i18n.ts` and a `subtitleKey` field added to the `Demo` interface in `demos.ts`.
 - **`DemoSubtitleKey` type** (`src/demos.ts`): New union type for subtitle translation keys, parallel to `DemoLabelKey`.
-- **External URL support for demos**: `externalUrl?: string` added to the `Demo` interface. Both list and grid views in the Projects & Demos modal now open external URLs in a new tab (`noopener,noreferrer`) instead of navigating internally.
+- **External URL support for demos**: `externalUrl?: string` added to the `Demo` interface. Both list and grid views in the Projects & Demos modal and the navbar dropdown (desktop and mobile) now open external URLs in a new tab (`noopener,noreferrer`) instead of navigating internally.
+- **Hard-coded chat suggestions**: `exampleQuestions` added to `t.chat` in `i18n.ts` for both EN and FI, replacing the API-fetched suggestions. Questions now reflect Jussi's actual skills, projects, experience, languages, and education.
 
 ### Changed
 - **AI Chat endpoint** (`src/api/chatApi.ts`): Migrated from the Node.js backend to the Python AI service (`VITE_JUSSI_AIBOT_API_URL`). Request payload updated to `{ handler, message, language, history }` and response field changed from `response`/`answer` to `reply`.
@@ -20,6 +21,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **AI Chat — missing Authorization header**: Added `Authorization: Bearer` to `/ai/chat` requests, resolving 401 errors from the Python service.
 - **AI CV Review — missing Authorization header**: Added `Authorization: Bearer` to `/ai/review` requests, resolving 401 errors.
+- **Navbar external demo links**: JussiSpace and any future external demos now open correctly in a new tab from the navbar dropdown (`NavActions.tsx`) on both desktop and mobile.
 
 ## [0.9.0] - 2026-03-19
 

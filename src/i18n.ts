@@ -118,11 +118,11 @@ export const translations = {
       copy: 'Copy',
       copied: 'Copied',
       exampleQuestions: [
-        'Who is Jussi Alanen',
-        'Tell your CV',
-        "What's your CV",
-        'Tell me about yourself',
-        'Who is Simon',
+        "What are Jussi's main skills?",
+        "What projects has Jussi worked on?",
+        "What is Jussi's work experience?",
+        "What programming languages does Jussi know?",
+        "Tell me about Jussi's education",
       ],
     },
     cvReview: {
@@ -1091,11 +1091,11 @@ export const translations = {
       copy: 'Kopioi',
       copied: 'Kopioitu',
       exampleQuestions: [
-        'Kuka on Jussi Alanen',
-        'Kerro CV:si',
-        'Mikä on CV:si',
-        'Kerro itsestäsi',
-        'Kuka on Simon',
+        'Mitkä ovat Jussin pääosaamiset?',
+        'Missä projekteissa Jussi on ollut mukana?',
+        'Millainen on Jussin työkokemus?',
+        'Mitä ohjelmointikieliä Jussi osaa?',
+        'Kerro Jussin koulutuksesta',
       ],
     },
     cvReview: {

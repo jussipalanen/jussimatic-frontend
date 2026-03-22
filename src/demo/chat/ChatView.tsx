@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ask, getSuggestions } from '../../api/chatApi';
+import { ask } from '../../api/chatApi';
 import {
   DEFAULT_LANGUAGE,
   getStoredLanguage,
@@ -24,16 +24,10 @@ function ChatView() {
   const { messages, setMessages, clearMessages } = usePersistedMessages();
   const endOfListRef = useRef<HTMLDivElement | null>(null);
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const suggestions = t.chat.exampleQuestions;
 
   useEffect(() => {
     setStoredLanguage(language);
-  }, [language]);
-
-  useEffect(() => {
-    getSuggestions(language).then((data) => {
-      setSuggestions(data.length > 0 ? data : suggestions);
-    });
   }, [language]);
 
   useEffect(() => {

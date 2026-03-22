@@ -209,7 +209,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
               {DEMOS.map((demo) => (
                 <button
                   key={demo.id}
-                  onClick={() => { navigate(demo.path); setShowProjects(false); }}
+                  onClick={() => { if (demo.externalUrl) { window.open(demo.externalUrl, '_blank', 'noopener,noreferrer'); } else { navigate(demo.path); } setShowProjects(false); }}
                   className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
                 >
                   <svg className={`w-4 h-4 shrink-0 ${demo.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -440,7 +440,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
               {DEMOS.map((demo) => (
                 <button
                   key={demo.id}
-                  onClick={() => { navigate(demo.path); setShowMobileMenu(false); }}
+                  onClick={() => { if (demo.externalUrl) { window.open(demo.externalUrl, '_blank', 'noopener,noreferrer'); } else { navigate(demo.path); } setShowMobileMenu(false); }}
                   className="flex items-center gap-2 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors text-left"
                 >
                   <svg className={`w-4 h-4 shrink-0 ${demo.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
