@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-03-22
+
+### Added
+- **JussiSpace project card**: New external demo entry in the Projects & Demos modal linking to the rental apartment and office space system (`jussispace-production.lab.jussialanen.com`). Opens in a new tab. Badges: Node.js, MySQL, AWS, API.
+- **Demo subtitles**: All 7 project/demo cards now display a short translated description below the title in both English and Finnish. Subtitle keys added to `t.landing` in `i18n.ts` and a `subtitleKey` field added to the `Demo` interface in `demos.ts`.
+- **`DemoSubtitleKey` type** (`src/demos.ts`): New union type for subtitle translation keys, parallel to `DemoLabelKey`.
+- **External URL support for demos**: `externalUrl?: string` added to the `Demo` interface. Both list and grid views in the Projects & Demos modal now open external URLs in a new tab (`noopener,noreferrer`) instead of navigating internally.
+
+### Changed
+- **AI Chat endpoint** (`src/api/chatApi.ts`): Migrated from the Node.js backend to the Python AI service (`VITE_JUSSI_AIBOT_API_URL`). Request payload updated to `{ handler, message, language, history }` and response field changed from `response`/`answer` to `reply`.
+- **AI Chat — conversation history**: `ChatView` now passes the full message history to `ask()`, enabling context-aware responses from the AI service.
+- **AI CV Review auth** (`src/demo/ai-cv-review/api/cvReviewApi.ts`): Replaced `X-API-key` header with `Authorization: Bearer <key>` to match the Python service requirement.
+- **Secret key renamed**: `VITE_JUSSI_AIBOT_API_KEY` → `VITE_JUSSI_AIBOT_AI_SECRET_KEY` across all files (source, `vite-env.d.ts`, `.env.example`, `Dockerfile`, `cloudbuild.yaml`, `scripts/update-secret-manager-frontend.sh`, `terraform/secrets.tf`). Now shares the same secret value as `JUSSI_AIBOT_AI_SECRET_KEY` used by other services.
+- **Terraform secret name** (`terraform/secrets.tf`): Secret resource renamed to `JUSSIMATIC_FRONTEND_VITE_JUSSI_AIBOT_AI_SECRET_KEY`.
+
+### Fixed
+- **AI Chat — missing Authorization header**: Added `Authorization: Bearer` to `/ai/chat` requests, resolving 401 errors from the Python service.
+- **AI CV Review — missing Authorization header**: Added `Authorization: Bearer` to `/ai/review` requests, resolving 401 errors.
+
 ## [0.9.0] - 2026-03-19
 
 ### Added
