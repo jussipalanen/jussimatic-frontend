@@ -52,7 +52,7 @@ export async function ask(
   language: string,
   history: HistoryEntry[],
 ): Promise<AskResponse> {
-  const url = `${AIBOT_API_URL}/ai/chat`;
+  const url = `${AIBOT_API_URL.replace(/\/$/, '')}/ai/chat`;
 
   const requestBody: AskRequest = {
     handler: 'jussimatic-ai-cv-chat',
