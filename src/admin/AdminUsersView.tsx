@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteUser, fetchAllUsers } from '../../../api/usersApi';
-import type { UserSummary } from '../../../api/usersApi';
-import AdminHeader from '../components/AdminHeader';
-import { getMe } from '../../../api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
-import UserEditModal from '../components/UserEditModal';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
-import type { Language } from '../../../i18n';
+import { deleteUser, fetchAllUsers } from '../api/usersApi';
+import type { UserSummary } from '../api/usersApi';
+import AdminHeader from '../demo/ecommerce/components/AdminHeader';
+import { getMe } from '../api/authApi';
+import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
+import UserEditModal from '../demo/ecommerce/components/UserEditModal';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
+import type { Language } from '../i18n';
 
 function normalizeRoleLabel(role: string, labels: Record<string, string>) {
   const key = role.trim().toLowerCase();

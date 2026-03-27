@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllBlogs, deleteBlog } from '../../../api/blogsApi';
-import type { Blog } from '../../../api/blogsApi';
-import { getMe } from '../../../api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
-import AdminHeader from '../components/AdminHeader';
-import { Pagination } from '../../../components/Pagination';
-import { BlogFormModal } from '../../../components/BlogFormModal';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
-import type { Language } from '../../../i18n';
+import { getAllBlogs, deleteBlog } from '../api/blogsApi';
+import type { Blog } from '../api/blogsApi';
+import { getMe } from '../api/authApi';
+import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
+import AdminHeader from '../demo/ecommerce/components/AdminHeader';
+import { Pagination } from '../components/Pagination';
+import { BlogFormModal } from '../components/BlogFormModal';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
+import type { Language } from '../i18n';
 
 const ITEMS_PER_PAGE = 10;
 

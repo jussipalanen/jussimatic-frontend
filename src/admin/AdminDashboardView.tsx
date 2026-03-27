@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMe } from '../../../api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
-import AdminHeader from '../components/AdminHeader';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
-import type { Language } from '../../../i18n';
+import { getMe } from '../api/authApi';
+import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
+import AdminHeader from '../demo/ecommerce/components/AdminHeader';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
+import type { Language } from '../i18n';
 
 function AdminDashboardView() {
   const navigate = useNavigate();
@@ -157,6 +157,26 @@ function AdminDashboardView() {
                 </svg>
                 <span className="text-base font-semibold text-white">{t.blogCategoriesTitle}</span>
                 <span className="text-sm text-gray-400">{t.blogCategoriesDesc}</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/projects')}
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-teal-500/60 hover:bg-teal-600/10 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-teal-400 group-hover:text-teal-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                <span className="text-base font-semibold text-white">{t.projectsTitle}</span>
+                <span className="text-sm text-gray-400">{t.projectsDesc}</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/project-categories')}
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-cyan-500/60 hover:bg-cyan-600/10 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-cyan-400 group-hover:text-cyan-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <span className="text-base font-semibold text-white">{t.projectCategoriesTitle}</span>
+                <span className="text-sm text-gray-400">{t.projectCategoriesDesc}</span>
               </button>
             </div>
           </div>

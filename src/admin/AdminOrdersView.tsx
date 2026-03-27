@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchAllOrders, updateOrder } from '../../../api/ordersApi';
-import { getMe } from '../../../api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
-import { fetchProductById } from '../../../api/productsApi';
-import type { Order } from '../../../api/ordersApi';
-import AdminHeader from '../components/AdminHeader';
-import CountrySelect from '../../../components/CountrySelect';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
-import type { Language } from '../../../i18n';
+import { fetchAllOrders, updateOrder } from '../api/ordersApi';
+import { getMe } from '../api/authApi';
+import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
+import { fetchProductById } from '../api/productsApi';
+import type { Order } from '../api/ordersApi';
+import AdminHeader from '../demo/ecommerce/components/AdminHeader';
+import CountrySelect from '../components/CountrySelect';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
+import type { Language } from '../i18n';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -77,7 +77,7 @@ function formatTaxPct(rate: number): string {
 
 interface TaxGroup { code: string | null; rate: number; amount: number }
 
-function calcOrderTaxBreakdown(items: import('../../../api/ordersApi').OrderItem[]): TaxGroup[] {
+function calcOrderTaxBreakdown(items: import('../api/ordersApi').OrderItem[]): TaxGroup[] {
   const groups: TaxGroup[] = [];
   for (const item of items) {
     const rawRate = item.tax_rate;
