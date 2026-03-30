@@ -1019,7 +1019,7 @@ export const translations = {
       description: 'The page you are looking for does not exist.',
       goHome: 'Go to homepage',
     },
-    footer: 'Built by Jussi Alanen. Source code available on GitHub',
+    footer: 'All rights reserved.',
   },
   fi: {
     landing: {
