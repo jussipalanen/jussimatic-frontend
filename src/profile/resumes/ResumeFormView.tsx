@@ -417,6 +417,7 @@ function PersonalSection({
 
   useEffect(() => {
     if (!photoFile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreviewUrl(null);
       return;
     }

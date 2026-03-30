@@ -14,11 +14,6 @@ function CartView() {
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
 
   useEffect(() => {
-    // Refresh cart items when component mounts
-    setCartItems(getCart());
-  }, []);
-
-  useEffect(() => {
     const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
     window.addEventListener('jussimatic-language-change', handler);
     return () => window.removeEventListener('jussimatic-language-change', handler);

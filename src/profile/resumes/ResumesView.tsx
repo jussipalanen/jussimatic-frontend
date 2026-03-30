@@ -49,6 +49,7 @@ function ResumesView() {
       return;
     }
     loadResumes(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const loadResumes = async (page = 1) => {

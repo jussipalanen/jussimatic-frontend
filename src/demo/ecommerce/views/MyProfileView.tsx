@@ -56,6 +56,7 @@ function MyProfileView() {
 
   useEffect(() => {
     loadProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cartCount = getCart().reduce((sum, item) => sum + item.quantity, 0);

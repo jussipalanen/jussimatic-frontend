@@ -226,6 +226,7 @@ function AdminOrdersView() {
     };
 
     loadOrders();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const handleOrderClick = (order: Order) => {

@@ -73,6 +73,7 @@ export default function MyInvoicesView() {
       return;
     }
     loadInvoices();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const loadInvoices = async () => {

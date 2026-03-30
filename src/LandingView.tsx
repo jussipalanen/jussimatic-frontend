@@ -15,7 +15,7 @@ function LandingView() {
   const year = new Date().getFullYear();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(() => searchParams.get('auth') === 'login');
   const [showProjectsModal, setShowProjectsModal] = useState(false);
   const [demosViewMode, setDemosViewMode] = useState<'list' | 'grid'>('list');
   const [visitorsCount, setVisitorsCount] = useState<number | null>(null);
@@ -92,7 +92,6 @@ function LandingView() {
   useEffect(() => {
     if (searchParams.get('auth') !== 'login') return;
 
-    setIsModalOpen(true);
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('auth');
     setSearchParams(nextParams, { replace: true });

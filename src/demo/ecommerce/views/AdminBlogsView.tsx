@@ -82,6 +82,7 @@ function AdminBlogsView() {
       }
     };
     checkAuth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadBlogs = async (page: number = currentPage) => {
@@ -101,6 +102,7 @@ function AdminBlogsView() {
   useEffect(() => {
     if (authError) return;
     loadBlogs(currentPage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, authError]);
 
   const handlePageChange = (page: number) => {

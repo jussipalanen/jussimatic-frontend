@@ -99,6 +99,7 @@ function ProductsView() {
 
   useEffect(() => {
     loadProducts(1, appliedSearch, perPage, sortBy, sortDir);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedSearch, perPage, sortBy, sortDir]);
 
   useEffect(() => {
@@ -125,6 +126,7 @@ function ProductsView() {
     if (!canManageProducts && (activeModal === 'create' || activeModal === 'edit')) {
       closeModal();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canManageProducts, activeModal]);
 
 

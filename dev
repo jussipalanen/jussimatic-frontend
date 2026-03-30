@@ -100,6 +100,31 @@ TAG_NAME=$TAG_NAME"
     ENV_FILE="${2:-.env.production}" bash scripts/update-secret-manager-frontend.sh "${@:3}"
     ;;
 
+  lint)
+    echo "Running linter..."
+    npm run lint
+    ;;
+
+  fix)
+    echo "Running linter with auto-fix..."
+    npm run lint:fix
+    ;;
+
+  test)
+    echo "Running unit tests..."
+    npm run test
+    ;;
+
+  test:e2e)
+    echo "Running Playwright end-to-end tests..."
+    npm run test:e2e
+    ;;
+
+  test:e2e:ui)
+    echo "Opening Playwright UI..."
+    npm run test:e2e:ui
+    ;;
+
   *)
     echo "Usage: ./dev [COMMAND]"
     echo ""
@@ -119,6 +144,11 @@ TAG_NAME=$TAG_NAME"
     echo "                            Optionally pass a custom env file path as second argument."
     echo "  secrets [env-file] [KEY] - Sync secrets to GCP Secret Manager from .env.production"
     echo "                            Optionally pass a custom env file and/or a single KEY to sync."
+    echo "  lint                    - Run ESLint"
+    echo "  fix                     - Run ESLint with auto-fix"
+    echo "  test                    - Run unit tests (vitest)"
+    echo "  test:e2e                - Run Playwright end-to-end tests"
+    echo "  test:e2e:ui             - Open Playwright UI mode"
     echo ""
     exit 1
     ;;

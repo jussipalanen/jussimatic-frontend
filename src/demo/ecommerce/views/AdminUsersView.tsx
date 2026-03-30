@@ -76,12 +76,6 @@ function AdminUsersView() {
     return () => window.removeEventListener('jussimatic-language-change', handler);
   }, []);
 
-  const roleLabels: Record<string, string> = {
-    admin: t.roleAdmin,
-    vendor: t.roleVendor,
-    customer: t.roleCustomer,
-  };
-
   useEffect(() => {
     const loadUsers = async () => {
       setLoading(true);
@@ -117,11 +111,17 @@ function AdminUsersView() {
     };
 
     loadUsers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const canManageUsers = currentUserRole === 'admin' || currentUserRole === 'administrator';
 
   const rows = useMemo(() => {
+    const roleLabels: Record<string, string> = {
+      admin: t.roleAdmin,
+      vendor: t.roleVendor,
+      customer: t.roleCustomer,
+    };
     return users.map((user) => {
       const firstName = getUserNameValue(user, 'first') || 'N/A';
       const lastName = getUserNameValue(user, 'last') || 'N/A';
@@ -144,7 +144,7 @@ function AdminUsersView() {
         roleLabel,
       };
     });
-  }, [users, language]);
+  }, [users, t]);
 
   const closeEditModal = () => {
     setShowEditModal(false);

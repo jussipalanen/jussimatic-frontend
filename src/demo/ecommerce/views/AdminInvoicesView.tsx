@@ -523,6 +523,7 @@ function AdminInvoicesView() {
     };
 
     loadInvoices();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const filteredInvoices = useMemo(() => {

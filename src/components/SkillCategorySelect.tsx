@@ -19,10 +19,14 @@ export default function SkillCategorySelect({ value, onChange, options, label, p
   // Sync display text when value changes externally
   const selectedLabel = options.find(o => o.value === value)?.label ?? value;
   const [inputText, setInputText] = useState(selectedLabel);
+  const [prevValue, setPrevValue] = useState(value);
+  const [prevOptions, setPrevOptions] = useState(options);
 
-  useEffect(() => {
-    setInputText(options.find(o => o.value === value)?.label ?? value);
-  }, [value, options]);
+  if (prevValue !== value || prevOptions !== options) {
+    setPrevValue(value);
+    setPrevOptions(options);
+    setInputText(selectedLabel);
+  }
 
   // Close on outside click
   useEffect(() => {

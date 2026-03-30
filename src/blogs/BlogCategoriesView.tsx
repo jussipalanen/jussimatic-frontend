@@ -42,6 +42,7 @@ function BlogCategoriesView() {
       }
     };
     checkAuth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadCategories = async () => {
@@ -60,6 +61,7 @@ function BlogCategoriesView() {
   useEffect(() => {
     if (authError) return;
     loadCategories();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authError]);
 
   const handleDelete = async () => {
