@@ -11,7 +11,7 @@ import { useJobsData } from './hooks/useJobsData';
 import { useJobsFilter } from './hooks/useJobsFilter';
 import { usePagination } from './hooks/usePagination';
 import type { VantaaJob } from './types';
-import DemoHeader from '../../components/DemoHeader';
+import Header from '../../components/Header';
 import { SearchForm } from './components/SearchForm';
 import { JobList } from './components/JobList';
 import { Pagination } from './components/Pagination';
@@ -53,7 +53,7 @@ function BrowseJobsView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      <DemoHeader
+      <Header
         title={t.jobs.title}
         language={language}
         onLanguageChange={setLanguage}

@@ -11,7 +11,7 @@ import type { Language } from '../../i18n';
 import { formatBotHtml, formatTimestamp, getBotText } from './chatHelpers';
 import type { ChatMessage } from './types';
 import { usePersistedMessages } from './usePersistedMessages';
-import DemoHeader from '../../components/DemoHeader';
+import Header from '../../components/Header';
 
 function ChatView() {
   const navigate = useNavigate();
@@ -117,7 +117,7 @@ function ChatView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      <DemoHeader
+      <Header
         title={t.chat.title}
         subtitle={t.chat.subtitle}
         language={language}

@@ -41,26 +41,10 @@ export default function LanguageSelect({ value, onChange, className, dropdownAli
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label="Select language"
-        className={[
-          'flex items-center gap-1.5 bg-gray-900 text-white border border-gray-700 rounded-lg',
-          'focus:outline-none focus:ring-2 focus:ring-blue-600 transition-colors hover:bg-gray-800',
-          className ?? 'px-2 py-1 text-xs sm:text-sm',
-        ].join(' ')}
+        className={`flex items-center justify-center gap-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all duration-300 ${className ?? 'w-8 h-8 sm:w-auto sm:px-2.5'} ${open ? 'bg-white/15 border-white/30 text-white' : 'bg-white/5 border-white/15 text-white/60 hover:bg-white/10 hover:border-white/30 hover:text-white'}`}
       >
-        {(() => { const Flag = FLAG_COMPONENTS[value]; return <Flag className="w-5 h-auto rounded-sm" title={t[value]} />; })()}
-        {open && (
-          <>
-            <span>{t[value]}</span>
-            <svg
-              className="w-3 h-3 shrink-0 rotate-180"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </>
-        )}
+        {(() => { const Flag = FLAG_COMPONENTS[value]; return <Flag className="w-5 h-auto rounded-sm shrink-0" title={t[value]} />; })()}
+        <span className="hidden sm:inline text-xs font-medium">{t[value]}</span>
       </button>
 
       {open && (

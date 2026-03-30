@@ -4,7 +4,7 @@ import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import type { Language } from './i18n';
 import { getVisitorsToday, getVisitorsTotal, trackVisitor } from './api/visitorsApi';
 import AuthModal from './AuthModal';
-import NavBar from './components/NavBar';
+import Header from './components/Header';
 const faceJa = '/profile_image.webp';
 import ShootingStars from './components/ShootingStars';
 import { DEMOS } from './demos';
@@ -98,9 +98,9 @@ function LandingView() {
   }, [searchParams, setSearchParams]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-14">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-14 md:pt-24">
       <ShootingStars />
-      <NavBar onLoginClick={() => setIsModalOpen(true)} />
+      <Header onLoginClick={() => setIsModalOpen(true)} />
 
       {/* Hero Section */}
       <header className="grow flex items-center justify-center px-4 py-12 sm:py-16">

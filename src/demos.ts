@@ -9,7 +9,8 @@ export type DemoLabelKey =
   | 'resumeBuilderCta'
   | 'invoiceToolCta'
   | 'jussispaceRentalCta'
-  | 'jussilogBackendCta';
+  | 'jussilogBackendCta'
+  | 'jusspressCta';
 
 export type DemoSubtitleKey =
   | 'chatSubtitle'
@@ -19,7 +20,8 @@ export type DemoSubtitleKey =
   | 'resumeBuilderSubtitle'
   | 'invoiceToolSubtitle'
   | 'jussispaceRentalSubtitle'
-  | 'jussilogBackendSubtitle';
+  | 'jussilogBackendSubtitle'
+  | 'jusspressSubtitle';
 
 export interface DemoBadge {
   label: string;
@@ -154,6 +156,20 @@ export const DEMOS: Demo[] = [
       { label: 'PHP', colorClass: 'bg-indigo-400/15 text-indigo-300 font-semibold' },
       { label: 'Laravel', colorClass: 'bg-red-400/15 text-red-300 font-semibold' },
       { label: 'PDF Export', colorClass: 'bg-yellow-400/15 text-yellow-300 font-medium' },
+    ],
+  },
+  {
+    id: 'jussipress',
+    path: '',
+    externalUrl: 'https://jussipress-ai.jussialanen.com/',
+    labelKey: 'jusspressCta',
+    subtitleKey: 'jusspressSubtitle',
+    iconColor: 'text-blue-400',
+    iconPath: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+    badges: [
+      { label: 'WordPress', colorClass: 'bg-blue-400/15 text-blue-300 font-semibold' },
+      { label: 'PHP', colorClass: 'bg-indigo-400/15 text-indigo-300 font-semibold' },
+      { label: 'AI', colorClass: 'bg-amber-400/15 text-amber-300 font-medium' },
     ],
   },
   {

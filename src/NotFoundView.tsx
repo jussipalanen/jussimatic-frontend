@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import NavBar from './components/NavBar';
+import Header from './components/Header';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import type { Language } from './i18n';
 
@@ -17,7 +17,7 @@ export default function NotFoundView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <NavBar />
+      <Header />
       <main className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
         <p className="text-8xl font-bold text-white/10 select-none mb-2">404</p>
         <h1 className="text-2xl font-bold text-white mb-2">{t.heading}</h1>
