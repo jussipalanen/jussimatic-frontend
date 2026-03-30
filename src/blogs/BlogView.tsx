@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getBlog } from '../api/blogsApi';
 import type { Blog } from '../api/blogsApi';
-import NavBar from '../components/NavBar';
+import Header from '../components/Header';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 import DOMPurify from 'dompurify';
@@ -85,8 +85,8 @@ function BlogView() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-14">
-      <NavBar />
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-14 md:pt-24">
+      <Header />
 
       <main className="grow p-6">
         <div className="max-w-3xl mx-auto">

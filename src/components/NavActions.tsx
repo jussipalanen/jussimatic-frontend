@@ -6,7 +6,7 @@ import { getRoleAccess } from '../utils/authUtils';
 import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 import LanguageSelect from './LanguageSelect';
-import UserEditModal from '../demo/ecommerce/components/UserEditModal';
+import UserEditModal from './UserEditModal';
 import { DEMOS } from '../demos';
 
 /**
@@ -174,13 +174,12 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
         <button
           ref={mobileMenuButtonRef}
           onClick={() => setShowMobileMenu((v) => !v)}
-          className={`sm:hidden flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm transition-colors ${showMobileMenu ? 'text-white bg-white/15' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+          className={`sm:hidden flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${showMobileMenu ? 'text-white bg-white/15 border-white/30' : 'text-white/60 bg-white/5 border-white/15 hover:text-white hover:bg-white/10 hover:border-white/30'}`}
           aria-label={t.landing.menu}
         >
           <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
-          {t.landing.menu}
         </button>
 
         {/* Desktop projects dropdown */}
@@ -229,8 +228,8 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
           title={animatedBg ? t.landing.animatedBgDisable : t.landing.animatedBgEnable}
           aria-pressed={animatedBg}
           className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${animatedBg
-              ? 'border-amber-400/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:border-amber-400/70'
-              : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
+            ? 'border-amber-400/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:border-amber-400/70'
+            : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
             }`}
         >
           {animatedBg ? (
@@ -352,7 +351,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
                 className="fixed inset-0 z-50 sm:hidden flex flex-col bg-gray-900 overflow-y-auto"
               >
                 <div className="px-4 border-b border-gray-700">
-                  <div className="flex items-center justify-between py-4">
+                  <div className="flex items-center justify-between py-2">
                     <div>
                       <div className="font-medium text-white">{getFullName()}</div>
                       {getEmail() && (

@@ -24,7 +24,7 @@ import type {
   TemplateThemeOption,
   WorkExperience,
 } from '../../api/resumesApi';
-import DemoHeader from '../../components/DemoHeader';
+import Header from '../../components/Header';
 import SkillCategorySelect from '../../components/SkillCategorySelect';
 
 // ---------------------------------------------------------------------------
@@ -1061,7 +1061,7 @@ function ResumeToolView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <DemoHeader
+      <Header
         containerClassName="max-w-6xl mx-auto"
         title={t.demoPageTitle}
         language={language}

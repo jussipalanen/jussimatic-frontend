@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import type { VantaaJob } from '../types';
 
 interface UseJobsFilterReturn {
@@ -13,23 +13,19 @@ interface UseJobsFilterReturn {
 export function useJobsFilter(jobs: VantaaJob[]): UseJobsFilterReturn {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [filteredJobs, setFilteredJobs] = useState<VantaaJob[]>([]);
-
-  useEffect(() => {
+  const filteredJobs = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
-    
-    const filtered = jobs.filter((job) => {
+
+    return jobs.filter((job) => {
       const matchesSearch = !query ||
         job.tyotehtava.toLowerCase().includes(query) ||
         job.organisaatio.toLowerCase().includes(query);
-      
+
       const matchesCategory = !selectedCategory ||
         job.ammattiala === selectedCategory;
-      
+
       return matchesSearch && matchesCategory;
     });
-    
-    setFilteredJobs(filtered);
   }, [jobs, searchQuery, selectedCategory]);
 
   const handleClearSearch = () => {

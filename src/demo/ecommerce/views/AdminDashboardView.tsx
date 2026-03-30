@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMe } from '../../../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
-import AdminHeader from '../components/AdminHeader';
+import AdminHeader from '../../../components/AdminHeader';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
 import type { Language } from '../../../i18n';
 

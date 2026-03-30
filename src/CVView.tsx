@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import NavBar from './components/NavBar';
+import Header from './components/Header';
 import Breadcrumb from './components/Breadcrumb';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import type { Language } from './i18n';
@@ -230,9 +230,9 @@ export default function CVView() {
 
   return (
     <div className="min-h-screen text-white">
-      <NavBar />
+      <Header />
 
-      <main className="max-w-4xl mx-auto px-4 pt-24 pb-20 sm:px-6">
+      <main className="max-w-4xl mx-auto px-4 pt-14 md:pt-24 pb-20 sm:px-6">
         <div className="mb-8">
           <Breadcrumb
             items={[{ label: tUi.breadcrumbHome, onClick: () => navigate('/') }]}

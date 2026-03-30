@@ -32,7 +32,7 @@ import type {
   TemplateThemeOption,
   WorkExperience,
 } from '../../api/resumesApi';
-import NavBar from '../../components/NavBar';
+import Header from '../../components/Header';
 import SkillCategorySelect from '../../components/SkillCategorySelect';
 
 // ---------------------------------------------------------------------------
@@ -417,6 +417,7 @@ function PersonalSection({
 
   useEffect(() => {
     if (!photoFile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreviewUrl(null);
       return;
     }
@@ -1697,9 +1698,9 @@ function ResumeFormView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <NavBar />
+      <Header />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 pb-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-14 md:pt-24 pb-12">
         {/* Page header */}
         <div className="mb-6">
           {/* Breadcrumb row */}

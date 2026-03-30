@@ -6,7 +6,7 @@ import { fetchOrderById, fetchAllOrders } from '../../../api/ordersApi';
 import type { Order } from '../../../api/ordersApi';
 import { getMe } from '../../../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
-import AdminHeader from '../components/AdminHeader';
+import AdminHeader from '../../../components/AdminHeader';
 import { Pagination } from '../../../components/Pagination';
 import CountrySelect from '../../../components/CountrySelect';
 import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../../../i18n';
@@ -523,6 +523,7 @@ function AdminInvoicesView() {
     };
 
     loadInvoices();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const filteredInvoices = useMemo(() => {

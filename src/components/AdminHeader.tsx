@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { APP_NAME } from '../../../constants';
-import NavActions from '../../../components/NavActions';
+import { APP_NAME } from '../constants';
+import NavActions from './NavActions';
 
 interface AdminHeaderProps {
   title: string;

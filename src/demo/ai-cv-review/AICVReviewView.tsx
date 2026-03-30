@@ -7,7 +7,7 @@ import {
   translations,
 } from '../../i18n';
 import type { Language } from '../../i18n';
-import DemoHeader from '../../components/DemoHeader';
+import Header from '../../components/Header';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_FILE_TYPES = [
@@ -157,7 +157,7 @@ function AICVReviewView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      <DemoHeader
+      <Header
         title={t.title}
         language={language}
         onLanguageChange={setLanguage}

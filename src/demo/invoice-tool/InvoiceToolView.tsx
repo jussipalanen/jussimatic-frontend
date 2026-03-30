@@ -6,7 +6,7 @@ import { exportInvoicePdfPublic, exportInvoiceHtmlPublic, fetchInvoiceOptions, s
 import type { InvoiceExportPayload, InvoiceStatusOption, InvoiceItemTypeOption } from '../../api/invoicesApi';
 import { fetchTaxRates } from '../../api/productsApi';
 import type { TaxRate } from '../../api/productsApi';
-import DemoHeader from '../../components/DemoHeader';
+import Header from '../../components/Header';
 import CountrySelect from '../../components/CountrySelect';
 
 // ---------------------------------------------------------------------------
@@ -315,7 +315,7 @@ export default function InvoiceToolView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <DemoHeader
+      <Header
         containerClassName="max-w-3xl mx-auto"
         title={tInv.demoPageTitle}
         language={language}
