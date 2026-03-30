@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2026-03-30
+
+### Added
+- **JussiPress demo entry**: New external project card in the Projects & Demos dropdown and modal linking to `jussipress-ai.jussialanen.com`. Badges: WordPress, PHP, AI. Translated in both EN and FI. `jusspressCta` and `jusspressSubtitle` keys added to `DemoLabelKey`, `DemoSubtitleKey`, and `i18n.ts`.
+
+### Changed
+- **`DemoHeader` → `Header` (unified component)**: `DemoHeader` and `NavBar` merged into a single `Header` component (`src/components/Header.tsx`). When `title` prop is provided it renders in breadcrumb mode (relative positioning); otherwise it renders as the fixed top navbar. All 13 view files updated to import `Header` instead of their respective component. `NavBar.tsx` and `DemoHeader.tsx` removed.
+- **Header logo — responsive sizing**: Logo height changed from a fixed `h-20` to `h-10 md:h-20` so the logo fits comfortably alongside nav actions on mobile without crowding the layout.
+- **Page top-padding — responsive offset**: All pages using the fixed header updated from mixed `pt-14` / `pt-20` / `pt-24` values to a unified `pt-14 md:pt-24` matching the responsive header height at each breakpoint.
+- **Hamburger menu button redesigned**: Label text removed; button restyled to `w-8 h-8 rounded-lg border` matching the shooting star toggle and language select buttons. Active/inactive states use `border-white/30 bg-white/15` and `border-white/15 bg-white/5` respectively.
+- **`LanguageSelect` trigger button — desktop label**: Button is now `w-8 h-8` icon-only on mobile and auto-widens on `sm+` to show the selected language name next to the flag (`gap-2 px-2.5`). Open/closed state reflected via border and background classes consistent with other nav icon buttons.
+- **`LanguageSelect` — gap always applied**: `gap-2` moved to the base class so it applies in all contexts including the ecommerce header, which passes a custom `className` that previously overrode the default gap.
+- **`LanguageSelect` — className conflict resolved**: Removed duplicate `text-white` from the base class string; text color is now controlled exclusively by the open/closed ternary, preventing Tailwind class conflicts.
+
+### Fixed
+- **Unused `year` variable**: Removed `const year = new Date().getFullYear()` from `LandingView.tsx` and `BrowseJobsView.tsx` where it was declared but never referenced, resolving `@typescript-eslint/no-unused-vars` lint errors.
+
 ## [1.1.2] - 2026-03-22
 
 ### Added

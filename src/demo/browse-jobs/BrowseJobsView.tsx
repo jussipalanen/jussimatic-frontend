@@ -18,7 +18,6 @@ import { Pagination } from './components/Pagination';
 
 function BrowseJobsView() {
   const navigate = useNavigate();
-  const year = new Date().getFullYear();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
 

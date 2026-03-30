@@ -12,7 +12,6 @@ import { DEMOS } from './demos';
 function LandingView() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const year = new Date().getFullYear();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
   const [isModalOpen, setIsModalOpen] = useState(() => searchParams.get('auth') === 'login');
