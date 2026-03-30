@@ -4,7 +4,7 @@ import type { BlogCategory } from '../api/blogsApi';
 import { getMe } from '../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
 import { BlogCategoryModal } from '../components/BlogCategoryModal';
-import AdminHeader from '../demo/ecommerce/components/AdminHeader';
+import AdminHeader from '../components/AdminHeader';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 

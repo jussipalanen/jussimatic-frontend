@@ -15,7 +15,6 @@ import DemoHeader from '../../components/DemoHeader';
 import { SearchForm } from './components/SearchForm';
 import { JobList } from './components/JobList';
 import { Pagination } from './components/Pagination';
-import { Footer } from './components/Footer';
 
 function BrowseJobsView() {
   const navigate = useNavigate();
@@ -148,8 +147,6 @@ function BrowseJobsView() {
           )}
         </div>
       </main>
-
-      <Footer year={year} footerText={t.footer} />
     </div>
   );
 }

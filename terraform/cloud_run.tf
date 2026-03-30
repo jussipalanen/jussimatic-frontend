@@ -30,6 +30,10 @@ resource "google_cloud_run_v2_service" "frontend" {
         value = var.vite_jussilog_backend_storage_base_url
       }
       env {
+        name  = "VITE_JUSSILOG_BACKEND_DOCS_URL"
+        value = var.vite_jussilog_backend_docs_url
+      }
+      env {
         name  = "VITE_JUSSI_AIBOT_API_URL"
         value = var.vite_jussi_aibot_api_url
       }

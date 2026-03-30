@@ -6,7 +6,7 @@ import { getRoleAccess } from '../utils/authUtils';
 import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 import LanguageSelect from './LanguageSelect';
-import UserEditModal from '../demo/ecommerce/components/UserEditModal';
+import UserEditModal from './UserEditModal';
 import { DEMOS } from '../demos';
 
 /**

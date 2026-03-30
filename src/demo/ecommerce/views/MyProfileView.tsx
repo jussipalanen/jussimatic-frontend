@@ -4,7 +4,7 @@ import { getMe } from '../../../api/authApi';
 import { getRoleAccess } from '../../../utils/authUtils';
 import { getCart } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
-import UserEditModal from '../components/UserEditModal';
+import UserEditModal from '../../../components/UserEditModal';
 import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../../../i18n';
 import type { UserSummary } from '../../../api/usersApi';
 

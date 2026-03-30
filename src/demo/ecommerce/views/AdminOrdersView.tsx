@@ -5,7 +5,7 @@ import { getMe } from '../../../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
 import { fetchProductById } from '../../../api/productsApi';
 import type { Order } from '../../../api/ordersApi';
-import AdminHeader from '../components/AdminHeader';
+import AdminHeader from '../../../components/AdminHeader';
 import CountrySelect from '../../../components/CountrySelect';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
 import type { Language } from '../../../i18n';

@@ -4,7 +4,7 @@ import { getAllBlogs, deleteBlog } from '../../../api/blogsApi';
 import type { Blog } from '../../../api/blogsApi';
 import { getMe } from '../../../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
-import AdminHeader from '../components/AdminHeader';
+import AdminHeader from '../../../components/AdminHeader';
 import { Pagination } from '../../../components/Pagination';
 import { BlogFormModal } from '../../../components/BlogFormModal';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
@@ -82,7 +82,7 @@ function AdminBlogsView() {
       }
     };
     checkAuth();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadBlogs = async (page: number = currentPage) => {
@@ -102,7 +102,7 @@ function AdminBlogsView() {
   useEffect(() => {
     if (authError) return;
     loadBlogs(currentPage);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, authError]);
 
   const handlePageChange = (page: number) => {
@@ -222,11 +222,10 @@ function AdminBlogsView() {
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="font-semibold text-white truncate">{blog.title}</span>
                         <span
-                          className={`text-xs rounded-full px-2 py-0.5 font-medium ${
-                            blog.visibility
-                              ? 'bg-green-600/20 text-green-400 border border-green-500/30'
-                              : 'bg-gray-700/50 text-gray-400 border border-gray-600/40'
-                          }`}
+                          className={`text-xs rounded-full px-2 py-0.5 font-medium ${blog.visibility
+                            ? 'bg-green-600/20 text-green-400 border border-green-500/30'
+                            : 'bg-gray-700/50 text-gray-400 border border-gray-600/40'
+                            }`}
                         >
                           {blog.visibility ? t.labelPublished : t.labelDraft}
                         </span>
