@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getCategories, deleteCategory } from '../api/blogsApi';
 import type { BlogCategory } from '../api/blogsApi';
 import { getMe } from '../api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
-import { BlogCategoryModal } from '../components/BlogCategoryModal';
-import AdminHeader from '../components/AdminHeader';
+import { getRoleAccess } from '../utils/authUtils';
+import { BlogCategoryModal } from '../modals/BlogCategoryModal';
+import Header from '../components/Header';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
 function BlogCategoriesView() {
+  const navigate = useNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminBlogs;
   const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
@@ -16,7 +18,6 @@ function BlogCategoriesView() {
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
 
   const [editingCategory, setEditingCategory] = useState<BlogCategory | null | undefined>(undefined);
   const [categoryToDelete, setCategoryToDelete] = useState<BlogCategory | null>(null);
@@ -32,13 +33,12 @@ function BlogCategoriesView() {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('auth_token');
-        if (!token) { setAuthError(t.authErrLogin); setLoading(false); return; }
+        if (!token) { navigate('/', { state: { adminAccessDenied: true } }); return; }
         const me = await getMe();
         const access = getRoleAccess(me);
-        if (!access.isAdmin && !access.isVendor) { setAuthError(PERMISSION_MESSAGE); setLoading(false); return; }
+        if (!access.isAdmin) { navigate('/', { state: { adminAccessDenied: true } }); return; }
       } catch {
-        setAuthError(t.authErrLogin);
-        setLoading(false);
+        navigate('/', { state: { adminAccessDenied: true } });
       }
     };
     checkAuth();
@@ -59,10 +59,9 @@ function BlogCategoriesView() {
   };
 
   useEffect(() => {
-    if (authError) return;
     loadCategories();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authError]);
+  }, []);
 
   const handleDelete = async () => {
     if (!categoryToDelete || deleting) return;
@@ -86,33 +85,27 @@ function BlogCategoriesView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <AdminHeader
+      <Header
         title={t.categoryListTitle}
-        backTo="/admin"
         backLabel={tDash.title}
+        onBack={() => navigate('/admin')}
       />
 
       <main className="container mx-auto px-4 py-8">
-        {authError && (
-          <div className="mx-auto max-w-2xl rounded-lg border border-yellow-500/30 bg-yellow-900/20 p-6 text-center">
-            <p className="text-lg text-yellow-300">{authError === PERMISSION_MESSAGE ? tDash.permissionDenied : authError}</p>
-          </div>
-        )}
-
-        {loading && !authError && (
+        {loading && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
             <p className="mt-4 text-gray-300">{t.loading}</p>
           </div>
         )}
 
-        {error && !loading && !authError && (
+        {error && !loading && (
           <div className="mx-auto max-w-2xl rounded-lg border border-red-500/30 bg-red-900/20 px-4 py-3 mb-4">
             <p className="text-red-300">{error}</p>
           </div>
         )}
 
-        {!loading && !authError && (
+        {!loading && (
           <div className="mx-auto max-w-4xl">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">{t.categoryListTitle}</h2>

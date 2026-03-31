@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMe } from '../../../api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
-import AdminHeader from '../../../components/AdminHeader';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../../i18n';
-import type { Language } from '../../../i18n';
+import { getMe } from '../api/authApi';
+import { getRoleAccess } from '../utils/authUtils';
+import Header from '../components/Header';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
+import type { Language } from '../i18n';
 
 function AdminDashboardView() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [authError, setAuthError] = useState<string | null>(null);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
 
@@ -26,28 +25,25 @@ function AdminDashboardView() {
   useEffect(() => {
     const loadAuth = async () => {
       setLoading(true);
-      setAuthError(null);
 
       try {
         const token = localStorage.getItem('auth_token');
 
         if (!token) {
-          setAuthError(t.authErrLogin);
-          setLoading(false);
+          navigate('/', { state: { adminAccessDenied: true } });
           return;
         }
 
         const user = await getMe();
         const access = getRoleAccess(user);
 
-        if (!access.isAdmin && !access.isVendor) {
-          setAuthError(PERMISSION_MESSAGE);
-          setLoading(false);
+        if (!access.isAdmin) {
+          navigate('/', { state: { adminAccessDenied: true } });
           return;
         }
       } catch (error) {
         console.error('Authentication failed:', error);
-        setAuthError(t.authErrLogin);
+        navigate('/', { state: { adminAccessDenied: true } });
       } finally {
         setLoading(false);
       }
@@ -58,49 +54,21 @@ function AdminDashboardView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <AdminHeader
+      <Header
         title={t.title}
-        backTo="/"
         backLabel={t.backToMain}
+        onBack={() => navigate('/')}
       />
 
       <main className="container mx-auto px-4 py-10">
-        {authError && (
-          <div className="mx-auto max-w-2xl rounded-lg border border-yellow-500/30 bg-yellow-900/20 p-6 text-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="mx-auto h-16 w-16 text-yellow-500 mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-            <p className="text-lg text-yellow-300 mb-4">{authError === PERMISSION_MESSAGE ? t.permissionDenied : authError}</p>
-            {authError !== PERMISSION_MESSAGE && (
-              <button
-                onClick={() => navigate('/demo/ecommerce/products')}
-                className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
-              >
-                {t.goToProducts}
-              </button>
-            )}
-          </div>
-        )}
-
-        {loading && !authError && (
+        {loading && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
             <p className="mt-4 text-gray-300">{t.loading}</p>
           </div>
         )}
 
-        {!loading && !authError && (
+        {!loading && (
           <div className="mx-auto max-w-4xl rounded-2xl border border-gray-700 bg-gray-800 p-8">
             <div className="flex flex-col gap-2">
               <h2 className="text-3xl font-bold">{t.heading}</h2>

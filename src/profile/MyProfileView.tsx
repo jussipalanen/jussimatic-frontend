@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMe } from '../../../api/authApi';
-import { getRoleAccess } from '../../../utils/authUtils';
-import { getCart } from '../../../utils/cartUtils';
-import EcommerceHeader from '../components/EcommerceHeader';
-import UserEditModal from '../../../components/UserEditModal';
-import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../../../i18n';
-import type { UserSummary } from '../../../api/usersApi';
+import { getMe } from '../api/authApi';
+import { getRoleAccess } from '../utils/authUtils';
+import { getCart } from '../utils/cartUtils';
+import EcommerceHeader from '../demo/ecommerce/components/EcommerceHeader';
+import UserEditModal from '../modals/UserEditModal';
+import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../i18n';
+import type { UserSummary } from '../api/usersApi';
 
 function MyProfileView() {
   const navigate = useNavigate();

@@ -33,7 +33,7 @@ export default function Header({
     // Demo mode — relative, with breadcrumb
     return (
       <>
-        <header className="relative z-10 bg-gray-900/95 backdrop-blur-sm border-b border-white/10">
+        <header className="relative z-10 bg-gray-900/95 backdrop-blur-sm border-b border-white/10 shadow-lg">
           <div className="absolute inset-0 bg-linear-to-r from-blue-600/10 via-transparent to-purple-600/8 pointer-events-none" />
           <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-blue-500/40 to-transparent pointer-events-none" />
 
@@ -65,9 +65,11 @@ export default function Header({
 
   // Navbar mode — fixed, no breadcrumb
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-white/10">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-white/10 shadow-lg">
+      <div className="absolute inset-0 bg-linear-to-r from-blue-600/10 via-transparent to-purple-600/8 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-blue-500/40 to-transparent pointer-events-none" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between py-2">
+        <div className="relative flex items-center justify-between py-2">
           <button
             onClick={() => navigate('/')}
             aria-label="Go to homepage"

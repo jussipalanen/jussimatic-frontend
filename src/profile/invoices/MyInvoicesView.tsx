@@ -136,7 +136,7 @@ export default function MyInvoicesView() {
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-14 md:pt-24 pb-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-20 md:pt-32 pb-12">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white">{t.pageTitle}</h1>

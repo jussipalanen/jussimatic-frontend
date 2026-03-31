@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { loginUser, loginWithGoogle, registerUser, requestPasswordReset } from './api/authApi';
-import { getStoredLanguage, translations, type Language } from './i18n';
+import { loginUser, loginWithGoogle, registerUser, requestPasswordReset } from '../api/authApi';
+import { getStoredLanguage, translations, type Language } from '../i18n';
 
 type AuthTab = 'login' | 'register' | 'forgot';
 
