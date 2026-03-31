@@ -4,6 +4,8 @@ A React + TypeScript portfolio application showcasing real-world integrations wi
 
 [![CI](https://github.com/jussipalanen/jussimatic-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/jussipalanen/jussimatic-frontend/actions/workflows/ci.yml)
 
+**Production:** [www.jussialanen.com](https://www.jussialanen.com/) &nbsp;|&nbsp; **Local dev:** [localhost:5137](http://localhost:5137)
+
 ## Features
 
 - 🛒 **E-commerce Demo**: Product browsing, cart, checkout, and order management integrated with a Laravel PHP backend. Role-based access for admin, vendor, and customer roles.
