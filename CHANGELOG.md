@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.4] - 2026-03-31
+
+### Added
+- **Admin link in account dropdown**: A new "Admin" / "Ylläpito" link appears in the NavBar user-menu (desktop dropdown and mobile overlay) for users with the admin role, linking directly to `/admin`.
+- **Clear Cart button**: A "Clear Cart" button is now shown in the cart totals section below the checkout button. Clicking it shows a confirmation prompt before emptying the cart.
+
+### Changed
+- **Admin views moved to `src/admin/`**: `AdminDashboardView`, `AdminOrdersView`, `AdminUsersView`, `AdminInvoicesView`, `AdminBlogsView` moved from `src/demo/ecommerce/views/` to `src/admin/`. `AdminHeader.tsx` moved from `src/components/` to `src/admin/`.
+- **Profile views moved to `src/profile/`**: `MyOrdersView` and `MyProfileView` moved from `src/demo/ecommerce/views/` to `src/profile/`. All import paths updated.
+- **Modal components moved to `src/modals/`**: `AuthModal`, `BlogCategoryModal`, `BlogFormModal`, and `UserEditModal` consolidated from `src/` and `src/components/` into a new `src/modals/` directory. All import paths updated across all consumers.
+- **Admin access control hardened**: All admin views (`AdminDashboardView`, `AdminOrdersView`, `AdminUsersView`, `AdminInvoicesView`, `AdminBlogsView`, `BlogCategoriesView`) now redirect to `/` with `{ state: { adminAccessDenied: true } }` for any auth failure or non-admin role. The yellow vendor-fallback warning block removed from all views.
+- **Admin access denied banner**: Landing page displays a dismissible red alert when redirected from a restricted admin page. Location state is cleared on mount so the banner does not reappear on refresh or back navigation.
+- **Header — gradient & shadow**: The fixed navbar now includes a subtle blue-to-purple gradient overlay and a glowing bottom border line. A `shadow-lg` applied to both navbar and demo/title modes.
+- **EcommerceHeader height matched**: Inner padding changed from `py-3` to `py-2` and a logo image added (`h-10 md:h-20`) so the e-commerce header matches the height of all other headers.
+- **`BlogCategoriesView` — uses unified `Header`**: Replaced `AdminHeader` with the shared `Header` component, consistent with all other admin views.
+- **Cart toast z-index raised**: The "added to cart" toast notification raised from `z-50` to `z-[200]` so it renders above all product detail and image modals.
+
+### Fixed
+- **`AdminOrdersView` — auto-opens first order on load**: Removed the `setSelectedOrder(enrichedOrders[0])` call that was intentionally but incorrectly auto-opening the first order detail modal whenever orders loaded.
+- **Unused `tDash` variables**: Removed dead `tDash` declarations in `AdminOrdersView`, `AdminInvoicesView`, and `AdminUsersView` that were assigned but never referenced, resolving `@typescript-eslint/no-unused-vars` lint errors.
+
 ## [1.1.3] - 2026-03-30
 
 ### Added

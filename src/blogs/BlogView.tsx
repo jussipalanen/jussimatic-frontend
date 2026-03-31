@@ -85,7 +85,7 @@ function BlogView() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-14 md:pt-24">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-20 md:pt-32">
       <Header />
 
       <main className="grow p-6">

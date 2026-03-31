@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ECOMMERCE_MAIN_TITLE } from '../../../constants';
 import { getMe, logoutUser } from '../../../api/authApi';
 import { getRoleAccess } from '../../../utils/authUtils';
-import AuthModal from '../../../AuthModal';
+import AuthModal from '../../../modals/AuthModal';
 import { getStoredLanguage, setStoredLanguage, translations, type Language } from '../../../i18n';
 import LanguageSelect from '../../../components/LanguageSelect';
 
@@ -96,12 +96,15 @@ function EcommerceHeader({
 
   return (
     <>
-      <header className="bg-gray-900/95 backdrop-blur-sm border-b border-white/10 sticky top-0 z-10">
+      <header className="bg-gray-900/95 backdrop-blur-sm border-b border-white/10 shadow-lg sticky top-0 z-10">
         <div className="absolute inset-0 bg-linear-to-r from-blue-600/10 via-transparent to-purple-600/8 pointer-events-none" />
         <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-blue-500/40 to-transparent pointer-events-none" />
-        <div className="relative max-w-screen-2xl mx-auto px-4 sm:px-6 py-3">
+        <div className="relative max-w-screen-2xl mx-auto px-4 sm:px-6 py-2">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-baseline gap-2">
+            <div className="flex min-w-0 items-center gap-3">
+              <button onClick={() => navigate('/')} aria-label="Go to homepage" className="cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 shrink-0">
+                <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" />
+              </button>
               <h1 className="flex min-w-0 items-baseline gap-2 flex-wrap">
                 <span className="text-lg font-bold text-white truncate">{ECOMMERCE_MAIN_TITLE}</span>
                 <span className="text-sm font-medium text-white/50 truncate">/ {title}</span>

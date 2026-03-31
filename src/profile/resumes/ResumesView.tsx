@@ -153,7 +153,7 @@ function ResumesView() {
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-14 md:pt-24 pb-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-20 md:pt-32 pb-12">
         {/* Page header */}
         <div className="flex items-center justify-between mb-6">
           <div>

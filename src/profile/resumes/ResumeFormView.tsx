@@ -1700,7 +1700,7 @@ function ResumeFormView() {
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-14 md:pt-24 pb-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 md:pt-32 pb-12">
         {/* Page header */}
         <div className="mb-6">
           {/* Breadcrumb row */}

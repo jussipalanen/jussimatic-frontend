@@ -1,9 +1,9 @@
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import type { Language } from './i18n';
 import { getVisitorsToday, getVisitorsTotal, trackVisitor } from './api/visitorsApi';
-import AuthModal from './AuthModal';
+import AuthModal from './modals/AuthModal';
 import Header from './components/Header';
 const faceJa = '/profile_image.webp';
 import ShootingStars from './components/ShootingStars';
@@ -11,8 +11,17 @@ import { DEMOS } from './demos';
 
 function LandingView() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const [adminDenied, setAdminDenied] = useState(() => !!(location.state as { adminAccessDenied?: boolean } | null)?.adminAccessDenied);
+
+  useEffect(() => {
+    if (adminDenied) {
+      window.history.replaceState({}, '', location.pathname + location.search);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
   const [isModalOpen, setIsModalOpen] = useState(() => searchParams.get('auth') === 'login');
   const [showProjectsModal, setShowProjectsModal] = useState(false);
@@ -97,12 +106,28 @@ function LandingView() {
   }, [searchParams, setSearchParams]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-14 md:pt-24">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <ShootingStars />
       <Header onLoginClick={() => setIsModalOpen(true)} />
 
+      {adminDenied && (
+        <div className="fixed top-20 md:top-32 inset-x-0 z-40 flex justify-center px-4 pointer-events-none">
+          <div className="pointer-events-auto flex items-start gap-3 w-full max-w-lg rounded-lg border border-red-500/40 bg-red-900/80 backdrop-blur-sm px-4 py-3 text-sm text-red-200 shadow-lg">
+            <svg className="w-5 h-5 shrink-0 mt-0.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            <span className="flex-1">{t.landing.adminAccessDenied}</span>
+            <button onClick={() => setAdminDenied(false)} className="text-red-400 hover:text-red-200 transition-colors" aria-label="Dismiss">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
-      <header className="grow flex items-center justify-center px-4 py-12 sm:py-16">
+      <header className="grow flex items-center justify-center px-4 py-12 sm:py-16 mt-20 md:mt-32">
         <div className="text-center w-full max-w-3xl">
           <h1 className="text-3xl sm:text-5xl font-bold mb-6">{t.landing.title}</h1>
 
