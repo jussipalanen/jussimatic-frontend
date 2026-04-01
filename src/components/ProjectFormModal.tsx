@@ -86,8 +86,8 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
   }, []);
 
   useEffect(() => {
-    getProjectCategories().then(setCategories).catch(() => {});
-    getProjectTags().then(setAvailableTags).catch(() => {});
+    getProjectCategories().then(setCategories).catch(() => { });
+    getProjectTags().then(setAvailableTags).catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -217,9 +217,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
     try {
       const payload: ProjectFormData = {
         title: { en: form.title.en.trim(), fi: form.title.fi.trim() || undefined },
-        slug: (form.slug.en.trim() || form.slug.fi.trim())
-          ? { en: form.slug.en.trim() || undefined, fi: form.slug.fi.trim() || undefined }
-          : undefined,
+        slug: form.slug.en.trim() ? { en: form.slug.en.trim(), fi: form.slug.fi.trim() || undefined } : undefined,
         short_description: (form.short_description.en.trim() || form.short_description.fi.trim())
           ? { en: form.short_description.en.trim(), fi: form.short_description.fi.trim() || undefined }
           : undefined,
@@ -287,11 +285,10 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
                   key={lang}
                   type="button"
                   onClick={() => setActiveLang(lang)}
-                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-                    activeLang === lang
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
+                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${activeLang === lang
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:text-white'
+                    }`}
                 >
                   {lang.toUpperCase()}
                 </button>

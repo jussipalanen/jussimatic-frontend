@@ -110,7 +110,7 @@ function AdminProjectFormView() {
           live_url: project.live_url ?? '',
           github_url: project.github_url ?? '',
           sort_order: project.sort_order != null ? String(project.sort_order) : '',
-          tags: project.tags?.map((t) => t.name) ?? [],
+          tags: project.tags?.map((t) => t.title) ?? [],
           tagInput: '',
           visibility: project.visibility ?? 'show',
           category_id: project.categories?.[0]?.id != null ? String(project.categories[0].id) : '',
@@ -170,16 +170,16 @@ function AdminProjectFormView() {
     setFormError(null);
     try {
       const payload: ProjectFormData = {
-        title: form.title.trim(),
-        slug: form.slug.trim() || undefined,
-        short_description: form.short_description.trim() || undefined,
-        long_description: form.long_description.trim() || undefined,
+        title: { en: form.title.trim() },
+        slug: form.slug ? { en: form.slug.trim() } : undefined,
+        short_description: form.short_description ? { en: form.short_description.trim() } : undefined,
+        long_description: form.long_description ? { en: form.long_description.trim() } : undefined,
         live_url: form.live_url.trim() || undefined,
         github_url: form.github_url.trim() || undefined,
         sort_order: form.sort_order.trim() ? Number(form.sort_order) : undefined,
-        tags: form.tags,
+        tag_ids: form.tags.map((t) => Number(t)),
         visibility: form.visibility,
-        category_id: form.category_id ? Number(form.category_id) : null,
+        category_ids: form.category_id ? [Number(form.category_id)] : [],
         image_file: form.image_file ?? undefined,
       };
       if (id) {
