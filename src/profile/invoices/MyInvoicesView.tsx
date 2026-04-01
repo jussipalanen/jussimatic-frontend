@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMyInvoices, getInvoice, exportInvoicePdf, exportInvoiceHtml } from '../../api/invoicesApi';
 import type { Invoice } from '../../api/invoicesApi';
-import NavBar from '../../components/NavBar';
+import Header from '../../components/Header';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
 import type { Language } from '../../i18n';
 
@@ -73,6 +73,7 @@ export default function MyInvoicesView() {
       return;
     }
     loadInvoices();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const loadInvoices = async () => {
@@ -133,9 +134,9 @@ export default function MyInvoicesView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <NavBar />
+      <Header />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-20 pb-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-20 md:pt-32 pb-12">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white">{t.pageTitle}</h1>

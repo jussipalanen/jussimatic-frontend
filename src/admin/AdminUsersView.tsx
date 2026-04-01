@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deleteUser, fetchAllUsers } from '../api/usersApi';
 import type { UserSummary } from '../api/usersApi';
-import AdminHeader from '../demo/ecommerce/components/AdminHeader';
+import Header from '../components/Header';
 import { getMe } from '../api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
-import UserEditModal from '../demo/ecommerce/components/UserEditModal';
+import { getRoleAccess } from '../utils/authUtils';
+import UserEditModal from '../modals/UserEditModal';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
@@ -50,7 +50,6 @@ function AdminUsersView() {
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [userToDelete, setUserToDelete] = useState<{ id: number; name: string } | null>(null);
@@ -68,7 +67,6 @@ function AdminUsersView() {
   } | null>(null);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminUsers;
-  const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
 
   useEffect(() => {
     const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
@@ -76,17 +74,11 @@ function AdminUsersView() {
     return () => window.removeEventListener('jussimatic-language-change', handler);
   }, []);
 
-  const roleLabels: Record<string, string> = {
-    admin: t.roleAdmin,
-    vendor: t.roleVendor,
-    customer: t.roleCustomer,
-  };
-
   useEffect(() => {
     const loadUsers = async () => {
       setLoading(true);
       setError(null);
-      setAuthError(null);
+
 
       try {
         const me = await getMe();
@@ -95,9 +87,8 @@ function AdminUsersView() {
         setCurrentUserId(me?.user_id ?? null);
         setCurrentUserRole(access.isAdmin ? 'admin' : access.isVendor ? 'vendor' : 'customer');
 
-        if (!access.isAdmin && !access.isVendor) {
-          setAuthError(PERMISSION_MESSAGE);
-          setLoading(false);
+        if (!access.isAdmin) {
+          navigate('/', { state: { adminAccessDenied: true } });
           return;
         }
 
@@ -110,18 +101,24 @@ function AdminUsersView() {
         }
       } catch (err) {
         console.error('Authentication failed:', err);
-        setAuthError(t.authErrLogin);
+        navigate('/', { state: { adminAccessDenied: true } });
       } finally {
         setLoading(false);
       }
     };
 
     loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const canManageUsers = currentUserRole === 'admin' || currentUserRole === 'administrator';
 
   const rows = useMemo(() => {
+    const roleLabels: Record<string, string> = {
+      admin: t.roleAdmin,
+      vendor: t.roleVendor,
+      customer: t.roleCustomer,
+    };
     return users.map((user) => {
       const firstName = getUserNameValue(user, 'first') || 'N/A';
       const lastName = getUserNameValue(user, 'last') || 'N/A';
@@ -144,7 +141,7 @@ function AdminUsersView() {
         roleLabel,
       };
     });
-  }, [users, language]);
+  }, [users, t]);
 
   const closeEditModal = () => {
     setShowEditModal(false);
@@ -226,59 +223,31 @@ function AdminUsersView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <AdminHeader
+      <Header
         title={t.title}
-        backTo="/admin"
         backLabel={translations[language].adminDashboard.title}
+        onBack={() => navigate('/admin')}
       />
 
       <main className="container mx-auto px-4 py-8">
-        {authError && (
-          <div className="mx-auto max-w-2xl rounded-lg border border-yellow-500/30 bg-yellow-900/20 p-6 text-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="mx-auto h-16 w-16 text-yellow-500 mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-            <p className="text-lg text-yellow-300 mb-4">{authError === PERMISSION_MESSAGE ? tDash.permissionDenied : authError}</p>
-            {authError !== PERMISSION_MESSAGE && (
-              <button
-                onClick={() => navigate('/demo/ecommerce/products')}
-                className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
-              >
-                {t.goToProducts}
-              </button>
-            )}
-          </div>
-        )}
-
-        {loading && !authError && (
+        {loading && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
             <p className="mt-4 text-gray-300">{t.loading}</p>
           </div>
         )}
 
-        {error && !loading && !authError && (
+        {error && !loading && (
           <div className="mx-auto max-w-2xl rounded-lg border border-red-500/30 bg-red-900/20 px-4 py-3 text-center">
             <p className="text-red-300">{error}</p>
           </div>
         )}
 
-        {!loading && !error && !authError && rows.length === 0 && (
+        {!loading && !error && rows.length === 0 && (
           <div className="text-center py-10 text-gray-400">{t.empty}</div>
         )}
 
-        {!loading && !error && !authError && rows.length > 0 && (
+        {!loading && !error && rows.length > 0 && (
           <div className="mx-auto max-w-4xl flex flex-col gap-3">
             {rows.map((row) => {
               const initials = [row.firstName, row.lastName]

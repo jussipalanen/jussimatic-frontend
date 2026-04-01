@@ -6,7 +6,7 @@ import { getRoleAccess } from '../utils/authUtils';
 import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 import LanguageSelect from './LanguageSelect';
-import UserEditModal from '../demo/ecommerce/components/UserEditModal';
+import UserEditModal from '../modals/UserEditModal';
 import { DEMOS } from '../demos';
 
 /**
@@ -167,6 +167,8 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
 
   const getEmail = () => String(userData?.user?.email ?? userData?.email ?? '').trim();
 
+  const isAdmin = isLoggedIn && userData != null && getRoleAccess(userData).isAdmin;
+
   return (
     <>
       <div className="flex items-center gap-2 sm:gap-3">
@@ -174,13 +176,12 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
         <button
           ref={mobileMenuButtonRef}
           onClick={() => setShowMobileMenu((v) => !v)}
-          className={`sm:hidden flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm transition-colors ${showMobileMenu ? 'text-white bg-white/15' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+          className={`sm:hidden flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${showMobileMenu ? 'text-white bg-white/15 border-white/30' : 'text-white/60 bg-white/5 border-white/15 hover:text-white hover:bg-white/10 hover:border-white/30'}`}
           aria-label={t.landing.menu}
         >
           <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
-          {t.landing.menu}
         </button>
 
         {/* Desktop projects dropdown */}
@@ -229,8 +230,8 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
           title={animatedBg ? t.landing.animatedBgDisable : t.landing.animatedBgEnable}
           aria-pressed={animatedBg}
           className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${animatedBg
-              ? 'border-amber-400/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:border-amber-400/70'
-              : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
+            ? 'border-amber-400/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:border-amber-400/70'
+            : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
             }`}
         >
           {animatedBg ? (
@@ -329,6 +330,19 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
                       </svg>
                       {t.landing.myInvoices}
                     </button>
+
+                    {isAdmin && (
+                      <button
+                        onClick={() => { navigate('/admin'); setShowUserMenu(false); }}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                      >
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {t.landing.admin}
+                      </button>
+                    )}
                   </div>
 
                   <div className="border-t border-gray-700 py-1">
@@ -352,7 +366,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
                 className="fixed inset-0 z-50 sm:hidden flex flex-col bg-gray-900 overflow-y-auto"
               >
                 <div className="px-4 border-b border-gray-700">
-                  <div className="flex items-center justify-between py-4">
+                  <div className="flex items-center justify-between py-2">
                     <div>
                       <div className="font-medium text-white">{getFullName()}</div>
                       {getEmail() && (
@@ -399,6 +413,18 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
                     </svg>
                     {t.landing.myInvoices}
                   </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => { navigate('/admin'); setShowUserMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                    >
+                      <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {t.landing.admin}
+                    </button>
+                  )}
                 </div>
                 <div className="border-t border-gray-700 py-1">
                   <button

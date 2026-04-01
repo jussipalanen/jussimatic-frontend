@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchAllOrders, updateOrder } from '../api/ordersApi';
 import { getMe } from '../api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
+import { getRoleAccess } from '../utils/authUtils';
 import { fetchProductById } from '../api/productsApi';
 import type { Order } from '../api/ordersApi';
-import AdminHeader from '../demo/ecommerce/components/AdminHeader';
+import Header from '../components/Header';
 import CountrySelect from '../components/CountrySelect';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
@@ -101,7 +101,6 @@ function AdminOrdersView() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [authError, setAuthError] = useState<string | null>(null);
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -109,7 +108,6 @@ function AdminOrdersView() {
   const [editError, setEditError] = useState<string | null>(null);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminOrders;
-  const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
 
   useEffect(() => {
     const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
@@ -150,24 +148,22 @@ function AdminOrdersView() {
   useEffect(() => {
     const loadOrders = async () => {
       setLoading(true);
-      setAuthError(null);
+
       setOrdersError(null);
 
       try {
         const token = localStorage.getItem('auth_token');
 
         if (!token) {
-          setAuthError(t.authErrLogin);
-          setLoading(false);
+          navigate('/', { state: { adminAccessDenied: true } });
           return;
         }
 
         const user = await getMe();
         const access = getRoleAccess(user);
 
-        if (!access.isAdmin && !access.isVendor) {
-          setAuthError(PERMISSION_MESSAGE);
-          setLoading(false);
+        if (!access.isAdmin) {
+          navigate('/', { state: { adminAccessDenied: true } });
           return;
         }
 
@@ -208,10 +204,6 @@ function AdminOrdersView() {
           );
 
           setOrders(enrichedOrders);
-          // Auto-open the first order's modal on page load
-          if (enrichedOrders.length > 0) {
-            setSelectedOrder(enrichedOrders[0]);
-          }
         } catch (err) {
           console.error('Failed to load orders:', err);
           setOrdersError(t.errLoadOrders);
@@ -219,13 +211,14 @@ function AdminOrdersView() {
         }
       } catch (err) {
         console.error('Authentication failed:', err);
-        setAuthError(t.authErrLogin);
+        navigate('/', { state: { adminAccessDenied: true } });
       } finally {
         setLoading(false);
       }
     };
 
     loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const handleOrderClick = (order: Order) => {
@@ -357,59 +350,31 @@ function AdminOrdersView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <AdminHeader
+      <Header
         title={t.title}
-        backTo="/admin"
         backLabel={translations[language].adminDashboard.title}
+        onBack={() => navigate('/admin')}
       />
 
       <main className="container mx-auto px-4 py-8">
-        {authError && (
-          <div className="mx-auto max-w-2xl rounded-lg border border-yellow-500/30 bg-yellow-900/20 p-6 text-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="mx-auto h-16 w-16 text-yellow-500 mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-            <p className="text-lg text-yellow-300 mb-4">{authError === PERMISSION_MESSAGE ? tDash.permissionDenied : authError}</p>
-            {authError !== PERMISSION_MESSAGE && (
-              <button
-                onClick={() => navigate('/demo/ecommerce/products')}
-                className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
-              >
-                {t.goToProducts}
-              </button>
-            )}
-          </div>
-        )}
-
-        {loading && !authError && (
+        {loading && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
             <p className="mt-4 text-gray-300">{t.loading}</p>
           </div>
         )}
 
-        {ordersError && !authError && (
+        {ordersError && (
           <div className="mx-auto max-w-2xl rounded-lg border border-red-500/30 bg-red-900/20 px-4 py-3 text-center">
             <p className="text-red-300">{ordersError}</p>
           </div>
         )}
 
-        {!loading && !authError && !ordersError && orders.length === 0 && (
+        {!loading && !ordersError && orders.length === 0 && (
           <div className="text-center py-10 text-gray-400">{t.empty}</div>
         )}
 
-        {!loading && !authError && orders.length > 0 && (
+        {!loading && orders.length > 0 && (
           <div className="mx-auto max-w-6xl space-y-4">
             {orders.map((order, index) => (
               <div

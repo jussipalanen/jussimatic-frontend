@@ -99,6 +99,7 @@ function ProductsView() {
 
   useEffect(() => {
     loadProducts(1, appliedSearch, perPage, sortBy, sortDir);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedSearch, perPage, sortBy, sortDir]);
 
   useEffect(() => {
@@ -125,6 +126,7 @@ function ProductsView() {
     if (!canManageProducts && (activeModal === 'create' || activeModal === 'edit')) {
       closeModal();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canManageProducts, activeModal]);
 
 
@@ -576,7 +578,7 @@ function ProductsView() {
 
       {/* Cart toast — top-right */}
       {cartToast && (
-        <div className="fixed top-5 right-5 z-50 w-80 max-w-[calc(100vw-2.5rem)] rounded-xl border border-green-500/30 bg-gray-900 shadow-2xl overflow-hidden animate-in slide-in-from-right-4 fade-in duration-200">
+        <div className="fixed top-5 right-5 z-[200] w-80 max-w-[calc(100vw-2.5rem)] rounded-xl border border-green-500/30 bg-gray-900 shadow-2xl overflow-hidden animate-in slide-in-from-right-4 fade-in duration-200">
           <div className="flex items-start gap-3 px-4 py-3">
             <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500/15">
               <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

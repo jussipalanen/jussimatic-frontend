@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchOrdersByUserId } from '../../../api/ordersApi';
-import { getMe } from '../../../api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from '../../../utils/authUtils';
-import { fetchProductById } from '../../../api/productsApi';
-import { getCart } from '../../../utils/cartUtils';
-import type { Order } from '../../../api/ordersApi';
-import EcommerceHeader from '../components/EcommerceHeader';
-import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../../../i18n';
+import { fetchOrdersByUserId } from '../api/ordersApi';
+import { getMe } from '../api/authApi';
+import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
+import { fetchProductById } from '../api/productsApi';
+import { getCart } from '../utils/cartUtils';
+import type { Order } from '../api/ordersApi';
+import EcommerceHeader from '../demo/ecommerce/components/EcommerceHeader';
+import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../i18n';
 
 const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
 const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
@@ -166,6 +166,7 @@ function MyOrdersView() {
     };
 
     loadUserAndOrders();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLoginClick = () => {

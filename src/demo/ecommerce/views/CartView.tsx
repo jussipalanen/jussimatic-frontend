@@ -14,11 +14,6 @@ function CartView() {
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
 
   useEffect(() => {
-    // Refresh cart items when component mounts
-    setCartItems(getCart());
-  }, []);
-
-  useEffect(() => {
     const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
     window.addEventListener('jussimatic-language-change', handler);
     return () => window.removeEventListener('jussimatic-language-change', handler);
@@ -82,16 +77,6 @@ function CartView() {
         backLabel={t.back}
         cartCount={cartCount}
         activeNav="cart"
-        actions={
-          cartItems.length > 0 ? (
-            <button
-              onClick={handleClearCart}
-              className="rounded-lg border border-red-500/60 px-3 py-2 text-sm font-semibold text-red-300 hover:bg-red-600/20 transition-colors"
-            >
-              {t.clearCart}
-            </button>
-          ) : null
-        }
       />
 
       {/* Main Content */}
@@ -356,6 +341,12 @@ function CartView() {
                 className="mt-1 w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
               >
                 {t.proceedToCheckout}
+              </button>
+              <button
+                onClick={handleClearCart}
+                className="w-full rounded-lg border border-red-500/60 px-6 py-3 font-semibold text-red-300 hover:bg-red-600/20 transition-colors"
+              >
+                {t.clearCart}
               </button>
             </div>
           </div>

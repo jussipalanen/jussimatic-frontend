@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deleteResume, copyResume, createResumeFromJson, exportResumePdf, exportResumeHtml, exportResumeJson, getResumes, updateResume } from '../../api/resumesApi';
 import type { Resume } from '../../api/resumesApi';
-import NavBar from '../../components/NavBar';
+import Header from '../../components/Header';
 import { Pagination } from '../../components/Pagination';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
 import type { Language } from '../../i18n';
@@ -49,6 +49,7 @@ function ResumesView() {
       return;
     }
     loadResumes(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const loadResumes = async (page = 1) => {
@@ -150,9 +151,9 @@ function ResumesView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <NavBar />
+      <Header />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-20 pb-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-20 md:pt-32 pb-12">
         {/* Page header */}
         <div className="flex items-center justify-between mb-6">
           <div>

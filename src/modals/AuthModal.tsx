@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { loginUser, loginWithGoogle, registerUser, requestPasswordReset } from './api/authApi';
-import { getStoredLanguage, translations, type Language } from './i18n';
+import { loginUser, loginWithGoogle, registerUser, requestPasswordReset } from '../api/authApi';
+import { getStoredLanguage, translations, type Language } from '../i18n';
 
 type AuthTab = 'login' | 'register' | 'forgot';
 
@@ -137,7 +137,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
     } finally {
       setGoogleLoading(false);
     }
-  }, [googleLoading]);
+  }, [googleLoading, t]);
 
   useEffect(() => {
     if (!isOpen || activeTab !== 'login') return;
@@ -195,7 +195,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
       script.onload = null;
       script.onerror = null;
     };
-  }, [activeTab, googleClientId, handleGoogleLogin, isOpen]);
+  }, [activeTab, googleClientId, handleGoogleLogin, isOpen, t]);
 
   const loginErrors = useMemo(() => {
     const errors: { identifier?: string; password?: string } = {};
@@ -213,7 +213,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
       errors.password = t.errPasswordRequired;
     }
     return errors;
-  }, [loginForm, language]);
+  }, [loginForm, t]);
 
   const registerErrors = useMemo(() => {
     const errors: {
@@ -245,7 +245,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
       errors.repassword = t.errPasswordsMismatch;
     }
     return errors;
-  }, [registerForm, language]);
+  }, [registerForm, t]);
 
   const forgotErrors = useMemo(() => {
     const errors: { email?: string } = {};
@@ -256,7 +256,7 @@ function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
       if (!emailOk) errors.email = t.errEmailFormat;
     }
     return errors;
-  }, [forgotForm, language]);
+  }, [forgotForm, t]);
 
   const loginHasErrors = Object.keys(loginErrors).length > 0;
   const registerHasErrors = Object.keys(registerErrors).length > 0;

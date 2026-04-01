@@ -1,21 +1,29 @@
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import type { Language } from './i18n';
 import { getVisitorsToday, getVisitorsTotal, trackVisitor } from './api/visitorsApi';
-import AuthModal from './AuthModal';
-import NavBar from './components/NavBar';
+import AuthModal from './modals/AuthModal';
+import Header from './components/Header';
 const faceJa = '/profile_image.webp';
 import ShootingStars from './components/ShootingStars';
 import { DEMOS } from './demos';
 
 function LandingView() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const year = new Date().getFullYear();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const [adminDenied, setAdminDenied] = useState(() => !!(location.state as { adminAccessDenied?: boolean } | null)?.adminAccessDenied);
+
+  useEffect(() => {
+    if (adminDenied) {
+      window.history.replaceState({}, '', location.pathname + location.search);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(() => searchParams.get('auth') === 'login');
   const [showProjectsModal, setShowProjectsModal] = useState(false);
   const [demosViewMode, setDemosViewMode] = useState<'list' | 'grid'>('list');
   const [visitorsCount, setVisitorsCount] = useState<number | null>(null);
@@ -92,19 +100,34 @@ function LandingView() {
   useEffect(() => {
     if (searchParams.get('auth') !== 'login') return;
 
-    setIsModalOpen(true);
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('auth');
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-14">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <ShootingStars />
-      <NavBar onLoginClick={() => setIsModalOpen(true)} />
+      <Header onLoginClick={() => setIsModalOpen(true)} />
+
+      {adminDenied && (
+        <div className="fixed top-20 md:top-32 inset-x-0 z-40 flex justify-center px-4 pointer-events-none">
+          <div className="pointer-events-auto flex items-start gap-3 w-full max-w-lg rounded-lg border border-red-500/40 bg-red-900/80 backdrop-blur-sm px-4 py-3 text-sm text-red-200 shadow-lg">
+            <svg className="w-5 h-5 shrink-0 mt-0.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            <span className="flex-1">{t.landing.adminAccessDenied}</span>
+            <button onClick={() => setAdminDenied(false)} className="text-red-400 hover:text-red-200 transition-colors" aria-label="Dismiss">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
-      <header className="grow flex items-center justify-center px-4 py-12 sm:py-16">
+      <header className="grow flex items-center justify-center px-4 py-12 sm:py-16 mt-20 md:mt-32">
         <div className="text-center w-full max-w-3xl">
           <h1 className="text-3xl sm:text-5xl font-bold mb-6">{t.landing.title}</h1>
 
@@ -261,45 +284,6 @@ function LandingView() {
           </div>
         </div>
       </header>
-
-      {/* Footer */}
-      <footer className="bg-gray-800 py-6 px-4 text-center">
-        <div className="flex justify-center items-center gap-4 mb-3">
-          <a
-            href="https://github.com/jussipalanen/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-400 hover:text-white transition-colors"
-            aria-label="GitHub"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-            </svg>
-          </a>
-          <a
-            href="https://www.linkedin.com/in/jussi-alanen-38628a75/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-400 hover:text-white transition-colors"
-            aria-label="LinkedIn"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-            </svg>
-          </a>
-        </div>
-        <p className="text-gray-400">&copy; {year} Jussimatic (Jussi Alanen). {t.footer}</p>
-      </footer>
 
       {/* Projects & Demos modal */}
       {showProjectsModal && (

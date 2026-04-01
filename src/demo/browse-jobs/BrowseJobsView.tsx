@@ -11,15 +11,13 @@ import { useJobsData } from './hooks/useJobsData';
 import { useJobsFilter } from './hooks/useJobsFilter';
 import { usePagination } from './hooks/usePagination';
 import type { VantaaJob } from './types';
-import DemoHeader from '../../components/DemoHeader';
+import Header from '../../components/Header';
 import { SearchForm } from './components/SearchForm';
 import { JobList } from './components/JobList';
 import { Pagination } from './components/Pagination';
-import { Footer } from './components/Footer';
 
 function BrowseJobsView() {
   const navigate = useNavigate();
-  const year = new Date().getFullYear();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
 
@@ -54,7 +52,7 @@ function BrowseJobsView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      <DemoHeader
+      <Header
         title={t.jobs.title}
         language={language}
         onLanguageChange={setLanguage}
@@ -148,8 +146,6 @@ function BrowseJobsView() {
           )}
         </div>
       </main>
-
-      <Footer year={year} footerText={t.footer} />
     </div>
   );
 }

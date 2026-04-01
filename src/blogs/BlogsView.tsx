@@ -5,8 +5,8 @@ import type { Blog, BlogsResponse } from '../api/blogsApi';
 import { getMe } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
 import { Pagination } from '../components/Pagination';
-import { BlogFormModal } from '../components/BlogFormModal';
-import NavBar from '../components/NavBar';
+import { BlogFormModal } from '../modals/BlogFormModal';
+import Header from '../components/Header';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
@@ -154,8 +154,8 @@ function BlogsView() {
   const tBlog = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminBlogs;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-14">
-      <NavBar />
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col pt-20 md:pt-32">
+      <Header />
 
       <main className="grow p-6">
         <div className="max-w-3xl mx-auto">

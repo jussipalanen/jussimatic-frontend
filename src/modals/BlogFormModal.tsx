@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { createBlog, updateBlog, getCategories } from '../api/blogsApi';
 import type { Blog, BlogFormData, BlogCategory } from '../api/blogsApi';
-import { RichTextEditor } from './RichTextEditor';
+import { RichTextEditor } from '../components/RichTextEditor';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 

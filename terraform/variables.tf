@@ -44,6 +44,12 @@ variable "vite_jussilog_backend_storage_base_url" {
   default     = ""
 }
 
+variable "vite_jussilog_backend_docs_url" {
+  description = "Laravel backend documentation URL"
+  type        = string
+  default     = ""
+}
+
 variable "vite_jussi_aibot_api_url" {
   description = "Python AI CV review backend base URL"
   type        = string

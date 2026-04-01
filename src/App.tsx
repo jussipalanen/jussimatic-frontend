@@ -1,13 +1,14 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './App.css'
+import Layout from './components/Layout'
 import LandingView from './LandingView'
 import ChatView from './ChatView'
 import BrowseJobsView from './demo/browse-jobs'
 import ProductsView from './demo/ecommerce/views/ProductsView'
 import CartView from './demo/ecommerce/views/CartView'
 import CheckoutView from './demo/ecommerce/views/CheckoutView'
-import MyOrdersView from './demo/ecommerce/views/MyOrdersView'
-import MyProfileView from './demo/ecommerce/views/MyProfileView'
+import MyOrdersView from './profile/MyOrdersView'
+import MyProfileView from './profile/MyProfileView'
 import AdminOrdersView from './admin/AdminOrdersView'
 import AdminDashboardView from './admin/AdminDashboardView'
 import AdminUsersView from './admin/AdminUsersView'
@@ -37,36 +38,36 @@ function App() {
         <div className="stars-layer-2" aria-hidden="true" />
         <div className="stars-layer-3" aria-hidden="true" />
         <Routes>
-          <Route path="/" element={<LandingView />} />
-          <Route path="/cv" element={<CVView />} />
-          <Route path="/chat" element={<ChatView />} />
-          <Route path="/logout" element={<LogoutView />} />
-          <Route path="/profile/resumes" element={<ResumesView />} />
-          <Route path="/profile/resumes/new" element={<ResumeFormView />} />
-          <Route path="/profile/resumes/:id" element={<ResumeFormView />} />
-          <Route path="/profile/resumes/:id/edit" element={<ResumeFormView />} />
-          <Route path="/profile/invoices" element={<MyInvoicesView />} />
-          <Route path="/demo/browse-jobs" element={<BrowseJobsView />} />
-          <Route path="/demo/ai-cv-review" element={<AICVReviewView />} />
-          <Route path="/demo/resume-tool" element={<ResumeToolView />} />
-          <Route path="/demo/invoice-tool" element={<InvoiceToolView />} />
-          <Route path="/demo/ecommerce/products" element={<ProductsView />} />
-          <Route path="/demo/ecommerce/cart" element={<CartView />} />
-          <Route path="/demo/ecommerce/checkout" element={<CheckoutView />} />
-          <Route path="/demo/ecommerce/my-orders" element={<MyOrdersView />} />
-          <Route path="/demo/ecommerce/my-profile" element={<MyProfileView />} />
-          <Route path="/admin" element={<AdminDashboardView />} />
-          <Route path="/admin/orders" element={<AdminOrdersView />} />
-          <Route path="/admin/users" element={<AdminUsersView />} />
-          <Route path="/admin/invoices" element={<AdminInvoicesView />} />
-          <Route path="/admin/blogs" element={<AdminBlogsView />} />
-          <Route path="/admin/blog-categories" element={<BlogCategoriesView />} />
-          <Route path="/admin/projects" element={<AdminProjectsView />} />
-          <Route path="/admin/project-categories" element={<ProjectCategoriesView />} />
-          <Route path="/blogs" element={<BlogsView />} />
-          <Route path="/blogs/:id" element={<BlogView />} />
-          <Route path="/reset-password" element={<ResetPasswordView />} />
-          <Route path="*" element={<NotFoundView />} />
+          <Route element={<Layout />}>
+            <Route path="/" element={<LandingView />} />
+            <Route path="/cv" element={<CVView />} />
+            <Route path="/chat" element={<ChatView />} />
+            <Route path="/logout" element={<LogoutView />} />
+            <Route path="/profile/resumes" element={<ResumesView />} />
+            <Route path="/profile/resumes/new" element={<ResumeFormView />} />
+            <Route path="/profile/resumes/:id" element={<ResumeFormView />} />
+            <Route path="/profile/resumes/:id/edit" element={<ResumeFormView />} />
+            <Route path="/profile/invoices" element={<MyInvoicesView />} />
+            <Route path="/demo/browse-jobs" element={<BrowseJobsView />} />
+            <Route path="/demo/ai-cv-review" element={<AICVReviewView />} />
+            <Route path="/demo/resume-tool" element={<ResumeToolView />} />
+            <Route path="/demo/invoice-tool" element={<InvoiceToolView />} />
+            <Route path="/demo/ecommerce/products" element={<ProductsView />} />
+            <Route path="/demo/ecommerce/cart" element={<CartView />} />
+            <Route path="/demo/ecommerce/checkout" element={<CheckoutView />} />
+            <Route path="/demo/ecommerce/my-orders" element={<MyOrdersView />} />
+            <Route path="/demo/ecommerce/my-profile" element={<MyProfileView />} />
+            <Route path="/admin" element={<AdminDashboardView />} />
+            <Route path="/admin/orders" element={<AdminOrdersView />} />
+            <Route path="/admin/users" element={<AdminUsersView />} />
+            <Route path="/admin/invoices" element={<AdminInvoicesView />} />
+            <Route path="/admin/blogs" element={<AdminBlogsView />} />
+            <Route path="/admin/blog-categories" element={<BlogCategoriesView />} />
+            <Route path="/blogs" element={<BlogsView />} />
+            <Route path="/blogs/:id" element={<BlogView />} />
+            <Route path="/reset-password" element={<ResetPasswordView />} />
+            <Route path="*" element={<NotFoundView />} />
+          </Route>
         </Routes>
       </>
     </Router>

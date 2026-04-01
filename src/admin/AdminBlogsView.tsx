@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { getAllBlogs, deleteBlog } from '../api/blogsApi';
 import type { Blog } from '../api/blogsApi';
 import { getMe } from '../api/authApi';
-import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
-import AdminHeader from '../demo/ecommerce/components/AdminHeader';
+import { getRoleAccess } from '../utils/authUtils';
+import Header from '../components/Header';
+
 import { Pagination } from '../components/Pagination';
-import { BlogFormModal } from '../components/BlogFormModal';
+import { BlogFormModal } from '../modals/BlogFormModal';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
@@ -52,7 +53,6 @@ function AdminBlogsView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
 
   // Form modal
   const [showForm, setShowForm] = useState(false);
@@ -72,16 +72,16 @@ function AdminBlogsView() {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('auth_token');
-        if (!token) { setAuthError(t.authErrLogin); setLoading(false); return; }
+        if (!token) { navigate('/', { state: { adminAccessDenied: true } }); return; }
         const me = await getMe();
         const access = getRoleAccess(me);
-        if (!access.isAdmin && !access.isVendor) { setAuthError(PERMISSION_MESSAGE); setLoading(false); return; }
+        if (!access.isAdmin) { navigate('/', { state: { adminAccessDenied: true } }); return; }
       } catch {
-        setAuthError(t.authErrLogin);
-        setLoading(false);
+        navigate('/', { state: { adminAccessDenied: true } });
       }
     };
     checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadBlogs = async (page: number = currentPage) => {
@@ -99,9 +99,9 @@ function AdminBlogsView() {
   };
 
   useEffect(() => {
-    if (authError) return;
     loadBlogs(currentPage);
-  }, [currentPage, authError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -145,42 +145,27 @@ function AdminBlogsView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <AdminHeader
+      <Header
         title={t.title}
-        backTo="/admin"
         backLabel={tDash.title}
+        onBack={() => navigate('/admin')}
       />
 
       <main className="container mx-auto px-4 py-8">
-        {/* Auth error */}
-        {authError && (
-          <div className="mx-auto max-w-2xl rounded-lg border border-yellow-500/30 bg-yellow-900/20 p-6 text-center">
-            <p className="text-lg text-yellow-300 mb-4">{authError === PERMISSION_MESSAGE ? tDash.permissionDenied : authError}</p>
-            {authError !== PERMISSION_MESSAGE && (
-              <button
-                onClick={() => navigate('/demo/ecommerce/products')}
-                className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
-              >
-                {t.goToProducts}
-              </button>
-            )}
-          </div>
-        )}
-
-        {loading && !authError && (
+        {loading && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
             <p className="mt-4 text-gray-300">{t.loading}</p>
           </div>
         )}
 
-        {error && !loading && !authError && (
+        {error && !loading && (
           <div className="mx-auto max-w-2xl rounded-lg border border-red-500/30 bg-red-900/20 px-4 py-3 mb-4">
             <p className="text-red-300">{error}</p>
           </div>
         )}
 
-        {!loading && !authError && (
+        {!loading && (
           <div className="mx-auto max-w-4xl">
             {/* Header row */}
             <div className="flex items-center justify-between mb-6">
@@ -220,11 +205,10 @@ function AdminBlogsView() {
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="font-semibold text-white truncate">{blog.title}</span>
                         <span
-                          className={`text-xs rounded-full px-2 py-0.5 font-medium ${
-                            blog.visibility
-                              ? 'bg-green-600/20 text-green-400 border border-green-500/30'
-                              : 'bg-gray-700/50 text-gray-400 border border-gray-600/40'
-                          }`}
+                          className={`text-xs rounded-full px-2 py-0.5 font-medium ${blog.visibility
+                            ? 'bg-green-600/20 text-green-400 border border-green-500/30'
+                            : 'bg-gray-700/50 text-gray-400 border border-gray-600/40'
+                            }`}
                         >
                           {blog.visibility ? t.labelPublished : t.labelDraft}
                         </span>
