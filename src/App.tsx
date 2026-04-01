@@ -16,6 +16,7 @@ import AdminInvoicesView from './admin/AdminInvoicesView'
 import AdminBlogsView from './admin/AdminBlogsView'
 import AdminProjectsView from './admin/AdminProjectsView'
 import ProjectCategoriesView from './projects/ProjectCategoriesView'
+import ProjectTagsView from './projects/ProjectTagsView'
 import ResetPasswordView from './ResetPasswordView'
 import AICVReviewView from './demo/ai-cv-review'
 import ResumeToolView from './demo/resume-tool'
@@ -63,6 +64,9 @@ function App() {
             <Route path="/admin/invoices" element={<AdminInvoicesView />} />
             <Route path="/admin/blogs" element={<AdminBlogsView />} />
             <Route path="/admin/blog-categories" element={<BlogCategoriesView />} />
+            <Route path="/admin/projects" element={<AdminProjectsView />} />
+            <Route path="/admin/project-categories" element={<ProjectCategoriesView />} />
+            <Route path="/admin/project-tags" element={<ProjectTagsView />} />
             <Route path="/blogs" element={<BlogsView />} />
             <Route path="/blogs/:id" element={<BlogView />} />
             <Route path="/reset-password" element={<ResetPasswordView />} />

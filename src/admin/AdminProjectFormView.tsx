@@ -4,7 +4,7 @@ import { getAdminProject, createProject, updateProject, getProjectCategories } f
 import type { ProjectCategory, ProjectFormData } from '../api/projectsApi';
 import { getMe } from '../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
-import AdminHeader from '../demo/ecommerce/components/AdminHeader';
+import Header from '../components/Header';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
@@ -93,7 +93,7 @@ function AdminProjectFormView() {
   }, []);
 
   useEffect(() => {
-    getProjectCategories().then(setCategories).catch(() => {});
+    getProjectCategories().then(setCategories).catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -201,10 +201,10 @@ function AdminProjectFormView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <AdminHeader
+      <Header
         title={isEditing ? t.editTitle : t.createTitle}
-        backTo="/admin/projects"
         backLabel={t.title}
+        onBack={() => navigate('/admin/projects')}
       />
 
       <main className="container mx-auto px-4 py-8">
@@ -417,14 +417,12 @@ function AdminProjectFormView() {
                 <button
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, visibility: f.visibility === 'show' ? 'hide' : 'show' }))}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                    form.visibility === 'show' ? 'bg-blue-600' : 'bg-gray-600'
-                  }`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${form.visibility === 'show' ? 'bg-blue-600' : 'bg-gray-600'
+                    }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                      form.visibility === 'show' ? 'translate-x-6' : 'translate-x-1'
-                    }`}
+                    className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${form.visibility === 'show' ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                   />
                 </button>
               </div>

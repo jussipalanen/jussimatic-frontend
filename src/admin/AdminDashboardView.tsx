@@ -106,46 +106,52 @@ function AdminDashboardView() {
                 <span className="text-base font-semibold text-white">{t.invoicesTitle}</span>
                 <span className="text-sm text-gray-400">{t.invoicesDesc}</span>
               </button>
-              <button
-                onClick={() => navigate('/admin/blogs')}
-                className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-purple-500/60 hover:bg-purple-600/10 transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-400 group-hover:text-purple-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v8a2 2 0 01-2 2zM9 12h6M9 16h4" />
-                </svg>
-                <span className="text-base font-semibold text-white">{t.blogsTitle}</span>
-                <span className="text-sm text-gray-400">{t.blogsDesc}</span>
-              </button>
-              <button
-                onClick={() => navigate('/admin/blog-categories')}
-                className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-orange-500/60 hover:bg-orange-600/10 transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-400 group-hover:text-orange-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                <span className="text-base font-semibold text-white">{t.blogCategoriesTitle}</span>
-                <span className="text-sm text-gray-400">{t.blogCategoriesDesc}</span>
-              </button>
-              <button
-                onClick={() => navigate('/admin/projects')}
-                className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-teal-500/60 hover:bg-teal-600/10 transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-teal-400 group-hover:text-teal-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-                <span className="text-base font-semibold text-white">{t.projectsTitle}</span>
-                <span className="text-sm text-gray-400">{t.projectsDesc}</span>
-              </button>
-              <button
-                onClick={() => navigate('/admin/project-categories')}
-                className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900/60 p-6 text-center hover:border-cyan-500/60 hover:bg-cyan-600/10 transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-cyan-400 group-hover:text-cyan-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                <span className="text-base font-semibold text-white">{t.projectCategoriesTitle}</span>
-                <span className="text-sm text-gray-400">{t.projectCategoriesDesc}</span>
-              </button>
+              <div className="group flex flex-col rounded-2xl border border-gray-700 bg-gray-900/60 overflow-hidden hover:border-purple-500/60 hover:bg-purple-600/10 transition-all">
+                <button
+                  onClick={() => navigate('/admin/blogs')}
+                  className="flex flex-col items-center gap-3 p-6 text-center flex-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-400 group-hover:text-purple-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v8a2 2 0 01-2 2zM9 12h6M9 16h4" />
+                  </svg>
+                  <span className="text-base font-semibold text-white">{t.blogsTitle}</span>
+                  <span className="text-sm text-gray-400">{t.blogsDesc}</span>
+                </button>
+                <div className="border-t border-gray-700 px-4 py-2 flex gap-1 justify-center flex-wrap">
+                  <button
+                    onClick={() => navigate('/admin/blog-categories')}
+                    className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-gray-700 transition-colors"
+                  >
+                    {t.blogCategoriesTitle}
+                  </button>
+                </div>
+              </div>
+              <div className="group flex flex-col rounded-2xl border border-gray-700 bg-gray-900/60 overflow-hidden hover:border-teal-500/60 hover:bg-teal-600/10 transition-all">
+                <button
+                  onClick={() => navigate('/admin/projects')}
+                  className="flex flex-col items-center gap-3 p-6 text-center flex-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-teal-400 group-hover:text-teal-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                  <span className="text-base font-semibold text-white">{t.projectsTitle}</span>
+                  <span className="text-sm text-gray-400">{t.projectsDesc}</span>
+                </button>
+                <div className="border-t border-gray-700 px-4 py-2 flex gap-1 justify-center flex-wrap">
+                  <button
+                    onClick={() => navigate('/admin/project-categories')}
+                    className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-gray-700 transition-colors"
+                  >
+                    {t.projectCategoriesTitle}
+                  </button>
+                  <button
+                    onClick={() => navigate('/admin/project-tags')}
+                    className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-gray-700 transition-colors"
+                  >
+                    {t.projectTagsTitle}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

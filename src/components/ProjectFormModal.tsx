@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { RichTextEditor } from './RichTextEditor';
-import { getAdminProject, createProject, updateProject, getProjectCategories } from '../api/projectsApi';
-import type { Project, ProjectCategory, ProjectFormData, ProjectTag } from '../api/projectsApi';
+import { getAdminProject, createProject, updateProject, getProjectCategories, getProjectTags, createProjectTag } from '../api/projectsApi';
+import type { Project, ProjectCategory, ProjectFormData, ProjectTagItem } from '../api/projectsApi';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
@@ -24,9 +24,7 @@ interface ProjectFormState {
   live_url: string;
   github_url: string;
   sort_order: string;
-  tags: ProjectTag[];
-  tagInput: string;
-  tagColor: string;
+  tag_ids: number[];
   visibility: string;
   category_id: string;
   image_file: File | null;
@@ -40,9 +38,7 @@ const EMPTY_FORM: ProjectFormState = {
   live_url: '',
   github_url: '',
   sort_order: '',
-  tags: [],
-  tagInput: '',
-  tagColor: '#3b82f6',
+  tag_ids: [],
   visibility: 'show',
   category_id: '',
   image_file: null,
@@ -76,7 +72,12 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageRemoved, setImageRemoved] = useState(false);
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
+  const [availableTags, setAvailableTags] = useState<ProjectTagItem[]>([]);
+  const [tagSearch, setTagSearch] = useState('');
+  const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+  const [creatingTag, setCreatingTag] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const tagContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: Event) => setLanguage((e as CustomEvent<Language>).detail);
@@ -86,6 +87,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
 
   useEffect(() => {
     getProjectCategories().then(setCategories).catch(() => {});
+    getProjectTags().then(setAvailableTags).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -107,9 +109,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
             live_url: en.live_url ?? '',
             github_url: en.github_url ?? '',
             sort_order: en.sort_order != null ? String(en.sort_order) : '',
-            tags: en.tags ?? [],
-            tagInput: '',
-            tagColor: '#3b82f6',
+            tag_ids: en.tags ? en.tags.map((tag) => tag.id) : [],
             visibility: en.visibility ?? 'show',
             category_id: en.categories?.[0]?.id != null ? String(en.categories[0].id) : '',
             image_file: null,
@@ -133,6 +133,61 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
     }
   }, [form.title.en, slugManuallyEdited]);
 
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (tagContainerRef.current && !tagContainerRef.current.contains(e.target as Node)) {
+        setTagDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filteredTags = availableTags.filter(
+    (tag) => tag.title.toLowerCase().includes(tagSearch.toLowerCase().trim()),
+  );
+  const exactMatch = availableTags.find(
+    (tag) => tag.title.toLowerCase() === tagSearch.trim().toLowerCase(),
+  );
+
+  const selectTag = (tag: ProjectTagItem) => {
+    setForm((f) => ({
+      ...f,
+      tag_ids: f.tag_ids.includes(tag.id)
+        ? f.tag_ids.filter((id) => id !== tag.id)
+        : [...f.tag_ids, tag.id],
+    }));
+    setTagSearch('');
+    setTagDropdownOpen(false);
+  };
+
+  const handleCreateTag = async () => {
+    const title = tagSearch.trim();
+    if (!title || creatingTag) return;
+    setCreatingTag(true);
+    try {
+      const newTag = await createProjectTag({ title, color: '#3b82f6' });
+      setAvailableTags((prev) => [...prev, newTag]);
+      setForm((f) => ({ ...f, tag_ids: [...f.tag_ids, newTag.id] }));
+      setTagSearch('');
+      setTagDropdownOpen(false);
+    } catch {
+      // silently ignore — tag list admin handles errors
+    } finally {
+      setCreatingTag(false);
+    }
+  };
+
+  const handleTagSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') { setTagDropdownOpen(false); return; }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filteredTags.length > 0 && !exactMatch) { selectTag(filteredTags[0]); return; }
+      if (exactMatch) { selectTag(exactMatch); return; }
+      if (tagSearch.trim()) handleCreateTag();
+    }
+  };
+
   const close = () => { if (!submitting) onClose(); };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,24 +207,6 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
     setImageRemoved(true);
     setForm((f) => ({ ...f, image_file: null }));
     if (imageInputRef.current) imageInputRef.current.value = '';
-  };
-
-  const handleAddTag = () => {
-    const name = form.tagInput.trim().replace(/,+$/, '').trim();
-    if (name && !form.tags.find((tg) => tg.name === name)) {
-      setForm((f) => ({ ...f, tags: [...f.tags, { name, color: f.tagColor }], tagInput: '' }));
-    } else {
-      setForm((f) => ({ ...f, tagInput: '' }));
-    }
-  };
-
-  const handleTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      handleAddTag();
-    } else if (e.key === 'Backspace' && !form.tagInput && form.tags.length > 0) {
-      setForm((f) => ({ ...f, tags: f.tags.slice(0, -1) }));
-    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -192,7 +229,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
         live_url: form.live_url.trim() || undefined,
         github_url: form.github_url.trim() || undefined,
         sort_order: form.sort_order.trim() ? Number(form.sort_order) : undefined,
-        tags: form.tags,
+        tag_ids: form.tag_ids,
         visibility: form.visibility,
         category_ids: form.category_id ? [Number(form.category_id)] : undefined,
         image_file: form.image_file ?? undefined,
@@ -412,61 +449,85 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
             </div>
 
             {/* Tags */}
-            <div>
+            <div ref={tagContainerRef} className="relative">
               <label className={labelCls}>{t.labelTags}</label>
-              {/* Existing tags */}
-              {form.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {form.tags.map((tag) => (
-                    <span
-                      key={tag.name}
-                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-white"
-                      style={{ backgroundColor: tag.color + '33', border: `1px solid ${tag.color}88` }}
-                    >
-                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
-                      {tag.name}
-                      <button
-                        type="button"
-                        onClick={() => setForm((f) => ({ ...f, tags: f.tags.filter((tg) => tg.name !== tag.name) }))}
-                        className="text-gray-300 hover:text-white leading-none ml-0.5"
+
+              {/* Selected tag pills */}
+              {form.tag_ids.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {form.tag_ids.map((id) => {
+                    const tag = availableTags.find((tg) => tg.id === id);
+                    if (!tag) return null;
+                    return (
+                      <span
+                        key={id}
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-white"
+                        style={{ backgroundColor: tag.color + '33', border: `1px solid ${tag.color}88` }}
                       >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
+                        {tag.title}
+                        <button
+                          type="button"
+                          disabled={submitting}
+                          onClick={() => setForm((f) => ({ ...f, tag_ids: f.tag_ids.filter((i) => i !== id) }))}
+                          className="ml-0.5 text-gray-300 hover:text-white leading-none"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })}
                 </div>
               )}
-              {/* Tag input row */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={form.tagInput}
-                  onChange={(e) => setForm((f) => ({ ...f, tagInput: e.target.value }))}
-                  onKeyDown={handleTagKeyDown}
-                  onBlur={() => { if (form.tagInput.trim()) handleAddTag(); }}
-                  className={`${inputCls} flex-1`}
-                  placeholder={t.placeholderTags}
-                  disabled={submitting}
-                />
-                <div className="relative flex items-center">
-                  <input
-                    type="color"
-                    value={form.tagColor}
-                    onChange={(e) => setForm((f) => ({ ...f, tagColor: e.target.value }))}
-                    className="w-10 h-10 rounded-lg border border-gray-600 bg-gray-900 cursor-pointer p-0.5"
-                    title="Tag color"
-                  />
+
+              {/* Search input */}
+              <input
+                type="text"
+                value={tagSearch}
+                onChange={(e) => { setTagSearch(e.target.value); setTagDropdownOpen(true); }}
+                onFocus={() => setTagDropdownOpen(true)}
+                onKeyDown={handleTagSearchKeyDown}
+                className={inputCls}
+                placeholder={t.placeholderTags}
+                disabled={submitting}
+                autoComplete="off"
+              />
+
+              {/* Dropdown */}
+              {tagDropdownOpen && (tagSearch.trim() !== '' || filteredTags.length > 0) && (
+                <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-600 bg-gray-800 shadow-xl max-h-48 overflow-y-auto">
+                  {filteredTags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); selectTag(tag); }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-left hover:bg-gray-700 transition-colors"
+                    >
+                      <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
+                      <span className="text-white">{tag.title}</span>
+                      {form.tag_ids.includes(tag.id) && (
+                        <span className="ml-auto text-green-400 text-xs">✓</span>
+                      )}
+                    </button>
+                  ))}
+                  {tagSearch.trim() && !exactMatch && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); handleCreateTag(); }}
+                      disabled={creatingTag}
+                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-left text-blue-400 hover:bg-gray-700 transition-colors border-t border-gray-700 disabled:opacity-60"
+                    >
+                      <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      {creatingTag ? 'Creating…' : `Create "${tagSearch.trim()}"`}
+                    </button>
+                  )}
+                  {filteredTags.length === 0 && !tagSearch.trim() && (
+                    <p className="px-3 py-2 text-sm text-gray-500">{t.tagsHint}</p>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAddTag}
-                  disabled={!form.tagInput.trim() || submitting}
-                  className="rounded-lg border border-gray-600 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/60 disabled:opacity-40 transition-colors"
-                >
-                  Add
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-gray-500">{t.tagsHint}</p>
+              )}
             </div>
 
             {/* URLs */}

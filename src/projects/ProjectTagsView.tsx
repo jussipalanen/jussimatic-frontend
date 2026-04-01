@@ -1,28 +1,29 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getProjectCategories, deleteProjectCategory } from '../api/projectsApi';
-import type { ProjectCategory } from '../api/projectsApi';
+import { getProjectTags, deleteProjectTag } from '../api/projectsApi';
+import type { ProjectTagItem } from '../api/projectsApi';
 import { getMe } from '../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
-import { ProjectCategoryModal } from '../components/ProjectCategoryModal';
+import { ProjectTagModal } from '../components/ProjectTagModal';
 import Header from '../components/Header';
+import { useNavigate } from 'react-router-dom';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
-function ProjectCategoriesView() {
+function ProjectTagsView() {
+
   const navigate = useNavigate();
 
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminProjects;
   const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
 
-  const [categories, setCategories] = useState<ProjectCategory[]>([]);
+  const [tags, setTags] = useState<ProjectTagItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const [editingCategory, setEditingCategory] = useState<ProjectCategory | null | undefined>(undefined);
-  const [categoryToDelete, setCategoryToDelete] = useState<ProjectCategory | null>(null);
+  const [editingTag, setEditingTag] = useState<ProjectTagItem | null | undefined>(undefined);
+  const [tagToDelete, setTagToDelete] = useState<ProjectTagItem | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -47,12 +48,12 @@ function ProjectCategoriesView() {
     checkAuth();
   }, []);
 
-  const loadCategories = async () => {
+  const loadTags = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getProjectCategories();
-      setCategories(res);
+      const res = await getProjectTags();
+      setTags(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.errLoad);
     } finally {
@@ -62,27 +63,27 @@ function ProjectCategoriesView() {
 
   useEffect(() => {
     if (authError) return;
-    loadCategories();
+    loadTags();
   }, [authError]);
 
   const handleDelete = async () => {
-    if (!categoryToDelete || deleting) return;
+    if (!tagToDelete || deleting) return;
     setDeleting(true);
     try {
-      await deleteProjectCategory(categoryToDelete.id);
-      setCategoryToDelete(null);
-      await loadCategories();
+      await deleteProjectTag(tagToDelete.id);
+      setTagToDelete(null);
+      await loadTags();
     } catch (err) {
       setError(err instanceof Error ? err.message : t.errDelete);
-      setCategoryToDelete(null);
+      setTagToDelete(null);
     } finally {
       setDeleting(false);
     }
   };
 
   const handleSaved = () => {
-    setEditingCategory(undefined);
-    loadCategories();
+    setEditingTag(undefined);
+    loadTags();
   };
 
   return (
@@ -116,46 +117,55 @@ function ProjectCategoriesView() {
         {!loading && !authError && (
           <div className="mx-auto max-w-4xl">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">{t.categoryListTitle}</h2>
+              <h2 className="text-xl font-bold">{t.tagListTitle}</h2>
               <button
-                onClick={() => setEditingCategory(null)}
+                onClick={() => setEditingTag(null)}
                 className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
               >
                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                {t.btnAddCategory}
+                {t.btnAddTag}
               </button>
             </div>
 
-            {!loading && !error && categories.length === 0 && (
+            {!loading && !error && tags.length === 0 && (
               <div className="text-center py-10 text-gray-400">{t.empty}</div>
             )}
 
-            {categories.length > 0 && (
+            {tags.length > 0 && (
               <div className="flex flex-col gap-3">
-                {categories.map((category) => (
+                {tags.map((tag) => (
                   <div
-                    key={category.id}
+                    key={tag.id}
                     className="flex items-center gap-4 rounded-xl border border-gray-700 bg-gray-800 px-5 py-4 hover:border-gray-600 transition-colors"
                   >
+                    {tag.color && (
+                      <span
+                        className="shrink-0 w-5 h-5 rounded-full border border-gray-600"
+                        style={{ backgroundColor: tag.color }}
+                      />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-white">{category.title}</span>
-                        <span className="text-xs font-mono text-gray-400">/{category.slug}</span>
+                        <span className="font-semibold text-white">{tag.title}</span>
+                        <span className="text-xs font-mono text-gray-400">/{tag.slug}</span>
+                        {tag.color && (
+                          <span className="text-xs font-mono text-gray-500">{tag.color}</span>
+                        )}
                       </div>
                     </div>
                     <div className="shrink-0 flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setEditingCategory(category)}
+                        onClick={() => setEditingTag(tag)}
                         className="rounded-lg border border-gray-600 px-3 py-1.5 text-sm font-semibold text-gray-300 hover:bg-gray-700/60 transition-colors"
                       >
                         {t.btnEdit}
                       </button>
                       <button
                         type="button"
-                        onClick={() => setCategoryToDelete(category)}
+                        onClick={() => setTagToDelete(tag)}
                         className="rounded-lg border border-red-500/60 px-3 py-1.5 text-sm font-semibold text-red-300 hover:bg-red-600/20 transition-colors"
                       >
                         {t.btnDelete}
@@ -169,25 +179,25 @@ function ProjectCategoriesView() {
         )}
       </main>
 
-      {editingCategory !== undefined && (
-        <ProjectCategoryModal
-          category={editingCategory}
-          onClose={() => setEditingCategory(undefined)}
+      {editingTag !== undefined && (
+        <ProjectTagModal
+          tag={editingTag}
+          onClose={() => setEditingTag(undefined)}
           onSaved={handleSaved}
         />
       )}
 
-      {categoryToDelete && (
+      {tagToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 shadow-lg" role="dialog" aria-modal="true">
             <h2 className="text-xl font-semibold text-white">{t.deleteTitle}</h2>
             <p className="mt-3 text-sm text-gray-300">
-              {t.deleteConfirm.replace('{title}', categoryToDelete.title)}
+              {t.deleteConfirm.replace('{title}', tagToDelete.title)}
             </p>
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 type="button"
-                onClick={() => { if (!deleting) setCategoryToDelete(null); }}
+                onClick={() => { if (!deleting) setTagToDelete(null); }}
                 disabled={deleting}
                 className="rounded-lg border border-gray-600 px-4 py-2 text-sm font-semibold text-gray-200 hover:bg-gray-800 disabled:opacity-50"
               >
@@ -209,4 +219,4 @@ function ProjectCategoriesView() {
   );
 }
 
-export default ProjectCategoriesView;
+export default ProjectTagsView;

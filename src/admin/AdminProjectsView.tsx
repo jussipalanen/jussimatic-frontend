@@ -4,7 +4,7 @@ import { getAdminProjects, deleteProject } from '../api/projectsApi';
 import type { Project } from '../api/projectsApi';
 import { getMe } from '../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
-import AdminHeader from '../demo/ecommerce/components/AdminHeader';
+import Header from '../components/Header';
 import { Pagination } from '../components/Pagination';
 import { ProjectFormModal } from '../components/ProjectFormModal';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
@@ -140,10 +140,10 @@ function AdminProjectsView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <AdminHeader
+      <Header
         title={t.title}
-        backTo="/admin"
-        backLabel={tDash.title}
+        backLabel={translations[language].adminDashboard.title}
+        onBack={() => navigate('/admin')}
       />
 
       <main className="container mx-auto px-4 py-8">
@@ -211,11 +211,10 @@ function AdminProjectsView() {
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="font-semibold text-white truncate">{project.title}</span>
                         <span
-                          className={`text-xs rounded-full px-2 py-0.5 font-medium ${
-                            project.visibility === 'show'
-                              ? 'bg-green-600/20 text-green-400 border border-green-500/30'
-                              : 'bg-gray-700/50 text-gray-400 border border-gray-600/40'
-                          }`}
+                          className={`text-xs rounded-full px-2 py-0.5 font-medium ${project.visibility === 'show'
+                            ? 'bg-green-600/20 text-green-400 border border-green-500/30'
+                            : 'bg-gray-700/50 text-gray-400 border border-gray-600/40'
+                            }`}
                         >
                           {project.visibility === 'show' ? t.labelPublished : t.labelHidden}
                         </span>
@@ -230,7 +229,7 @@ function AdminProjectsView() {
                       )}
                       <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-gray-500">
                         {project.tags && project.tags.length > 0 && (
-                          <span>{project.tags.slice(0, 4).map((t) => t.name).join(', ')}{project.tags.length > 4 ? ` +${project.tags.length - 4}` : ''}</span>
+                          <span>{project.tags.slice(0, 4).map((t) => t.title).join(', ')}{project.tags.length > 4 ? ` +${project.tags.length - 4}` : ''}</span>
                         )}
                         <span className="font-mono">#{project.id}</span>
                         {project.sort_order != null && (

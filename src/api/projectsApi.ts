@@ -44,7 +44,7 @@ export interface Project {
   images?: string[];
   live_url?: string | null;
   github_url?: string | null;
-  tags?: ProjectTag[] | null;
+  tags?: ProjectTagItem[] | null;
   visibility: string;
   sort_order?: number;
   created_at: string;
@@ -90,7 +90,7 @@ export async function getAdminProjects(
 ): Promise<ProjectsResponse> {
   const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
 
-  const response = await fetch(buildUrl(`projects?${params}`), {
+  const response = await fetch(buildUrl(`admin/projects?${params}`), {
     method: 'GET',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
   });
@@ -129,7 +129,7 @@ export async function getProject(id: number | string): Promise<Project> {
 
 export async function getAdminProject(id: number | string, lang?: string): Promise<Project> {
   const params = lang ? `?lang=${lang}` : '';
-  const response = await fetch(buildUrl(`projects/${id}${params}`), {
+  const response = await fetch(buildUrl(`admin/projects/${id}${params}`), {
     method: 'GET',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
   });
@@ -155,7 +155,7 @@ export interface ProjectFormData {
   remove_feature_image?: boolean;
   live_url?: string;
   github_url?: string;
-  tags?: ProjectTag[];
+  tag_ids?: number[];
   visibility?: string;
   sort_order?: number;
   category_ids?: number[];
@@ -182,14 +182,11 @@ function buildProjectFormData(data: ProjectFormData): FormData {
   if (data.live_url !== undefined) formData.append('live_url', data.live_url);
   if (data.github_url !== undefined) formData.append('github_url', data.github_url);
 
-  // Tags as objects
-  if (data.tags && data.tags.length > 0) {
-    data.tags.forEach((tag, i) => {
-      formData.append(`tags[${i}][name]`, tag.name);
-      formData.append(`tags[${i}][color]`, tag.color);
-    });
+  // Tag IDs
+  if (data.tag_ids && data.tag_ids.length > 0) {
+    data.tag_ids.forEach((id, i) => formData.append(`tag_ids[${i}]`, String(id)));
   } else {
-    formData.append('tags', '');
+    formData.append('tag_ids', '');
   }
 
   if (data.visibility !== undefined) formData.append('visibility', data.visibility);
@@ -228,6 +225,63 @@ export async function updateProject(id: number, data: ProjectFormData): Promise<
 
 export async function deleteProject(id: number): Promise<void> {
   const response = await fetch(buildUrl(`projects/${id}`), {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+  });
+  if (!response.ok) {
+    const json = await response.json().catch(() => null);
+    handleApiError(json, response.status, response.statusText);
+  }
+}
+
+// Project Tags
+
+export interface ProjectTagItem {
+  id: number;
+  title: string;
+  slug: string;
+  color: string;
+}
+
+export interface ProjectTagFormData {
+  title: string;
+  color: string;
+}
+
+export async function getProjectTags(): Promise<ProjectTagItem[]> {
+  const response = await fetch(buildUrl('project-tags'), {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) handleApiError(data, response.status, response.statusText);
+  return (data?.data ?? data) as ProjectTagItem[];
+}
+
+export async function createProjectTag(data: ProjectTagFormData): Promise<ProjectTagItem> {
+  const response = await fetch(buildUrl('project-tags'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  const json = await response.json().catch(() => null);
+  if (!response.ok) handleApiError(json, response.status, response.statusText);
+  return (json?.data ?? json) as ProjectTagItem;
+}
+
+export async function updateProjectTag(id: number, data: ProjectTagFormData): Promise<ProjectTagItem> {
+  const response = await fetch(buildUrl(`project-tags/${id}`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  const json = await response.json().catch(() => null);
+  if (!response.ok) handleApiError(json, response.status, response.statusText);
+  return (json?.data ?? json) as ProjectTagItem;
+}
+
+export async function deleteProjectTag(id: number): Promise<void> {
+  const response = await fetch(buildUrl(`project-tags/${id}`), {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
   });
