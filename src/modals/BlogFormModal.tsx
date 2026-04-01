@@ -219,7 +219,7 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 py-8 overflow-y-auto"
       onClick={(e) => { if (e.target === e.currentTarget) close(); }}
     >
-      <div className="w-full max-w-2xl rounded-lg border border-gray-700 bg-gray-900 shadow-xl">
+      <div className="w-full max-w-2xl rounded-lg border border-gray-700 bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
           <h2 className="text-lg font-semibold text-white">
             {blog ? t.editTitle : t.createTitle}
@@ -263,7 +263,43 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
 
           {/* Title */}
           <div>
-            <label className={labelCls}>{t.labelTitle} <span className="text-red-400">*</span></label>
+            <div className="flex items-center justify-between mb-1">
+              <label className={labelCls}>{t.labelTitle} <span className="text-red-400">*</span></label>
+              {editLang === 'fi' && form.title.en?.trim() && !form.title.fi?.trim() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const srcTitle = form.title.en ?? '';
+                    const srcSlug = form.slug.en ?? '';
+                    setForm((f) => ({ ...f, title: { ...f.title, fi: srcTitle } }));
+                    setSlugManuallyEdited((s) => ({ ...s, fi: !!srcSlug.trim() }));
+                    if (!form.slug.fi?.trim() && srcSlug.trim()) {
+                      setForm((f) => ({ ...f, slug: { ...f.slug, fi: srcSlug } }));
+                    }
+                  }}
+                  className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                >
+                  {t.copyFromEnglish}
+                </button>
+              )}
+              {editLang === 'en' && form.title.fi?.trim() && !form.title.en?.trim() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const srcTitle = form.title.fi ?? '';
+                    const srcSlug = form.slug.fi ?? '';
+                    setForm((f) => ({ ...f, title: { ...f.title, en: srcTitle } }));
+                    setSlugManuallyEdited((s) => ({ ...s, en: !!srcSlug.trim() }));
+                    if (!form.slug.en?.trim() && srcSlug.trim()) {
+                      setForm((f) => ({ ...f, slug: { ...f.slug, en: srcSlug } }));
+                    }
+                  }}
+                  className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                >
+                  {t.copyFromFinnish}
+                </button>
+              )}
+            </div>
             <input
               type="text"
               value={form.title[editLang] ?? ''}
@@ -277,6 +313,13 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
                   }
                   return updatedForm;
                 });
+              }}
+              onBlur={() => {
+                // Auto-generate slug on blur if slug is empty
+                const title = form.title[editLang];
+                if (title?.trim() && !form.slug[editLang]?.trim()) {
+                  setForm((f) => ({ ...f, slug: { ...f.slug, [editLang]: generateSlug(title) } }));
+                }
               }}
               className={inputCls}
               placeholder={editLang === 'en' ? 'Enter English title' : 'Syötä suomenkielinen otsikko'}

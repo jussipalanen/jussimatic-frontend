@@ -63,7 +63,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeLang, setActiveLang] = useState<'en' | 'fi'>('en');
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState<{ en: boolean; fi: boolean }>({ en: false, fi: false });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageRemoved, setImageRemoved] = useState(false);
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
@@ -110,23 +110,33 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
             image_file: null,
           });
           setImagePreview(en.feature_image ? buildImageUrl(en.feature_image) : null);
-          setSlugManuallyEdited(true);
+          setSlugManuallyEdited({ en: true, fi: true });
         })
         .catch((err) => setFormError(err instanceof Error ? err.message : t.errLoad))
         .finally(() => setLoading(false));
     } else {
       setForm(EMPTY_FORM);
       setImagePreview(null);
-      setSlugManuallyEdited(false);
+      setSlugManuallyEdited({ en: false, fi: false });
     }
   }, [project]);
 
-  // Auto-generate EN slug from EN title
+  // Auto-generate slug from title when title changes (per language)
   useEffect(() => {
-    if (!slugManuallyEdited && form.title.en.trim()) {
+    if (!slugManuallyEdited.en && form.title.en?.trim()) {
       setForm((f) => ({ ...f, slug: { ...f.slug, en: generateSlug(f.title.en) } }));
+      // Reset manual flag so it can auto-fill again if slug is cleared
+      setSlugManuallyEdited((s) => ({ ...s, en: false }));
     }
-  }, [form.title.en, slugManuallyEdited]);
+  }, [form.title.en, slugManuallyEdited.en]);
+
+  useEffect(() => {
+    if (!slugManuallyEdited.fi && form.title.fi?.trim()) {
+      setForm((f) => ({ ...f, slug: { ...f.slug, fi: generateSlug(f.title.fi) } }));
+      // Reset manual flag so it can auto-fill again if slug is cleared
+      setSlugManuallyEdited((s) => ({ ...s, fi: false }));
+    }
+  }, [form.title.fi, slugManuallyEdited.fi]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -249,7 +259,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 py-8 overflow-y-auto"
       onClick={(e) => { if (e.target === e.currentTarget) close(); }}
     >
-      <div className="w-full max-w-2xl rounded-lg border border-gray-700 bg-gray-900 shadow-xl">
+      <div className="w-full max-w-2xl rounded-lg border border-gray-700 bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
           <h2 className="text-lg font-semibold text-white">
             {project ? t.editTitle : t.createTitle}
@@ -292,14 +302,67 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
 
             {/* Title */}
             <div>
-              <label className={labelCls}>
-                {t.labelTitle}
-                {activeLang === 'en' && <span className="text-red-400 ml-1">*</span>}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className={labelCls}>
+                  {t.labelTitle}
+                  {activeLang === 'en' && <span className="text-red-400 ml-1">*</span>}
+                </label>
+                {activeLang === 'fi' && form.title.en?.trim() && !form.title.fi?.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const srcTitle = form.title.en ?? '';
+                      const srcSlug = form.slug.en ?? '';
+                      setForm((f) => ({ ...f, title: { ...f.title, fi: srcTitle } }));
+                      setSlugManuallyEdited((s) => ({ ...s, fi: !!srcSlug.trim() }));
+                      if (!form.slug.fi?.trim() && srcSlug.trim()) {
+                        setForm((f) => ({ ...f, slug: { ...f.slug, fi: srcSlug } }));
+                      }
+                    }}
+                    className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                  >
+                    {t.copyFromEnglish}
+                  </button>
+                )}
+                {activeLang === 'en' && form.title.fi?.trim() && !form.title.en?.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const srcTitle = form.title.fi ?? '';
+                      const srcSlug = form.slug.fi ?? '';
+                      setForm((f) => ({ ...f, title: { ...f.title, en: srcTitle } }));
+                      setSlugManuallyEdited((s) => ({ ...s, en: !!srcSlug.trim() }));
+                      if (!form.slug.en?.trim() && srcSlug.trim()) {
+                        setForm((f) => ({ ...f, slug: { ...f.slug, en: srcSlug } }));
+                      }
+                    }}
+                    className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                  >
+                    {t.copyFromFinnish}
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 value={form.title[activeLang]}
-                onChange={(e) => setForm((f) => ({ ...f, title: { ...f.title, [activeLang]: e.target.value } }))}
+                onChange={(e) => {
+                  const newTitle = e.target.value;
+                  setForm((f) => {
+                    const updatedForm = { ...f, title: { ...f.title, [activeLang]: newTitle } };
+                    // Auto-fill slug from title if slug is empty for current language
+                    if (!f.slug[activeLang]?.trim() && newTitle.trim()) {
+                      updatedForm.slug = { ...f.slug, [activeLang]: generateSlug(newTitle) };
+                    }
+                    return updatedForm;
+                  });
+                }}
+                onBlur={() => {
+                  // Auto-generate slug on blur if slug is empty
+                  const title = form.title[activeLang];
+                  if (title?.trim() && !form.slug[activeLang]?.trim()) {
+                    setForm((f) => ({ ...f, slug: { ...f.slug, [activeLang]: generateSlug(title) } }));
+                  }
+                }}
                 className={inputCls}
                 placeholder={`${t.placeholderTitle} (${activeLang.toUpperCase()})`}
                 required={activeLang === 'en'}
@@ -310,20 +373,24 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className={labelCls}>{t.labelSlug}</label>
-                {activeLang === 'en' && (
-                  <button
-                    type="button"
-                    onClick={() => { setForm((f) => ({ ...f, slug: { ...f.slug, en: generateSlug(f.title.en) } })); setSlugManuallyEdited(true); }}
-                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                  >
-                    Auto-generate
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm((f) => ({ ...f, slug: { ...f.slug, [activeLang]: generateSlug(f.title[activeLang] ?? '') } }));
+                    setSlugManuallyEdited((s) => ({ ...s, [activeLang]: true }));
+                  }}
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  Auto-generate
+                </button>
               </div>
               <input
                 type="text"
                 value={form.slug[activeLang]}
-                onChange={(e) => { setForm((f) => ({ ...f, slug: { ...f.slug, [activeLang]: e.target.value } })); setSlugManuallyEdited(true); }}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, slug: { ...f.slug, [activeLang]: e.target.value } }));
+                  setSlugManuallyEdited((s) => ({ ...s, [activeLang]: true }));
+                }}
                 className={inputCls}
                 placeholder={`${t.placeholderSlug} (${activeLang.toUpperCase()})`}
               />
