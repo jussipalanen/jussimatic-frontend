@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { logoutUser } from '../api/authApi';
 
 function LogoutView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   useEffect(() => {
     const performLogout = async () => {

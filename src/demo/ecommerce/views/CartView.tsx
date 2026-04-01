@@ -1,15 +1,13 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../../hooks/useLocaleNavigate';
 import { useState, useEffect } from 'react';
 import { getCart, removeFromCart, updateCartItemQuantity, clearCart, calcCartTaxBreakdown, calcCartTotals } from '../../../utils/cartUtils';
 import type { CartItem } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
 import { getStoredLanguage, translations, type Language } from '../../../i18n';
-
-const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
-const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
+import { buildStorageUrl } from '../../../constants';
 
 function CartView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [cartItems, setCartItems] = useState<CartItem[]>(getCart());
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
 
@@ -37,14 +35,6 @@ function CartView() {
     const n = typeof net === 'string' ? parseFloat(net) : net;
     const r = taxRate > 1 ? taxRate / 100 : taxRate;
     return n * (1 + r);
-  };
-
-  const buildStorageUrl = (path: string | null | undefined) => {
-    if (!path) return PLACEHOLDER_IMAGE_URL;
-    if (!STORAGE_BASE_URL) return path;
-    const base = STORAGE_BASE_URL.replace(/\/+$/, '');
-    const endpoint = path.replace(/^\/+/, '');
-    return `${base}/${endpoint}`;
   };
 
   const handleRemove = (productId: number) => {

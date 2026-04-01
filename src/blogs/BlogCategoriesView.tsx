@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getCategories, deleteCategory } from '../api/blogsApi';
 import type { BlogCategory } from '../api/blogsApi';
 import { getMe } from '../api/authApi';
@@ -10,7 +10,7 @@ import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
 function BlogCategoriesView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminBlogs;
   const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;

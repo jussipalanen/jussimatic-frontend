@@ -5,13 +5,13 @@ import { getMe } from '../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
 import { ProjectTagModal } from '../components/ProjectTagModal';
 import Header from '../components/Header';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
 function ProjectTagsView() {
 
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminProjects;

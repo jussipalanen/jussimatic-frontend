@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../hooks/useLocaleNavigate';
 import { deleteResume, copyResume, createResumeFromJson, exportResumePdf, exportResumeHtml, exportResumeJson, getResumes, updateResume } from '../../api/resumesApi';
 import type { Resume } from '../../api/resumesApi';
 import Header from '../../components/Header';
@@ -15,7 +15,7 @@ function formatDate(dateStr?: string) {
 }
 
 function ResumesView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).resumes;
   const [resumes, setResumes] = useState<Resume[]>([]);

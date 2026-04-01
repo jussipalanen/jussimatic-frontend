@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getMe, logoutUser } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
-import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../i18n';
+import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations, getPathWithoutLanguage } from '../i18n';
 import type { Language } from '../i18n';
 import LanguageSelect from './LanguageSelect';
 import UserEditModal from '../modals/UserEditModal';
@@ -55,7 +56,9 @@ interface NavActionsProps {
 }
 
 export default function NavActions({ language: controlledLanguage, onLanguageChange, onLoginClick }: NavActionsProps) {
-  const navigate = useNavigate();
+  const rawNavigate = useNavigate();
+  const navigate = useLocaleNavigate();
+  const location = useLocation();
   const [internalLanguage, setInternalLanguage] = useState<Language>(() => controlledLanguage ?? getStoredLanguage());
   const language = controlledLanguage ?? internalLanguage;
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
@@ -93,7 +96,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
   useEffect(() => {
     getProjects(1, 50, 'sort_order', 'asc', language)
       .then((res) => setPortfolioProjects(res.data.filter((p) => p.visibility === 'show')))
-      .catch(() => {});
+      .catch(() => { });
   }, [language]);
 
   useEffect(() => {
@@ -130,6 +133,15 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
   const handleLanguageChange = (lang: Language) => {
     setInternalLanguage(lang);
     setStoredLanguage(lang);
+
+    // Build the new URL with language prefix
+    const currentPath = getPathWithoutLanguage(location.pathname);
+    const newPath = lang === 'en' ? `/en${currentPath}` : currentPath;
+
+    // Navigate to the new URL
+    rawNavigate(newPath);
+
+    // Dispatch event for components that listen to language changes
     window.dispatchEvent(new CustomEvent('jussimatic-language-change', { detail: lang }));
     onLanguageChange?.(lang);
   };
@@ -144,7 +156,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
       console.error('Logout error:', error);
     } finally {
       localStorage.removeItem('auth_token');
-      window.location.href = '/';
+      window.location.href = language === 'en' ? '/en' : '/';
     }
   };
 

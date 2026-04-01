@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import NavActions from './NavActions';
 import Breadcrumb from './Breadcrumb';
 import type { Language } from '../i18n';
@@ -27,7 +27,7 @@ export default function Header({
   onBack,
   containerClassName = 'max-w-4xl mx-auto',
 }: HeaderProps) {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   if (title) {
     // Demo mode — relative, with breadcrumb

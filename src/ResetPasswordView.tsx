@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
+import { useLocaleNavigate } from './hooks/useLocaleNavigate'
 import { resetPassword } from './api/authApi'
 
 function ResetPasswordView() {
-  const navigate = useNavigate()
+  const navigate = useLocaleNavigate()
   const [searchParams] = useSearchParams()
   const token = (searchParams.get('token') ?? '').trim()
   const email = (searchParams.get('email') ?? '').trim()

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../../i18n';
+import { useLocaleNavigate } from '../../hooks/useLocaleNavigate';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
 import type { Language } from '../../i18n';
 import { exportInvoicePdfPublic, exportInvoiceHtmlPublic, fetchInvoiceOptions, sendInvoiceEmailPublic } from '../../api/invoicesApi';
 import type { InvoiceExportPayload, InvoiceStatusOption, InvoiceItemTypeOption } from '../../api/invoicesApi';
@@ -125,7 +125,7 @@ function generateInvoiceNumber(): string {
 // ---------------------------------------------------------------------------
 
 export default function InvoiceToolView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const tInv = (translations[language] ?? translations[DEFAULT_LANGUAGE]).invoices;
 
@@ -147,6 +147,12 @@ export default function InvoiceToolView() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [sendSuccess, setSendSuccess] = useState(false);
+
+  useEffect(() => {
+    const handler = (event: Event) => setLanguage((event as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
 
   useEffect(() => {
     fetchTaxRates(form.lang).then(setTaxRates).catch(() => setTaxRates([]));
@@ -319,7 +325,7 @@ export default function InvoiceToolView() {
         containerClassName="max-w-3xl mx-auto"
         title={tInv.demoPageTitle}
         language={language}
-        onLanguageChange={(lang) => { setLanguage(lang); setStoredLanguage(lang); }}
+        onLanguageChange={(lang) => setLanguage(lang)}
         backLabel={tInv.demoBackToHome}
         onBack={() => navigate('/')}
       />

@@ -1,9 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../hooks/useLocaleNavigate';
 import { useState, useEffect } from 'react';
 import {
   DEFAULT_LANGUAGE,
   getStoredLanguage,
-  setStoredLanguage,
   translations,
 } from '../../i18n';
 import type { Language } from '../../i18n';
@@ -17,7 +16,7 @@ import { JobList } from './components/JobList';
 import { Pagination } from './components/Pagination';
 
 function BrowseJobsView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
 
@@ -37,10 +36,11 @@ function BrowseJobsView() {
   const pagination = usePagination(5);
   const { resetPage } = pagination;
 
-  // Persist language preference
   useEffect(() => {
-    setStoredLanguage(language);
-  }, [language]);
+    const handler = (event: Event) => setLanguage((event as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
 
   // Reset pagination when filters change
   useEffect(() => {

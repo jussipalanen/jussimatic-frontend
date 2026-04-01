@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../hooks/useLocaleNavigate';
 import { getMyInvoices, getInvoice, exportInvoicePdf, exportInvoiceHtml } from '../../api/invoicesApi';
 import type { Invoice } from '../../api/invoicesApi';
 import Header from '../../components/Header';
@@ -39,7 +39,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function MyInvoicesView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).invoices;
 

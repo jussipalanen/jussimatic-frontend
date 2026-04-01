@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getAdminProject, createProject, updateProject, getProjectCategories } from '../api/projectsApi';
 import type { ProjectCategory, ProjectFormData } from '../api/projectsApi';
 import { getMe } from '../api/authApi';
@@ -49,7 +50,7 @@ function generateSlug(title: string): string {
 
 function AdminProjectFormView() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const isEditing = Boolean(id);
 
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());

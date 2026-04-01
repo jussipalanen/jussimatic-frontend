@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getProjectCategories, deleteProjectCategory } from '../api/projectsApi';
 import type { ProjectCategory } from '../api/projectsApi';
 import { getMe } from '../api/authApi';
@@ -10,7 +10,7 @@ import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
 function ProjectCategoriesView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminProjects;

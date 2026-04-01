@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getMe } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
 import Header from '../components/Header';
@@ -7,7 +7,7 @@ import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
 function AdminDashboardView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [loading, setLoading] = useState(true);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;

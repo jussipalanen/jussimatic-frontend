@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getAllBlogs, deleteBlog } from '../api/blogsApi';
 import type { Blog } from '../api/blogsApi';
 import { getMe } from '../api/authApi';
@@ -8,16 +8,11 @@ import Header from '../components/Header';
 
 import { Pagination } from '../components/Pagination';
 import { BlogFormModal } from '../modals/BlogFormModal';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
+import { DEFAULT_LANGUAGE, getStoredLanguage, getLocalizedValue, translations } from '../i18n';
 import type { Language } from '../i18n';
+import { buildImageUrl } from '../constants';
 
 const ITEMS_PER_PAGE = 10;
-
-const STORAGE_BASE_URL = (import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
-
-function buildImageUrl(path: string) {
-  return `${STORAGE_BASE_URL}/${path.replace(/^\/+/, '')}`;
-}
 
 function getPageNumbers(currentPage: number, totalPages: number): number[] {
   const pages: number[] = [];
@@ -43,7 +38,7 @@ function getPageNumbers(currentPage: number, totalPages: number): number[] {
 }
 
 function AdminBlogsView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminBlogs;
   const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
@@ -88,7 +83,7 @@ function AdminBlogsView() {
     setLoading(true);
     setError(null);
     try {
-      const res = await getAllBlogs(page, ITEMS_PER_PAGE);
+      const res = await getAllBlogs(page, ITEMS_PER_PAGE, 'created_at', 'desc', language);
       setBlogs(res.data);
       setTotalPages(res.last_page);
     } catch (err) {
@@ -101,7 +96,7 @@ function AdminBlogsView() {
   useEffect(() => {
     loadBlogs(currentPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
+  }, [currentPage, language]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -197,13 +192,13 @@ function AdminBlogsView() {
                     {blog.featured_image && (
                       <img
                         src={buildImageUrl(blog.featured_image)}
-                        alt={blog.title}
+                        alt={getLocalizedValue(blog.title, language)}
                         className="shrink-0 w-16 h-16 rounded-lg object-cover border border-gray-700"
                       />
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="font-semibold text-white truncate">{blog.title}</span>
+                        <span className="font-semibold text-white truncate">{getLocalizedValue(blog.title, language)}</span>
                         <span
                           className={`text-xs rounded-full px-2 py-0.5 font-medium ${blog.visibility
                             ? 'bg-green-600/20 text-green-400 border border-green-500/30'
@@ -219,7 +214,7 @@ function AdminBlogsView() {
                         )}
                       </div>
                       {blog.excerpt && (
-                        <p className="text-sm text-gray-400 truncate">{blog.excerpt}</p>
+                        <p className="text-sm text-gray-400 truncate">{getLocalizedValue(blog.excerpt, language)}</p>
                       )}
                       <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-gray-500">
                         {blog.author && (
@@ -233,7 +228,7 @@ function AdminBlogsView() {
                     <div className="shrink-0 flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => navigate(`/blogs/${blog.slug ?? blog.id}`)}
+                        onClick={() => navigate(`/blogs/${typeof blog.slug === 'string' ? blog.slug : (blog.slug?.[language] ?? blog.slug?.en ?? blog.id)}`)}
                         className="rounded-lg border border-blue-500/60 px-3 py-1.5 text-sm font-semibold text-blue-300 hover:bg-blue-600/20 transition-colors"
                       >
                         {t.btnView}
@@ -284,7 +279,7 @@ function AdminBlogsView() {
           <div className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 shadow-lg" role="dialog" aria-modal="true">
             <h2 className="text-xl font-semibold text-white">{t.deleteTitle}</h2>
             <p className="mt-3 text-sm text-gray-300">
-              {t.deleteConfirm.replace('{title}', blogToDelete.title)}
+              {t.deleteConfirm.replace('{title}', getLocalizedValue(blogToDelete.title, language))}
             </p>
             <div className="mt-6 flex items-center justify-end gap-3">
               <button

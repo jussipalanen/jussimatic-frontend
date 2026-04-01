@@ -1,4 +1,5 @@
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
+import { useLocaleNavigate } from './hooks/useLocaleNavigate';
 import { useEffect, useState } from 'react';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import type { Language } from './i18n';
@@ -11,7 +12,7 @@ import { getProjects } from './api/projectsApi';
 import type { Project } from './api/projectsApi';
 
 function LandingView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());

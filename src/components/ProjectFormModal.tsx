@@ -4,12 +4,7 @@ import { getAdminProject, createProject, updateProject, getProjectCategories, ge
 import type { Project, ProjectCategory, ProjectFormData, ProjectTagItem } from '../api/projectsApi';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
-
-const STORAGE_BASE_URL = (import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
-
-function buildImageUrl(path: string) {
-  return `${STORAGE_BASE_URL}/${path.replace(/^\/+/, '')}`;
-}
+import { buildImageUrl } from '../constants';
 
 interface TranslatedFormField {
   en: string;

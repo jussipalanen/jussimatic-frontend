@@ -1,21 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getBlog } from '../api/blogsApi';
 import type { Blog } from '../api/blogsApi';
 import Header from '../components/Header';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
+import { DEFAULT_LANGUAGE, getStoredLanguage, getLocalizedValue, translations } from '../i18n';
 import type { Language } from '../i18n';
+import { buildImageUrl } from '../constants';
 import DOMPurify from 'dompurify';
 import './blog-content.css';
 
-const STORAGE_BASE_URL = (import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
-
-function buildImageUrl(path: string) {
-  return `${STORAGE_BASE_URL}/${path.replace(/^\/+/, '')}`;
-}
-
 function BlogView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { id } = useParams<{ id: string }>();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
@@ -24,37 +20,92 @@ function BlogView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Store the numeric blog ID when first loaded to enable language switching
+  const [blogNumericId, setBlogNumericId] = useState<number | null>(null);
+  // Track if we're navigating to update URL (to avoid infinite loops)
+  const [isNavigatingUrl, setIsNavigatingUrl] = useState(false);
+  // Track the language that was used to load the current blog
+  const [loadedLanguage, setLoadedLanguage] = useState<Language | null>(null);
+
   useEffect(() => {
     const handler = (event: Event) => {
-      setLanguage((event as CustomEvent<Language>).detail);
+      const newLang = (event as CustomEvent<Language>).detail;
+      setLanguage(newLang);
     };
     window.addEventListener('jussimatic-language-change', handler);
     return () => window.removeEventListener('jussimatic-language-change', handler);
   }, []);
 
+  // Fetch blog by slug from URL
+  const loadBlogBySlug = async (slug: string, lang: Language) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getBlog(slug, lang);
+      setBlog(res);
+      // Store the numeric ID for future language switches
+      setBlogNumericId(res.id);
+      setLoadedLanguage(lang);
+    } catch (err) {
+      setError(err instanceof Error && err.message === 'NOT_FOUND' ? 'NOT_FOUND' : (err instanceof Error ? err.message : translations[lang]?.blog?.errorLoading ?? 'Failed to load blog'));
+      setBlog(null);
+      setBlogNumericId(null);
+      setLoadedLanguage(null);
+    } finally {
+      setLoading(false);
+      setIsNavigatingUrl(false);
+    }
+  };
+
+  // Fetch blog by numeric ID (for language switching)
+  // Does NOT show loading state to prevent content blinking
+  const loadBlogById = async (numericId: number, lang: Language) => {
+    try {
+      const res = await getBlog(numericId, lang);
+      setBlog(res);
+      setBlogNumericId(res.id);
+      setLoadedLanguage(lang);
+      setError(null);
+    } catch (err) {
+      // Blog not found in this language - keep existing content and show warning
+      if (err instanceof Error && err.message === 'NOT_FOUND') {
+        setError('LANGUAGE_NOT_AVAILABLE');
+      } else {
+        setError(err instanceof Error ? err.message : translations[lang]?.blog?.errorLoading ?? 'Failed to load blog');
+      }
+    } finally {
+      setIsNavigatingUrl(false);
+    }
+  };
+
+  // Load blog when URL or language changes
   useEffect(() => {
     if (!id) return;
+    if (isNavigatingUrl) return;
 
-    let active = true;
+    // Language switch with known numeric ID: fetch by ID to get the translated version
+    if (blogNumericId !== null && loadedLanguage !== null && loadedLanguage !== language) {
+      loadBlogById(blogNumericId, language);
+      return;
+    }
 
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await getBlog(id);
-        if (!active) return;
-        setBlog(res);
-      } catch (err) {
-        if (!active) return;
-        setError(err instanceof Error && err.message === 'NOT_FOUND' ? 'NOT_FOUND' : (err instanceof Error ? err.message : t.blog.errorLoading));
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
+    // Initial load or URL change (not a language switch): fetch by slug
+    loadBlogBySlug(id, language);
+  }, [id, language, blogNumericId, loadedLanguage]);
 
-    load();
-    return () => { active = false; };
-  }, [id, t.blog.errorLoading]);
+  // Update URL when language changes to show localized slug
+  useEffect(() => {
+    if (!blog?.slug || loading || isNavigatingUrl) return;
+
+    const localizedSlug = typeof blog.slug === 'string'
+      ? blog.slug
+      : (blog.slug[language] ?? blog.slug.en);
+
+    if (localizedSlug && id !== localizedSlug) {
+      setIsNavigatingUrl(true);
+      navigate(`/blogs/${localizedSlug}`, { replace: true });
+    }
+  }, [blog, id, language, loading, isNavigatingUrl, navigate]);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
@@ -65,14 +116,14 @@ function BlogView() {
     const isPlainText = !/<[a-z][\s\S]*>/i.test(content);
     const html = isPlainText
       ? content
-          .split(/\n\n+/)
-          .map((para) => `<p>${para.replace(/\n/g, '<br>')}</p>`)
-          .join('')
+        .split(/\n\n+/)
+        .map((para) => `<p>${para.replace(/\n/g, '<br>')}</p>`)
+        .join('')
       : content
-          // Collapse 3+ consecutive empty paragraphs to 2
-          .replace(/(<p>(\s|&nbsp;)*<\/p>\s*){3,}/gi, '<p><br></p><p><br></p>')
-          // Give single empty paragraphs a <br> so they render with visible height
-          .replace(/<p>(\s|&nbsp;)*<\/p>/gi, '<p><br></p>');
+        // Collapse 3+ consecutive empty paragraphs to 2
+        .replace(/(<p>(\s|&nbsp;)*<\/p>\s*){3,}/gi, '<p><br></p><p><br></p>')
+        // Give single empty paragraphs a <br> so they render with visible height
+        .replace(/<p>(\s|&nbsp;)*<\/p>/gi, '<p><br></p>');
     return DOMPurify.sanitize(html, {
       ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'b', 'strong', 'i', 'em', 's', 'p', 'br', 'a', 'blockquote', 'code', 'pre', 'img', 'hr'],
       ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'src', 'alt'],
@@ -112,13 +163,19 @@ function BlogView() {
             </div>
           )}
 
+          {error === 'LANGUAGE_NOT_AVAILABLE' && !loading && (
+            <div className="bg-yellow-900/30 border border-yellow-600/50 rounded-lg p-3 mb-4">
+              <p className="text-yellow-400 text-sm">{t.blog.languageNotAvailable}</p>
+            </div>
+          )}
+
           {!loading && !error && blog && (
             <article className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
               {/* Feature image */}
               {blog.featured_image && (
                 <img
                   src={buildImageUrl(blog.featured_image)}
-                  alt={blog.title}
+                  alt={getLocalizedValue(blog.title, language)}
                   className="w-full h-56 object-cover"
                 />
               )}
@@ -131,7 +188,7 @@ function BlogView() {
                   </span>
                 )}
 
-                <h1 className="text-2xl font-bold text-white mb-3">{blog.title}</h1>
+                <h1 className="text-2xl font-bold text-white mb-3">{getLocalizedValue(blog.title, language)}</h1>
 
                 {/* Meta */}
                 <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-6">
@@ -147,10 +204,10 @@ function BlogView() {
                 {blog.content ? (
                   <div
                     className="blog-content"
-                    dangerouslySetInnerHTML={{ __html: renderContent(blog.content) }}
+                    dangerouslySetInnerHTML={{ __html: renderContent(getLocalizedValue(blog.content, language)) }}
                   />
                 ) : blog.excerpt ? (
-                  <p className="text-gray-300 leading-relaxed">{blog.excerpt}</p>
+                  <p className="text-gray-300 leading-relaxed">{getLocalizedValue(blog.excerpt, language)}</p>
                 ) : null}
 
                 {/* Tags */}

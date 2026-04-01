@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { fetchAllOrders, updateOrder } from '../api/ordersApi';
 import { getMe } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
@@ -9,9 +9,7 @@ import Header from '../components/Header';
 import CountrySelect from '../components/CountrySelect';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
-
-const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
-const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
+import { buildStorageUrl } from '../constants';
 
 function formatDate(dateString?: string) {
   if (!dateString) return 'N/A';
@@ -29,14 +27,6 @@ function formatPrice(price: string | number | null | undefined) {
   if (!price) return '€0.00';
   const numPrice = typeof price === 'string' ? parseFloat(price) : price;
   return `€${numPrice.toFixed(2)}`;
-}
-
-function buildStorageUrl(path: string | null | undefined) {
-  if (!path) return PLACEHOLDER_IMAGE_URL;
-  if (!STORAGE_BASE_URL) return path;
-  const base = STORAGE_BASE_URL.replace(/\/+$/, '');
-  const endpoint = path.replace(/^\/+/, '');
-  return `${base}/${endpoint}`;
 }
 
 function getEffectivePrice(item: { unit_price?: string | number; sale_price?: string | number; price?: string | number }): number {
@@ -98,7 +88,7 @@ function calcOrderTaxBreakdown(items: import('../api/ordersApi').OrderItem[]): T
 }
 
 function AdminOrdersView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [ordersError, setOrdersError] = useState<string | null>(null);

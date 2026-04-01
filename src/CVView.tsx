@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from './hooks/useLocaleNavigate';
 import Header from './components/Header';
 import Breadcrumb from './components/Breadcrumb';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
@@ -170,16 +170,16 @@ function ProficiencyDots({ proficiency }: { proficiency: string }) {
 // Main view
 // ---------------------------------------------------------------------------
 
-const STORAGE_BASE_URL = (import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
+import { buildImageUrl } from './constants';
 
 function resolvePhoto(photo?: string | null): string | null {
   if (!photo) return null;
   if (photo.startsWith('http://') || photo.startsWith('https://')) return photo;
-  return `${STORAGE_BASE_URL}/${photo}`;
+  return buildImageUrl(photo);
 }
 
 export default function CVView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

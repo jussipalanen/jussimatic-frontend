@@ -1,36 +1,48 @@
 export type Language = 'en' | 'fi';
 
-export const DEFAULT_LANGUAGE: Language = 'en';
+export const DEFAULT_LANGUAGE: Language = 'fi';
 export const STORAGE_KEY = 'jussimatic-language';
 
-const isLanguage = (value: string | null): value is Language => value === 'en' || value === 'fi';
+export const SUPPORTED_LANGUAGES: Language[] = ['en', 'fi'];
 
-const getBrowserLanguage = (): Language => {
-  if (typeof navigator === 'undefined') return DEFAULT_LANGUAGE;
+export const isValidLanguage = (lang: string | null): lang is Language =>
+  lang === 'en' || lang === 'fi';
 
-  const candidates = Array.isArray(navigator.languages) && navigator.languages.length > 0
-    ? navigator.languages
-    : [navigator.language];
-
-  for (const candidate of candidates) {
-    if (!candidate) continue;
-    const normalized = candidate.toLowerCase();
-    if (normalized === 'fi' || normalized.startsWith('fi-')) return 'fi';
-    if (normalized === 'en' || normalized.startsWith('en-')) return 'en';
-  }
-
-  return DEFAULT_LANGUAGE;
+export const getLanguageFromPath = (pathname: string): Language => {
+  const match = pathname.match(/^\/(en|fi)(\/|$)/);
+  return (match?.[1] as Language) ?? DEFAULT_LANGUAGE;
 };
+
+export const getPathWithoutLanguage = (pathname: string): string => {
+  return pathname.replace(/^\/(en|fi)/, '') || '/';
+};
+
+export const localePath = (path: string, lang: Language): string => {
+  if (lang === 'fi') return path;
+  return `/en${path.startsWith('/') ? path : `/${path}`}`;
+};
+
+/**
+ * Get a localized value from a translated field.
+ * Falls back to English if the requested language is not available.
+ * Also handles plain strings for backward compatibility with legacy API responses.
+ */
+export function getLocalizedValue<T extends string>(
+  field: { en: T; fi?: T } | string | null | undefined,
+  lang: Language
+): string {
+  if (!field) return '';
+  // Handle plain strings (backward compatibility)
+  if (typeof field === 'string') return field;
+  // Handle TranslatedField objects
+  return field[lang] ?? field.en ?? '';
+}
+
 
 export const getStoredLanguage = (): Language => {
   if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
-
-  try {
-    const value = window.localStorage.getItem(STORAGE_KEY);
-    return isLanguage(value) ? value : getBrowserLanguage();
-  } catch {
-    return getBrowserLanguage();
-  }
+  // URL path is the authoritative source: /en/... = English, anything else = Finnish (default)
+  return getLanguageFromPath(window.location.pathname);
 };
 
 export const setStoredLanguage = (lang: Language): void => {
@@ -1085,6 +1097,7 @@ export const translations = {
       nextPage: 'Next page',
       perPage: 'Per page',
       blogNotFound: 'Blog post not found.',
+      languageNotAvailable: 'This blog post is not available in the selected language. Showing the English version.',
     },
     notFound: {
       heading: 'Page not found',
@@ -2134,6 +2147,7 @@ export const translations = {
       nextPage: 'Seuraava sivu',
       perPage: 'Per sivu',
       blogNotFound: 'Blogipostausta ei löydy.',
+      languageNotAvailable: 'Tätä blogipostausta ei ole saatavilla valitulla kielellä. Näytetään englanninkielinen versio.',
     },
     notFound: {
       heading: 'Sivua ei löydy',

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { fetchAllInvoices, updateInvoice, deleteInvoice, createInvoice, fetchInvoiceOptions } from '../api/invoicesApi';
 import type { Invoice, UpdateInvoiceData, CreateInvoiceData, InvoiceStatusOption, InvoiceItemTypeOption } from '../api/invoicesApi';
 import { fetchOrderById, fetchAllOrders } from '../api/ordersApi';
@@ -306,7 +306,7 @@ function StatusBadge({ status, label, color }: { status: string; label?: string;
 }
 
 function AdminInvoicesView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [invoicesError, setInvoicesError] = useState<string | null>(null);

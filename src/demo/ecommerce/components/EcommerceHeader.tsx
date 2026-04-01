@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocaleNavigate } from '../../../hooks/useLocaleNavigate';
 import { useEffect, useState } from 'react';
 import { ECOMMERCE_MAIN_TITLE } from '../../../constants';
 import { getMe, logoutUser } from '../../../api/authApi';
 import { getRoleAccess } from '../../../utils/authUtils';
 import AuthModal from '../../../modals/AuthModal';
-import { getStoredLanguage, setStoredLanguage, translations, type Language } from '../../../i18n';
+import { getStoredLanguage, translations, getPathWithoutLanguage, type Language } from '../../../i18n';
 import LanguageSelect from '../../../components/LanguageSelect';
 
 type NavKey = 'products' | 'cart' | 'my-orders' | 'my-profile' | 'admin-dashboard';
@@ -27,7 +28,9 @@ function EcommerceHeader({
   activeNav,
   actions,
 }: EcommerceHeaderProps) {
-  const navigate = useNavigate();
+  const rawNavigate = useNavigate();
+  const navigate = useLocaleNavigate();
+  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [roleAccess, setRoleAccess] = useState<ReturnType<typeof getRoleAccess> | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -35,10 +38,19 @@ function EcommerceHeader({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
 
+  const handleLanguageChange = (lang: Language) => {
+    setLanguage(lang);
+    const currentPath = getPathWithoutLanguage(location.pathname);
+    const newPath = lang === 'en' ? `/en${currentPath}` : currentPath;
+    rawNavigate(newPath);
+    window.dispatchEvent(new CustomEvent<Language>('jussimatic-language-change', { detail: lang }));
+  };
+
   useEffect(() => {
-    setStoredLanguage(language);
-    window.dispatchEvent(new CustomEvent('jussimatic-language-change', { detail: language }));
-  }, [language]);
+    const handler = (event: Event) => setLanguage((event as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
 
   const t = translations[language].ecommerce;
   const isProductsActive = activeNav === 'products';
@@ -137,7 +149,7 @@ function EcommerceHeader({
             <div className="hidden lg:flex shrink-0 items-center gap-1.5 lg:gap-2.5">
               {actions && <div className="flex items-center gap-1.5 lg:gap-2.5">{actions}</div>}
 
-              <LanguageSelect value={language} onChange={setLanguage} className="px-2 py-1 lg:px-3 lg:py-1.5 text-xs lg:text-sm" />
+              <LanguageSelect value={language} onChange={handleLanguageChange} className="px-2 py-1 lg:px-3 lg:py-1.5 text-xs lg:text-sm" />
 
               {/* Products */}
               <button onClick={() => navigateAndCloseMenu('/demo/ecommerce/products')} disabled={isProductsActive} aria-current={isProductsActive ? 'page' : undefined} aria-label={t.browseProducts} className={isProductsActive ? activeBtnCls : navBtnCls}>
@@ -291,7 +303,7 @@ function EcommerceHeader({
 
                 {/* Bottom bar: auth action */}
                 <div className="px-3 pb-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
-                  <LanguageSelect value={language} onChange={setLanguage} dropdownAlign="left" />
+                  <LanguageSelect value={language} onChange={handleLanguageChange} dropdownAlign="left" />
                   {isLoggedIn ? (
                     <button
                       onClick={handleLogout}

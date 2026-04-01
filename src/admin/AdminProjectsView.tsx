@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getAdminProjects, deleteProject } from '../api/projectsApi';
 import type { Project } from '../api/projectsApi';
 import { getMe } from '../api/authApi';
@@ -9,14 +9,9 @@ import { Pagination } from '../components/Pagination';
 import { ProjectFormModal } from '../components/ProjectFormModal';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
+import { buildImageUrl } from '../constants';
 
 const ITEMS_PER_PAGE = 10;
-
-const STORAGE_BASE_URL = (import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
-
-function buildImageUrl(path: string) {
-  return `${STORAGE_BASE_URL}/${path.replace(/^\/+/, '')}`;
-}
 
 function getPageNumbers(currentPage: number, totalPages: number): number[] {
   const pages: number[] = [];
@@ -42,7 +37,7 @@ function getPageNumbers(currentPage: number, totalPages: number): number[] {
 }
 
 function AdminProjectsView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminProjects;
   const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;

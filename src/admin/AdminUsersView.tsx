@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { deleteUser, fetchAllUsers } from '../api/usersApi';
 import type { UserSummary } from '../api/usersApi';
 import Header from '../components/Header';
@@ -46,7 +46,7 @@ function getUserRoles(user: UserSummary): string[] {
 }
 
 function AdminUsersView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

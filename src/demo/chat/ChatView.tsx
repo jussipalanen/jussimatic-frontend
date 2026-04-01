@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../hooks/useLocaleNavigate';
 import { ask } from '../../api/chatApi';
 import {
   DEFAULT_LANGUAGE,
   getStoredLanguage,
-  setStoredLanguage,
   translations,
 } from '../../i18n';
 import type { Language } from '../../i18n';
@@ -14,7 +13,7 @@ import { usePersistedMessages } from './usePersistedMessages';
 import Header from '../../components/Header';
 
 function ChatView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
@@ -26,8 +25,10 @@ function ChatView() {
   const suggestions = t.chat.exampleQuestions;
 
   useEffect(() => {
-    setStoredLanguage(language);
-  }, [language]);
+    const handler = (event: Event) => setLanguage((event as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
 
   useEffect(() => {
     endOfListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
