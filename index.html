@@ -19,6 +19,12 @@
 
 <body>
   <div id="root"></div>
+  <!-- Apply persisted theme before React mounts to prevent flash -->
+  <script>
+    if (localStorage.getItem('jussimatic-theme') === 'light') {
+      document.documentElement.classList.add('light-theme');
+    }
+  </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

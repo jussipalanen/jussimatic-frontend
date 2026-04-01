@@ -1,0 +1,346 @@
+/* ================================================ */
+/* DARK THEME (default)                              */
+/* Space / night-sky background with animated stars */
+/* ================================================ */
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% -5%, rgba(12, 25, 80, 0.45) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 85% 105%, rgba(35, 6, 60, 0.30) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 35% at 50% 50%, rgba(3, 8, 30, 0.20) 0%, transparent 70%),
+    linear-gradient(to bottom, #000005 0%, #010008 45%, #030005 100%);
+  background-color: #000005;
+}
+
+/* Vignette darken — edges fade to deeper black */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.72) 100%);
+}
+
+#root {
+  background: transparent;
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+/* ---- Star layer 1: tiny & dense, very slow drift ---- */
+.stars-layer-1 {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  contain: paint;
+  will-change: background-position;
+  background-image:
+    radial-gradient(1px 1px at 5% 8%, rgba(255, 255, 255, 0.90) 0%, transparent 100%),
+    radial-gradient(1px 1px at 12% 35%, rgba(255, 255, 255, 0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 18% 62%, rgba(255, 255, 255, 0.75) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 15%, rgba(255, 255, 255, 0.40) 0%, transparent 100%),
+    radial-gradient(1px 1px at 31% 88%, rgba(255, 255, 255, 0.65) 0%, transparent 100%),
+    radial-gradient(1px 1px at 38% 45%, rgba(255, 255, 255, 0.80) 0%, transparent 100%),
+    radial-gradient(1px 1px at 44% 2%, rgba(255, 255, 255, 0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 51% 72%, rgba(255, 255, 255, 0.70) 0%, transparent 100%),
+    radial-gradient(1px 1px at 57% 28%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 64% 55%, rgba(255, 255, 255, 0.85) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 18%, rgba(255, 255, 255, 0.60) 0%, transparent 100%),
+    radial-gradient(1px 1px at 77% 82%, rgba(255, 255, 255, 0.75) 0%, transparent 100%),
+    radial-gradient(1px 1px at 83% 40%, rgba(255, 255, 255, 0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 89% 68%, rgba(255, 255, 255, 0.90) 0%, transparent 100%),
+    radial-gradient(1px 1px at 96% 25%, rgba(255, 255, 255, 0.65) 0%, transparent 100%),
+    radial-gradient(1px 1px at 8% 78%, rgba(255, 255, 255, 0.70) 0%, transparent 100%),
+    radial-gradient(1px 1px at 22% 52%, rgba(255, 255, 255, 0.40) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 7%, rgba(255, 255, 255, 0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 48% 95%, rgba(255, 255, 255, 0.75) 0%, transparent 100%),
+    radial-gradient(1px 1px at 61% 42%, rgba(255, 255, 255, 0.60) 0%, transparent 100%);
+  background-size: 200px 200px;
+  opacity: 0.48;
+  animation: starDrift1 140s linear infinite;
+}
+
+/* ---- Star layer 2: medium & scattered, mid-speed ---- */
+.stars-layer-2 {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  contain: paint;
+  will-change: background-position;
+  background-image:
+    radial-gradient(1.5px 1.5px at 10% 20%, rgba(255, 255, 255, 1.00) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 25% 65%, rgba(200, 220, 255, 0.85) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 40% 10%, rgba(255, 255, 255, 0.90) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 55% 80%, rgba(220, 200, 255, 0.80) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 70% 35%, rgba(255, 255, 255, 0.95) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 82% 55%, rgba(200, 230, 255, 0.75) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 92% 8%, rgba(255, 255, 255, 0.85) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 48% 48%, rgba(255, 230, 200, 0.70) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 15% 90%, rgba(255, 255, 255, 0.80) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 62% 22%, rgba(210, 220, 255, 0.90) 0%, transparent 100%);
+  background-size: 380px 380px;
+  opacity: 0.52;
+  animation: starDrift2 90s linear infinite;
+}
+
+/* ---- Star layer 3: bright accent stars, gentle twinkle ---- */
+.stars-layer-3 {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  contain: paint;
+  will-change: background-position;
+  background-image:
+    radial-gradient(2px 2px at 15% 25%, rgba(255, 255, 255, 1.00) 0%, transparent 100%),
+    radial-gradient(2px 2px at 45% 60%, rgba(210, 225, 255, 1.00) 0%, transparent 100%),
+    radial-gradient(2px 2px at 72% 18%, rgba(255, 255, 255, 1.00) 0%, transparent 100%),
+    radial-gradient(2.5px 2.5px at 88% 75%, rgba(255, 240, 210, 0.95) 0%, transparent 100%),
+    radial-gradient(2px 2px at 30% 82%, rgba(255, 255, 255, 0.90) 0%, transparent 100%),
+    radial-gradient(2px 2px at 60% 40%, rgba(220, 210, 255, 1.00) 0%, transparent 100%);
+  background-size: 650px 650px;
+  opacity: 0.65;
+  animation:
+    starDrift3 65s linear infinite,
+    starTwinkle 5s ease-in-out infinite alternate;
+}
+
+@keyframes starDrift1 {
+  from { background-position: 0 0; }
+  to   { background-position: 200px 200px; }
+}
+
+@keyframes starDrift2 {
+  from { background-position: 0 0; }
+  to   { background-position: -380px 380px; }
+}
+
+@keyframes starDrift3 {
+  from { background-position: 0 0; }
+  to   { background-position: 650px -650px; }
+}
+
+@keyframes starTwinkle {
+  0%   { opacity: 0.38; }
+  50%  { opacity: 0.80; }
+  100% { opacity: 0.42; }
+}
+
+/* ================================================ */
+/* SHOOTING STARS & STARLIGHT FLARES                */
+/* ================================================ */
+
+.shooting-stars-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  contain: paint;
+}
+
+/* ---- Shooting Star base ---- */
+.shooting-star {
+  position: absolute;
+  height: 2px;
+  border-radius: 999px;
+  opacity: 0;
+  will-change: transform, opacity;
+  background: linear-gradient(to right,
+      transparent 0%,
+      rgba(150, 195, 255, 0.06) 12%,
+      rgba(175, 215, 255, 0.22) 35%,
+      rgba(210, 235, 255, 0.60) 60%,
+      rgba(245, 252, 255, 0.88) 82%,
+      rgba(255, 255, 255, 0.96) 93%,
+      rgba(255, 255, 255, 0.55) 100%);
+  filter: drop-shadow(0 0 3px rgba(180, 220, 255, 0.55));
+}
+
+/* Glowing leading tip */
+.shooting-star::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  translate: 0 -50%;
+  width: 5px;
+  height: 5px;
+  background: radial-gradient(circle, #fff 0%, rgba(210, 240, 255, 0.85) 55%, transparent 100%);
+  border-radius: 50%;
+  box-shadow:
+    0 0 4px 2px rgba(255, 255, 255, 1.0),
+    0 0 12px 5px rgba(210, 238, 255, 0.95),
+    0 0 28px 11px rgba(175, 220, 255, 0.55),
+    0 0 55px 20px rgba(155, 210, 255, 0.22);
+}
+
+.shooting-star--1 {
+  top: 4%;
+  left: 0;
+  width: 310px;
+  animation: shootAcross 78s linear 5s infinite;
+}
+
+.shooting-star--2 {
+  top: 0;
+  left: 8%;
+  width: 255px;
+  animation: shootAcross 65s linear 23s infinite;
+}
+
+.shooting-star--3 {
+  top: 17%;
+  left: 0;
+  width: 390px;
+  animation: shootAcross 94s linear 47s infinite;
+}
+
+.shooting-star--4 {
+  top: 0;
+  left: 22%;
+  width: 275px;
+  animation: shootAcross 72s linear 14s infinite;
+}
+
+.shooting-star--5 {
+  top: 9%;
+  left: 0;
+  width: 230px;
+  animation: shootAcross 85s linear 61s infinite;
+}
+
+@keyframes shootAcross {
+  0% {
+    transform: rotate(28deg) translateX(-700px);
+    opacity: 0;
+  }
+  2% {
+    transform: rotate(28deg) translateX(-700px);
+    opacity: 0;
+  }
+  3% {
+    transform: rotate(28deg) translateX(-280px);
+    opacity: 0;
+    animation-timing-function: linear;
+  }
+  5.2% {
+    transform: rotate(28deg) translateX(60px);
+    opacity: 1;
+  }
+  9.5% {
+    transform: rotate(28deg) translateX(calc(100vw - 80px));
+    opacity: 1;
+  }
+  11.5% {
+    transform: rotate(28deg) translateX(calc(100vw + 340px));
+    opacity: 0;
+  }
+  12% {
+    transform: rotate(28deg) translateX(-700px);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(28deg) translateX(-700px);
+    opacity: 0;
+  }
+}
+
+/* ---- Starlight Flares ---- */
+.starlight-flare {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  opacity: 0;
+  will-change: transform, opacity;
+  box-shadow:
+    0 0 8px 3px rgba(255, 255, 255, 0.90),
+    0 0 26px 11px rgba(220, 240, 255, 0.60),
+    0 0 80px 35px rgba(180, 215, 255, 0.22);
+}
+
+.starlight-flare--1 {
+  top: 22%;
+  left: 28%;
+  animation: starlightFlare 90s ease-in-out 8s infinite;
+}
+
+.starlight-flare--2 {
+  top: 58%;
+  left: 72%;
+  animation: starlightFlare 72s ease-in-out 38s infinite;
+}
+
+.starlight-flare--3 {
+  top: 14%;
+  left: 62%;
+  animation: starlightFlare 85s ease-in-out 55s infinite;
+}
+
+@keyframes starlightFlare {
+  0%   { opacity: 0; transform: scale(0.8); }
+  1.5% { opacity: 0; }
+  2%   { opacity: 1; transform: scale(1.8); }
+  5%   { opacity: 0.75; transform: scale(1.2); }
+  9%   { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+
+/* ================================================ */
+/* PERFORMANCE — touch/mobile devices               */
+/* ================================================ */
+@media (hover: none) and (pointer: coarse) {
+  .stars-layer-1,
+  .stars-layer-3 {
+    animation: none;
+  }
+
+  .starlight-flare {
+    display: none;
+  }
+
+  .shooting-star {
+    display: none;
+  }
+}
+
+/* ================================================ */
+/* ACCESSIBILITY — respect OS reduced motion        */
+/* ================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .stars-layer-1,
+  .stars-layer-2,
+  .stars-layer-3 {
+    animation: none !important;
+  }
+
+  .shooting-star,
+  .starlight-flare {
+    animation: none !important;
+    display: none;
+  }
+}
+
+/* ================================================ */
+/* USER TOGGLE — animated background disabled       */
+/* ================================================ */
+.no-bg-animation .stars-layer-1,
+.no-bg-animation .stars-layer-2,
+.no-bg-animation .stars-layer-3 {
+  animation: none !important;
+}
+
+.no-bg-animation .shooting-stars-layer {
+  display: none;
+}

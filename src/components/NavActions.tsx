@@ -79,6 +79,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
     // First visit: disable animations automatically on low-end devices
     return !isLowEndDevice();
   });
+  const [lightTheme, setLightTheme] = useState(() => localStorage.getItem('jussimatic-theme') === 'light');
   const userMenuRef = useRef<HTMLDivElement>(null);
   const userMobileMenuRef = useRef<HTMLDivElement>(null);
   const projectsMenuRef = useRef<HTMLDivElement>(null);
@@ -133,6 +134,15 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
     }
     localStorage.setItem('jussimatic-animated-bg', String(animatedBg));
   }, [animatedBg]);
+
+  useEffect(() => {
+    if (lightTheme) {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+    localStorage.setItem('jussimatic-theme', lightTheme ? 'light' : 'dark');
+  }, [lightTheme]);
 
   const handleLanguageChange = (lang: Language) => {
     setInternalLanguage(lang);
@@ -253,6 +263,34 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
             </div>
           )}
         </div>
+
+        {/* Light / Dark theme toggle */}
+        <button
+          onClick={() => setLightTheme((v) => !v)}
+          aria-label={lightTheme ? 'Switch to dark theme' : 'Switch to light theme'}
+          title={lightTheme ? 'Switch to dark theme' : 'Switch to light theme'}
+          aria-pressed={lightTheme}
+          className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${lightTheme
+            ? 'border-yellow-400/60 bg-yellow-400/15 text-yellow-500 hover:bg-yellow-400/25 hover:border-yellow-400/80'
+            : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
+          }`}
+        >
+          {lightTheme ? (
+            <>
+              <span className="absolute inset-0 rounded-lg bg-yellow-300/20 blur-sm animate-pulse" />
+              {/* Sun icon — filled, light mode active */}
+              <svg className="relative w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm0 15a5 5 0 100-10 5 5 0 000 10zm7.071-12.071a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM21 11h1a1 1 0 110 2h-1a1 1 0 110-2zm-2.929 7.071a1 1 0 011.414 0l.707.707a1 1 0 11-1.414 1.414l-.707-.707a1 1 0 010-1.414zM12 20a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-7.071-2.929a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM3 11H2a1 1 0 100 2h1a1 1 0 100-2zm1.929-7.071a1 1 0 011.414 0l.707.707A1 1 0 015.636 6.05l-.707-.707a1 1 0 010-1.414z" />
+              </svg>
+            </>
+          ) : (
+            /* Sun icon — outline, dark mode */
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="4" />
+              <path strokeLinecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+          )}
+        </button>
 
         {/* Animated background toggle */}
         <button

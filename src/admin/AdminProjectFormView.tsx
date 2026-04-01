@@ -12,8 +12,12 @@ import type { Language } from '../i18n';
 interface ProjectFormState {
   title: string;
   slug: string;
+  title_fi: string;
+  slug_fi: string;
   short_description: string;
   long_description: string;
+  short_description_fi: string;
+  long_description_fi: string;
   live_url: string;
   github_url: string;
   sort_order: string;
@@ -27,8 +31,12 @@ interface ProjectFormState {
 const EMPTY_FORM: ProjectFormState = {
   title: '',
   slug: '',
+  title_fi: '',
+  slug_fi: '',
   short_description: '',
   long_description: '',
+  short_description_fi: '',
+  long_description_fi: '',
   live_url: '',
   github_url: '',
   sort_order: '',
@@ -43,6 +51,8 @@ function generateSlug(title: string): string {
   return title
     .toLowerCase()
     .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^\w\s-]/g, '')
     .replace(/[\s_]+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -61,6 +71,7 @@ function AdminProjectFormView() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [slugFiManuallyEdited, setSlugFiManuallyEdited] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
   const [loading, setLoading] = useState(isEditing);
@@ -102,22 +113,30 @@ function AdminProjectFormView() {
     const fetchProject = async () => {
       setLoading(true);
       try {
-        const project = await getAdminProject(id);
+        const [enProject, fiProject] = await Promise.all([
+          getAdminProject(id),
+          getAdminProject(id, 'fi').catch(() => null),
+        ]);
         setForm({
-          title: project.title,
-          slug: project.slug ?? '',
-          short_description: project.short_description ?? '',
-          long_description: project.long_description ?? '',
-          live_url: project.live_url ?? '',
-          github_url: project.github_url ?? '',
-          sort_order: project.sort_order != null ? String(project.sort_order) : '',
-          tags: project.tags?.map((t) => t.title) ?? [],
+          title: enProject.title,
+          slug: enProject.slug ?? '',
+          title_fi: fiProject?.title ?? '',
+          slug_fi: fiProject?.slug ?? '',
+          short_description: enProject.short_description ?? '',
+          long_description: enProject.long_description ?? '',
+          short_description_fi: fiProject?.short_description ?? '',
+          long_description_fi: fiProject?.long_description ?? '',
+          live_url: enProject.live_url ?? '',
+          github_url: enProject.github_url ?? '',
+          sort_order: enProject.sort_order != null ? String(enProject.sort_order) : '',
+          tags: enProject.tags?.map((t) => t.title) ?? [],
           tagInput: '',
-          visibility: project.visibility ?? 'show',
-          category_id: project.categories?.[0]?.id != null ? String(project.categories[0].id) : '',
+          visibility: enProject.visibility ?? 'show',
+          category_id: enProject.categories?.[0]?.id != null ? String(enProject.categories[0].id) : '',
           image_file: null,
         });
         setSlugManuallyEdited(true);
+        setSlugFiManuallyEdited(Boolean(fiProject?.slug));
       } catch (err) {
         setFormError(err instanceof Error ? err.message : t.errLoad);
       } finally {
@@ -127,11 +146,6 @@ function AdminProjectFormView() {
     fetchProject();
   }, [id, authError]);
 
-  useEffect(() => {
-    if (!slugManuallyEdited && form.title.trim()) {
-      setForm((f) => ({ ...f, slug: generateSlug(f.title) }));
-    }
-  }, [form.title, slugManuallyEdited]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -171,10 +185,22 @@ function AdminProjectFormView() {
     setFormError(null);
     try {
       const payload: ProjectFormData = {
-        title: { en: form.title.trim() },
-        slug: form.slug ? { en: form.slug.trim() } : undefined,
-        short_description: form.short_description ? { en: form.short_description.trim() } : undefined,
-        long_description: form.long_description ? { en: form.long_description.trim() } : undefined,
+        title: {
+          en: form.title.trim(),
+          ...(form.title_fi.trim() ? { fi: form.title_fi.trim() } : {}),
+        },
+        slug: (form.slug.trim() || form.slug_fi.trim()) ? {
+          en: form.slug.trim(),
+          ...(form.slug_fi.trim() ? { fi: form.slug_fi.trim() } : {}),
+        } : undefined,
+        short_description: (form.short_description.trim() || form.short_description_fi.trim()) ? {
+          en: form.short_description.trim(),
+          ...(form.short_description_fi.trim() ? { fi: form.short_description_fi.trim() } : {}),
+        } : undefined,
+        long_description: (form.long_description.trim() || form.long_description_fi.trim()) ? {
+          en: form.long_description.trim(),
+          ...(form.long_description_fi.trim() ? { fi: form.long_description_fi.trim() } : {}),
+        } : undefined,
         live_url: form.live_url.trim() || undefined,
         github_url: form.github_url.trim() || undefined,
         sort_order: form.sort_order.trim() ? Number(form.sort_order) : undefined,
@@ -225,7 +251,14 @@ function AdminProjectFormView() {
         {!loading && !authError && (
           <div className="mx-auto max-w-2xl">
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              {/* Title */}
+
+              {/* ── English (EN) ── */}
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">EN</span>
+                <div className="h-px flex-1 bg-gray-700" />
+              </div>
+
+              {/* Title EN */}
               <div>
                 <label className={labelCls}>
                   {t.labelTitle} <span className="text-red-400">*</span>
@@ -240,7 +273,7 @@ function AdminProjectFormView() {
                 />
               </div>
 
-              {/* Slug */}
+              {/* Slug EN */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className={labelCls}>{t.labelSlug}</label>
@@ -261,7 +294,7 @@ function AdminProjectFormView() {
                 />
               </div>
 
-              {/* Short description */}
+              {/* Short description EN */}
               <div>
                 <label className={labelCls}>{t.labelSubtitle}</label>
                 <input
@@ -273,7 +306,7 @@ function AdminProjectFormView() {
                 />
               </div>
 
-              {/* Long description */}
+              {/* Long description EN */}
               <div>
                 <label className={labelCls}>{t.labelDescription}</label>
                 <textarea
@@ -282,6 +315,73 @@ function AdminProjectFormView() {
                   className={`${inputCls} min-h-[120px] resize-y`}
                   placeholder={t.placeholderDescription}
                 />
+              </div>
+
+              {/* ── Finnish (FI) ── */}
+              <div className="flex items-center gap-3 mt-2">
+                <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">FI</span>
+                <div className="h-px flex-1 bg-gray-700" />
+              </div>
+
+              {/* Title FI */}
+              <div>
+                <label className={labelCls}>{t.labelTitle} <span className="text-gray-500 font-normal text-xs">(Suomi)</span></label>
+                <input
+                  type="text"
+                  value={form.title_fi}
+                  onChange={(e) => setForm((f) => ({ ...f, title_fi: e.target.value }))}
+                  className={inputCls}
+                  placeholder={t.placeholderTitle}
+                />
+              </div>
+
+              {/* Slug FI */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className={labelCls}>{t.labelSlug} <span className="text-gray-500 font-normal text-xs">(Suomi)</span></label>
+                  <button
+                    type="button"
+                    onClick={() => { setForm((f) => ({ ...f, slug_fi: generateSlug(f.title_fi) })); setSlugFiManuallyEdited(true); }}
+                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    Auto-generate
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={form.slug_fi}
+                  onChange={(e) => { setForm((f) => ({ ...f, slug_fi: e.target.value })); setSlugFiManuallyEdited(true); }}
+                  className={inputCls}
+                  placeholder={t.placeholderSlug}
+                />
+              </div>
+
+              {/* Short description FI */}
+              <div>
+                <label className={labelCls}>{t.labelSubtitle} <span className="text-gray-500 font-normal text-xs">(Suomi)</span></label>
+                <input
+                  type="text"
+                  value={form.short_description_fi}
+                  onChange={(e) => setForm((f) => ({ ...f, short_description_fi: e.target.value }))}
+                  className={inputCls}
+                  placeholder={t.placeholderSubtitle}
+                />
+              </div>
+
+              {/* Long description FI */}
+              <div>
+                <label className={labelCls}>{t.labelDescription} <span className="text-gray-500 font-normal text-xs">(Suomi)</span></label>
+                <textarea
+                  value={form.long_description_fi}
+                  onChange={(e) => setForm((f) => ({ ...f, long_description_fi: e.target.value }))}
+                  className={`${inputCls} min-h-[120px] resize-y`}
+                  placeholder={t.placeholderDescription}
+                />
+              </div>
+
+              {/* ── Common fields ── */}
+              <div className="flex items-center gap-3 mt-2">
+                <div className="h-px flex-1 bg-gray-700" />
               </div>
 
               {/* Category */}
