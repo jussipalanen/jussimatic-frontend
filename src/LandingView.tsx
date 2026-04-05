@@ -29,6 +29,8 @@ function LandingView() {
   const [showProjectsModal, setShowProjectsModal] = useState(false);
   const [demosViewMode, setDemosViewMode] = useState<'list' | 'grid'>('list');
   const [portfolioProjects, setPortfolioProjects] = useState<Project[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [projectsError, setProjectsError] = useState(false);
   const [visitorsCount, setVisitorsCount] = useState<number | null>(null);
   const [visitorsTotalCount, setVisitorsTotalCount] = useState<number | null>(null);
   const [visitorsError, setVisitorsError] = useState<string | null>(null);
@@ -102,9 +104,11 @@ function LandingView() {
 
   useEffect(() => {
     if (!showProjectsModal) return;
+    setProjectsLoading(true);
+    setProjectsError(false);
     getProjects(1, 50, 'sort_order', 'asc', language)
-      .then((res) => setPortfolioProjects(res.data.filter((p) => p.visibility === 'show')))
-      .catch(() => {});
+      .then((res) => { setPortfolioProjects(res.data.filter((p) => p.visibility === 'show')); setProjectsLoading(false); })
+      .catch(() => { setProjectsError(true); setProjectsLoading(false); });
   }, [showProjectsModal, language]);
 
   useEffect(() => {
@@ -342,7 +346,19 @@ function LandingView() {
               </div>
             </div>
             {/* Modal body */}
-            {demosViewMode === 'list' ? (
+            {projectsLoading ? (
+              <div className="flex-1 flex items-center justify-center py-12">
+                <p className="text-sm text-white/40">{t.landing.projectsLoading}</p>
+              </div>
+            ) : projectsError ? (
+              <div className="flex-1 flex items-center justify-center py-12">
+                <p className="text-sm text-red-400">{t.landing.projectsError}</p>
+              </div>
+            ) : portfolioProjects.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center py-12">
+                <p className="text-sm text-white/40">{t.landing.projectsEmpty}</p>
+              </div>
+            ) : demosViewMode === 'list' ? (
               <div className="overflow-y-auto flex-1 divide-y divide-gray-700">
                 {portfolioProjects.map((project) => (
                   <button

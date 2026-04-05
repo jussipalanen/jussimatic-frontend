@@ -68,6 +68,8 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
   const [portfolioProjects, setPortfolioProjects] = useState<Project[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [projectsError, setProjectsError] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [animatedBg, setAnimatedBg] = useState(() => {
@@ -94,9 +96,11 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
   }, []);
 
   useEffect(() => {
+    setProjectsLoading(true);
+    setProjectsError(false);
     getProjects(1, 50, 'sort_order', 'asc', language)
-      .then((res) => setPortfolioProjects(res.data.filter((p) => p.visibility === 'show')))
-      .catch(() => { });
+      .then((res) => { setPortfolioProjects(res.data.filter((p) => p.visibility === 'show')); setProjectsLoading(false); })
+      .catch(() => { setProjectsError(true); setProjectsLoading(false); });
   }, [language]);
 
   useEffect(() => {
@@ -227,7 +231,13 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
           {showProjects && (
             <div className="absolute top-full right-0 mt-1 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden max-h-[80vh] overflow-y-auto">
               <p className="text-xs font-semibold uppercase tracking-wide text-white/40 px-4 pt-3 pb-1.5">{t.landing.portfolioSection}</p>
-              {portfolioProjects.map((project) => (
+              {projectsLoading ? (
+                <p className="px-4 py-3 text-sm text-white/40">{t.landing.projectsLoading}</p>
+              ) : projectsError ? (
+                <p className="px-4 py-3 text-sm text-red-400">{t.landing.projectsError}</p>
+              ) : portfolioProjects.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-white/40">{t.landing.projectsEmpty}</p>
+              ) : portfolioProjects.map((project) => (
                 <button
                   key={project.id}
                   onClick={() => { if (project.live_url) { window.open(project.live_url, '_blank', 'noopener,noreferrer'); } setShowProjects(false); }}
@@ -483,21 +493,29 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
         >
           <div className="max-w-7xl mx-auto px-4 py-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-white/40 px-2 pt-1 pb-2">{t.landing.portfolioSection}</p>
-            <div className="grid grid-cols-2 gap-1">
-              {portfolioProjects.map((project) => (
-                <button
-                  key={project.id}
-                  onClick={() => { if (project.live_url) { window.open(project.live_url, '_blank', 'noopener,noreferrer'); } setShowMobileMenu(false); }}
-                  disabled={!project.live_url}
-                  className="flex items-center gap-2 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors text-left disabled:opacity-50 disabled:cursor-default"
-                >
-                  <svg className="w-4 h-4 shrink-0 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                  <span className="truncate">{project.title}</span>
-                </button>
-              ))}
-            </div>
+            {projectsLoading ? (
+              <p className="px-3 py-2 text-sm text-white/40">{t.landing.projectsLoading}</p>
+            ) : projectsError ? (
+              <p className="px-3 py-2 text-sm text-red-400">{t.landing.projectsError}</p>
+            ) : portfolioProjects.length === 0 ? (
+              <p className="px-3 py-2 text-sm text-white/40">{t.landing.projectsEmpty}</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-1">
+                {portfolioProjects.map((project) => (
+                  <button
+                    key={project.id}
+                    onClick={() => { if (project.live_url) { window.open(project.live_url, '_blank', 'noopener,noreferrer'); } setShowMobileMenu(false); }}
+                    disabled={!project.live_url}
+                    className="flex items-center gap-2 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors text-left disabled:opacity-50 disabled:cursor-default"
+                  >
+                    <svg className="w-4 h-4 shrink-0 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    <span className="truncate">{project.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {/* Animated background toggle — mobile panel */}
             <div className="border-t border-white/10 mt-2 pt-2">
               <button
