@@ -6,6 +6,8 @@ import { getMe } from '../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
 import { ProjectCategoryModal } from '../components/ProjectCategoryModal';
 import Header from '../components/Header';
+import AuthModal from '../modals/AuthModal';
+import Breadcrumb from '../components/Breadcrumb';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
@@ -16,6 +18,7 @@ function ProjectCategoriesView() {
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminProjects;
   const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,13 +90,15 @@ function ProjectCategoriesView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <Header
-        title={t.title}
-        backLabel={translations[language].adminDashboard.title}
-        onBack={() => navigate('/admin')}
-      />
+      <Header onLoginClick={() => setIsModalOpen(true)} />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-24 md:pt-32 pb-8">
+        <div className="mx-auto max-w-4xl mb-8">
+          <Breadcrumb
+            items={[{ label: translations[language].adminDashboard.title, onClick: () => navigate('/admin') }]}
+            current={t.title}
+          />
+        </div>
         {authError && (
           <div className="mx-auto max-w-2xl rounded-lg border border-yellow-500/30 bg-yellow-900/20 p-6 text-center">
             <p className="text-lg text-yellow-300">{authError === PERMISSION_MESSAGE ? tDash.permissionDenied : authError}</p>
@@ -205,6 +210,7 @@ function ProjectCategoriesView() {
           </div>
         </div>
       )}
+      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />
     </div>
   );
 }

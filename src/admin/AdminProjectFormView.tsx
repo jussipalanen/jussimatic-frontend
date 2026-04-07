@@ -6,6 +6,8 @@ import type { ProjectCategory, ProjectFormData } from '../api/projectsApi';
 import { getMe } from '../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
 import Header from '../components/Header';
+import AuthModal from '../modals/AuthModal';
+import Breadcrumb from '../components/Breadcrumb';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
@@ -67,6 +69,7 @@ function AdminProjectFormView() {
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminProjects;
   const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState<ProjectFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -146,6 +149,15 @@ function AdminProjectFormView() {
     fetchProject();
   }, [id, authError]);
 
+  useEffect(() => {
+    if (!slugManuallyEdited) setForm((f) => ({ ...f, slug: generateSlug(f.title) }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.title]);
+
+  useEffect(() => {
+    if (!slugFiManuallyEdited) setForm((f) => ({ ...f, slug_fi: generateSlug(f.title_fi) }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.title_fi]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -228,13 +240,15 @@ function AdminProjectFormView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <Header
-        title={isEditing ? t.editTitle : t.createTitle}
-        backLabel={t.title}
-        onBack={() => navigate('/admin/projects')}
-      />
+      <Header onLoginClick={() => setIsModalOpen(true)} />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-24 md:pt-32 pb-8">
+        <div className="mx-auto max-w-2xl mb-8">
+          <Breadcrumb
+            items={[{ label: t.title, onClick: () => navigate('/admin/projects') }]}
+            current={isEditing ? t.editTitle : t.createTitle}
+          />
+        </div>
         {authError && (
           <div className="mx-auto max-w-2xl rounded-lg border border-yellow-500/30 bg-yellow-900/20 p-6 text-center">
             <p className="text-lg text-yellow-300">{authError === PERMISSION_MESSAGE ? tDash.permissionDenied : authError}</p>
@@ -555,6 +569,7 @@ function AdminProjectFormView() {
           </div>
         )}
       </main>
+      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />
     </div>
   );
 }

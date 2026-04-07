@@ -6,6 +6,8 @@ import { getMe } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
 import { BlogCategoryModal } from '../modals/BlogCategoryModal';
 import Header from '../components/Header';
+import AuthModal from '../modals/AuthModal';
+import Breadcrumb from '../components/Breadcrumb';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
@@ -15,6 +17,7 @@ function BlogCategoriesView() {
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminBlogs;
   const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,13 +88,15 @@ function BlogCategoriesView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <Header
-        title={t.categoryListTitle}
-        backLabel={tDash.title}
-        onBack={() => navigate('/admin')}
-      />
+      <Header onLoginClick={() => setIsModalOpen(true)} />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-24 md:pt-32 pb-8">
+        <div className="mx-auto max-w-4xl mb-8">
+          <Breadcrumb
+            items={[{ label: tDash.title, onClick: () => navigate('/admin') }]}
+            current={t.categoryListTitle}
+          />
+        </div>
         {loading && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
@@ -197,6 +202,7 @@ function BlogCategoriesView() {
           </div>
         </div>
       )}
+      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />
     </div>
   );
 }

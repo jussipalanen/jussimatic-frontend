@@ -3,12 +3,15 @@ import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getMe } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
 import Header from '../components/Header';
+import AuthModal from '../modals/AuthModal';
+import Breadcrumb from '../components/Breadcrumb';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 
 function AdminDashboardView() {
   const navigate = useLocaleNavigate();
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
 
@@ -54,13 +57,15 @@ function AdminDashboardView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <Header
-        title={t.title}
-        backLabel={t.backToMain}
-        onBack={() => navigate('/')}
-      />
+      <Header onLoginClick={() => setIsModalOpen(true)} />
 
-      <main className="container mx-auto px-4 py-10">
+      <main className="container mx-auto px-4 pt-24 md:pt-32 pb-10">
+        <div className="mx-auto max-w-4xl mb-8">
+          <Breadcrumb
+            items={[{ label: t.backToMain, onClick: () => navigate('/') }]}
+            current={t.title}
+          />
+        </div>
         {loading && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
@@ -156,6 +161,7 @@ function AdminDashboardView() {
           </div>
         )}
       </main>
+      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />
     </div>
   );
 }

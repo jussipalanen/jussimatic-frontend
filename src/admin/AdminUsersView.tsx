@@ -3,6 +3,8 @@ import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { deleteUser, fetchAllUsers } from '../api/usersApi';
 import type { UserSummary } from '../api/usersApi';
 import Header from '../components/Header';
+import AuthModal from '../modals/AuthModal';
+import Breadcrumb from '../components/Breadcrumb';
 import { getMe } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
 import UserEditModal from '../modals/UserEditModal';
@@ -65,6 +67,7 @@ function AdminUsersView() {
     email: string;
     role: string;
   } | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminUsers;
 
@@ -223,13 +226,15 @@ function AdminUsersView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <Header
-        title={t.title}
-        backLabel={translations[language].adminDashboard.title}
-        onBack={() => navigate('/admin')}
-      />
+      <Header onLoginClick={() => setIsModalOpen(true)} />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-24 md:pt-32 pb-8">
+        <div className="mx-auto max-w-4xl mb-8">
+          <Breadcrumb
+            items={[{ label: translations[language].adminDashboard.title, onClick: () => navigate('/admin') }]}
+            current={t.title}
+          />
+        </div>
         {loading && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
@@ -361,6 +366,7 @@ function AdminUsersView() {
           />
         )}
       </main>
+      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />
     </div>
   );
 }

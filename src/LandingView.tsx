@@ -109,7 +109,8 @@ function LandingView() {
     setProjectsError(false);
     getProjects(1, 50, 'sort_order', 'asc', language)
       .then((res) => setPortfolioProjects(res.data.filter((p) => p.visibility === 'show')))
-      .catch(() => { });
+      .catch(() => { setProjectsError(true); })
+      .finally(() => setProjectsLoading(false));
   }, [showProjectsModal, language]);
 
   useEffect(() => {

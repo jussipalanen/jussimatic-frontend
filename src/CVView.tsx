@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocaleNavigate } from './hooks/useLocaleNavigate';
 import Header from './components/Header';
 import Breadcrumb from './components/Breadcrumb';
+import AuthModal from './modals/AuthModal';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import type { Language } from './i18n';
 import { PROFICIENCY_LEVELS } from './constants';
@@ -193,6 +194,8 @@ export default function CVView() {
     return () => window.removeEventListener('jussimatic-language-change', handler);
   }, []);
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const cvLanguage = (resume?.lang ?? DEFAULT_LANGUAGE) as Language;
   const t = (translations[cvLanguage] ?? translations[DEFAULT_LANGUAGE]).cv;
   const tUi = (translations[uiLanguage] ?? translations[DEFAULT_LANGUAGE]).cv;
@@ -229,8 +232,8 @@ export default function CVView() {
     }, {}) ?? {};
 
   return (
-    <div className="min-h-screen text-white">
-      <Header />
+    <div className="min-h-screen text-white flex flex-col">
+      <Header onLoginClick={() => setIsModalOpen(true)} />
 
       <main className="max-w-4xl mx-auto px-4 pt-24 md:pt-32 pb-20 sm:px-6">
         <div className="mb-8">
@@ -258,7 +261,7 @@ export default function CVView() {
 
         {/* CV Content */}
         {!loading && resume && (
-          <article className="space-y-14">
+          <article className="space-y-14 rounded-2xl border border-white/10 bg-gray-900/50 px-6 sm:px-10 py-10 backdrop-blur-sm">
 
             {/* ── Header ── */}
             <header className="flex flex-col sm:flex-row sm:items-start gap-6">
@@ -563,6 +566,7 @@ export default function CVView() {
           </article>
         )}
       </main>
+      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />
     </div>
   );
 }

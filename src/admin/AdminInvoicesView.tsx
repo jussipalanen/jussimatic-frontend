@@ -7,6 +7,8 @@ import type { Order } from '../api/ordersApi';
 import { getMe } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
 import Header from '../components/Header';
+import AuthModal from '../modals/AuthModal';
+import Breadcrumb from '../components/Breadcrumb';
 import { Pagination } from '../components/Pagination';
 import CountrySelect from '../components/CountrySelect';
 import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../i18n';
@@ -313,6 +315,7 @@ function AdminInvoicesView() {
   const [searchInvoiceId, setSearchInvoiceId] = useState('');
   const [searchOrderId, setSearchOrderId] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminInvoices;
   const [statusOptions, setStatusOptions] = useState<InvoiceStatusOption[]>(DEFAULT_STATUS_OPTIONS);
@@ -897,13 +900,15 @@ function AdminInvoicesView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <Header
-        title={t.title}
-        backLabel={translations[language].adminDashboard.title}
-        onBack={() => navigate('/admin')}
-      />
+      <Header onLoginClick={() => setIsModalOpen(true)} />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-24 md:pt-32 pb-8">
+        <div className="mx-auto max-w-5xl mb-8">
+          <Breadcrumb
+            items={[{ label: translations[language].adminDashboard.title, onClick: () => navigate('/admin') }]}
+            current={t.title}
+          />
+        </div>
         {loading && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
@@ -1969,6 +1974,7 @@ function AdminInvoicesView() {
           </div>
         </div>
       )}
+      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />
     </div>
   );
 }

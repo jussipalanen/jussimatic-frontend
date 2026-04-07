@@ -244,11 +244,14 @@ html.light-theme nav.fixed .text-white\/40,
 html.light-theme nav.fixed .text-white\/30,
 html.light-theme header.relative.z-10 .text-white,
 html.light-theme header.relative.z-10 .text-white\/80,
-html.light-theme header.relative.z-10 .text-white\/60 {
+html.light-theme header.relative.z-10 .text-white\/60,
+html.light-theme header.relative.z-10 .text-white\/40,
+html.light-theme header.relative.z-10 .text-white\/30 {
   color: rgba(255, 255, 255, 0.92) !important;
 }
 
-html.light-theme nav.fixed .border-white\/20 {
+html.light-theme nav.fixed .border-white\/20,
+html.light-theme header.relative.z-10 .border-white\/20 {
   border-color: rgba(255, 255, 255, 0.28) !important;
 }
 
@@ -575,14 +578,20 @@ html.light-theme .border-red-500\/50 { border-color: rgba(239, 68, 68, 0.70) !im
 html.light-theme .border-red-500\/60 { border-color: rgba(239, 68, 68, 0.75) !important; }
 
 /* Alert / badge text */
-html.light-theme .text-red-200 { color: #991b1b !important; }
-html.light-theme .text-red-300 { color: #b91c1c !important; }
-html.light-theme .text-red-400 { color: #dc2626 !important; }
+html.light-theme .text-red-200    { color: #991b1b !important; }
+html.light-theme .text-red-200\/80 { color: rgba(153, 27, 27, 0.85) !important; }
+html.light-theme .text-red-300    { color: #b91c1c !important; }
+html.light-theme .text-red-400    { color: #dc2626 !important; }
 
 /* Red hover states (delete buttons, danger zone) */
 html.light-theme .hover\:bg-red-500\/10:hover  { background-color: rgba(254, 226, 226, 0.70) !important; }
 html.light-theme .hover\:bg-red-600\/20:hover  { background-color: rgba(252, 202, 202, 0.65) !important; }
 html.light-theme .hover\:bg-red-700:hover      { background-color: #dc2626 !important; }
+
+/* Teal badges and icons (category pills, project icons) */
+html.light-theme .text-teal-300    { color: #0f766e !important; }
+html.light-theme .text-teal-400    { color: #0d9488 !important; }
+html.light-theme .bg-teal-500\/15  { background-color: rgba(20, 184, 166, 0.18) !important; }
 
 /* ================================================ */
 /* MODALS & PORTALED OVERLAYS                       */
@@ -601,6 +610,13 @@ html.light-theme .fixed.inset-0 textarea.bg-gray-900,
 html.light-theme .fixed.inset-0 textarea.bg-gray-800 {
   background-color: #ffffff !important;
   color: #1e3a2e !important;
+}
+
+/* Readonly / disabled inputs (bg-gray-700) — slightly tinted to indicate non-editable */
+html.light-theme .fixed.inset-0 input.bg-gray-700 {
+  background-color: rgba(64, 145, 108, 0.08) !important;
+  color: #556b5e !important;
+  border-color: rgba(64, 145, 108, 0.20) !important;
 }
 
 /* Modal text */
@@ -630,6 +646,18 @@ html.light-theme .fixed.inset-0 .hover\:bg-gray-700\/60:hover {
   background-color: rgba(82, 183, 136, 0.12) !important;
 }
 
+/* Solid-color buttons inside modals — keep white text on coloured background */
+html.light-theme .fixed.inset-0 button.bg-blue-600,
+html.light-theme .fixed.inset-0 button.bg-blue-600.text-white,
+html.light-theme .fixed.inset-0 button.bg-green-600.text-white,
+html.light-theme .fixed.inset-0 button.bg-red-600.text-white,
+html.light-theme .fixed.inset-0 button.bg-red-700.text-white { color: #ffffff !important; }
+
+/* Success / emerald alert box inside modals */
+html.light-theme .fixed.inset-0 .bg-emerald-900\/20 { background-color: rgba(209, 250, 229, 0.65) !important; }
+html.light-theme .fixed.inset-0 .border-emerald-500\/30 { border-color: rgba(16, 185, 129, 0.50) !important; }
+html.light-theme .fixed.inset-0 .text-emerald-300 { color: #065f46 !important; }
+
 /* Mobile user menu — portaled directly with bg-gray-900 on itself */
 html.light-theme .fixed.inset-0.bg-gray-900 {
   background-color: #f4faf7 !important;
@@ -657,6 +685,14 @@ html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/30 {
 html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/20 { color: #94b0a0 !important; }
 html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/10 { color: #b0c8bc !important; }
 
+/* CV content panel overlay */
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) main article {
+  background-color: rgba(255, 255, 255, 0.68) !important;
+  border-color: rgba(27, 67, 50, 0.12) !important;
+  box-shadow: 0 2px 24px rgba(27, 67, 50, 0.08) !important;
+  backdrop-filter: none !important;
+}
+
 /* Headings without explicit text-color class (inherit white from parent) */
 html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) main h1,
 html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) main h2,
@@ -678,19 +714,97 @@ html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .bg-white\/15  { 
 html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .border-white\/10 { border-color: rgba(27, 67, 50, 0.18) !important; }
 html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .border-white\/20 { border-color: rgba(27, 67, 50, 0.22) !important; }
 
-/* Mobile menu panel — portaled with inset-x-0 (not inset-0) */
+/* CV view: nav.fixed must override the CV content selectors (which have higher specificity).
+   Restore the same green-gradient header used everywhere else. */
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed {
+  background: linear-gradient(135deg,
+    #1b4332 0%,
+    #2d6a4f 28%,
+    #357558 55%,
+    #3d7d5e 80%,
+    #40916c 100%) !important;
+  border-bottom: 1px solid rgba(82, 183, 136, 0.40) !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 2px 16px rgba(27, 67, 50, 0.25) !important;
+}
+
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed > .absolute {
+  display: none;
+}
+
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/90,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/80,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/70,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/65,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/60,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/55,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/50,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/45,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/40,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/35,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/30,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/20,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/10 {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .hover\:text-white:hover {
+  color: #ffffff !important;
+}
+
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .bg-white\/5  { background-color: rgba(255, 255, 255, 0.05) !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .bg-white\/10 { background-color: rgba(255, 255, 255, 0.10) !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .bg-white\/15 { background-color: rgba(255, 255, 255, 0.15) !important; }
+
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+/* Mobile demos panel — portaled to body with fixed inset-x-0 bg-gray-900 */
 html.light-theme .fixed.inset-x-0.bg-gray-900 {
   background-color: #f4faf7 !important;
   border-top-color: rgba(64, 145, 108, 0.25) !important;
 }
 
+/* Text inside the portaled mobile panel (outside .min-h-screen, so general rules don't apply) */
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-white     { color: #1e3a2e !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-white\/80 { color: #2d4a3a !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-white\/60 { color: #52735f !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-white\/40 { color: rgba(27, 67, 50, 0.55) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-white\/30 { color: rgba(27, 67, 50, 0.45) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-teal-400  { color: #0d9488 !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-red-400   { color: #dc2626 !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-gray-400  { color: #52735f !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .border-white\/10  { border-color: rgba(27, 67, 50, 0.15) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .border-white\/20  { border-color: rgba(27, 67, 50, 0.20) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .bg-white\/20   { background-color: rgba(27, 67, 50, 0.12) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .bg-white       { background-color: #ffffff !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .hover\:bg-white\/10:hover { background-color: rgba(27, 67, 50, 0.08) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .hover\:text-white:hover   { color: #1b4332 !important; }
+
+/* User mobile full-screen overlay — portaled to body with fixed inset-0 bg-gray-900 */
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 {
+  background-color: #f4faf7 !important;
+}
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .text-white     { color: #1e3a2e !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .text-white\/60 { color: #52735f !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .text-red-400   { color: #b91c1c !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .text-gray-400  { color: #52735f !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .border-gray-700 { border-color: rgba(27, 67, 50, 0.18) !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .bg-gray-700    { background-color: rgba(209, 236, 225, 0.70) !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .hover\:bg-gray-700:hover { background-color: rgba(209, 236, 225, 0.70) !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .hover\:bg-white\/10:hover { background-color: rgba(27, 67, 50, 0.08) !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .hover\:text-white:hover  { color: #1b4332 !important; }
+
 /* ================================================ */
 /* ADMIN VIEWS                                       */
 /* ================================================ */
 
-/* AdminHeader — uses sticky/top-0 instead of relative/z-10 */
+/* AdminHeader / EcommerceHeader — uses sticky/top-0 instead of relative/z-10 */
 html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 {
-  background: linear-gradient(135deg,
+  background-color: transparent !important;
+  background-image: linear-gradient(135deg,
     #1b4332 0%,
     #2d6a4f 28%,
     #357558 55%,
@@ -705,8 +819,11 @@ html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 > .absolute {
 }
 
 html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-white,
-html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-white\/50,
 html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-white\/80,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-white\/60,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-white\/50,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-white\/30,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-gray-200,
 html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-gray-300,
 html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-gray-400 {
   color: rgba(255, 255, 255, 0.90) !important;
@@ -840,3 +957,116 @@ html.light-theme .blog-content pre                { background: rgba(64, 145, 10
 html.light-theme .blog-content pre code           { color: #1e3a2e; }
 html.light-theme .blog-content hr                 { border-top-color: rgba(64, 145, 108, 0.30); }
 
+/* ================================================ */
+/* ECOMMERCE VIEWS                                   */
+/* ================================================ */
+
+/* EcommerceHeader (sticky top-0) — button borders, backgrounds & hovers on green bg */
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .border-gray-600 {
+  border-color: rgba(255, 255, 255, 0.30) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .border-white\/15 {
+  border-color: rgba(255, 255, 255, 0.20) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .border-white\/30 {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-white\/15 {
+  background-color: rgba(255, 255, 255, 0.18) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:bg-gray-700:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:bg-white\/10:hover {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:bg-white\/20:hover {
+  background-color: rgba(255, 255, 255, 0.24) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:border-white\/30:hover {
+  border-color: rgba(255, 255, 255, 0.38) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:text-white:hover {
+  color: rgba(255, 255, 255, 1) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:text-white\/60:hover {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+/* EcommerceHeader — mobile dropdown menu (bg-gray-900/95) → light panel */
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 {
+  background-color: rgba(244, 250, 247, 0.98) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .text-white,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .text-gray-200 {
+  color: #2a4a39 !important;
+}
+/* Inactive toggle buttons in mobile menu — use dark border/bg instead of near-invisible white */
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .text-white\/30 {
+  color: rgba(27, 67, 50, 0.45) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .border-white\/15 {
+  border-color: rgba(27, 67, 50, 0.22) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .hover\:text-white\/60:hover {
+  color: rgba(27, 67, 50, 0.75) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .hover\:border-white\/30:hover {
+  border-color: rgba(27, 67, 50, 0.38) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .bg-white\/5 {
+  background-color: rgba(27, 67, 50, 0.06) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .hover\:bg-white\/10:hover {
+  background-color: rgba(27, 67, 50, 0.10) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .border-white\/10 {
+  border-color: rgba(27, 67, 50, 0.12) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .border-white\/20 {
+  border-color: rgba(27, 67, 50, 0.20) !important;
+}
+
+/* Cart "added to cart" toast popup (fixed top-5 right-5, NOT inset-0) */
+html.light-theme .fixed.top-5.right-5.bg-gray-900 {
+  background-color: #f4faf7 !important;
+  border-color: rgba(16, 185, 129, 0.40) !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .text-white {
+  color: #1e3a2e !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .text-gray-300 {
+  color: #3d5a4a !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .text-gray-500 {
+  color: #6b8575 !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .text-green-400 {
+  color: #15803d !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .hover\:text-white:hover {
+  color: #1b4332 !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .bg-green-500\/15 {
+  background-color: rgba(21, 128, 61, 0.12) !important;
+}
+
+/* Product modal & create/edit form — accent colors inside .fixed.inset-0 */
+html.light-theme .fixed.inset-0 .text-green-400 { color: #15803d !important; }
+html.light-theme .fixed.inset-0 .text-yellow-400 { color: #92400e !important; }
+html.light-theme .fixed.inset-0 .bg-yellow-500\/15 { background-color: rgba(146, 64, 14, 0.10) !important; }
+html.light-theme .fixed.inset-0 .border-yellow-500\/30 { border-color: rgba(146, 64, 14, 0.25) !important; }
+html.light-theme .fixed.inset-0 .bg-gray-900\/50 { background-color: rgba(209, 236, 225, 0.45) !important; }
+html.light-theme .fixed.inset-0 .bg-gray-900\/40 { background-color: rgba(209, 236, 225, 0.35) !important; }
+html.light-theme .fixed.inset-0 .divide-white\/10 > * + * { border-color: rgba(64, 145, 108, 0.15) !important; }
+html.light-theme .fixed.inset-0 .placeholder-gray-600::placeholder { color: rgba(64, 145, 108, 0.45) !important; }
+html.light-theme .fixed.inset-0 button.bg-green-600 { background-color: #15803d !important; }

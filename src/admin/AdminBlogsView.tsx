@@ -5,7 +5,8 @@ import type { Blog } from '../api/blogsApi';
 import { getMe } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
 import Header from '../components/Header';
-
+import AuthModal from '../modals/AuthModal';
+import Breadcrumb from '../components/Breadcrumb';
 import { Pagination } from '../components/Pagination';
 import { BlogFormModal } from '../modals/BlogFormModal';
 import { DEFAULT_LANGUAGE, getStoredLanguage, getLocalizedValue, translations } from '../i18n';
@@ -43,6 +44,7 @@ function AdminBlogsView() {
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminBlogs;
   const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -140,13 +142,15 @@ function AdminBlogsView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <Header
-        title={t.title}
-        backLabel={tDash.title}
-        onBack={() => navigate('/admin')}
-      />
+      <Header onLoginClick={() => setIsModalOpen(true)} />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-24 md:pt-32 pb-8">
+        <div className="mx-auto max-w-4xl mb-8">
+          <Breadcrumb
+            items={[{ label: tDash.title, onClick: () => navigate('/admin') }]}
+            current={t.title}
+          />
+        </div>
         {loading && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
@@ -302,6 +306,7 @@ function AdminBlogsView() {
           </div>
         </div>
       )}
+      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />
     </div>
   );
 }
