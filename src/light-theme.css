@@ -29,6 +29,179 @@ html.light-theme .shooting-stars-layer {
 }
 
 /* ================================================ */
+/* FALLING LEAVES (light theme only)                */
+/* ================================================ */
+
+.falling-leaves-layer {
+  display: none;
+}
+
+html.light-theme .falling-leaves-layer {
+  display: block;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  contain: paint;
+}
+
+/* ---- Leaf base shape ---- */
+.leaf {
+  position: absolute;
+  opacity: 0;
+  will-change: transform, opacity;
+  border-radius: 50% 0 50% 0;
+  filter: drop-shadow(0 2px 4px rgba(27, 67, 50, 0.20));
+}
+
+/* ---- Individual leaves — size, color, start position ---- */
+.leaf--1 {
+  width: 18px;
+  height: 22px;
+  left: 8%;
+  background: #52b788;
+  animation: leafFall1 28s ease-in-out 0s infinite;
+}
+
+.leaf--2 {
+  width: 14px;
+  height: 18px;
+  left: 22%;
+  background: #40916c;
+  animation: leafFall2 34s ease-in-out 7s infinite;
+}
+
+.leaf--3 {
+  width: 20px;
+  height: 24px;
+  left: 41%;
+  background: #74c69d;
+  animation: leafFall1 38s ease-in-out 14s infinite;
+}
+
+.leaf--4 {
+  width: 12px;
+  height: 16px;
+  left: 58%;
+  background: #2d6a4f;
+  animation: leafFall2 30s ease-in-out 3s infinite;
+}
+
+.leaf--5 {
+  width: 16px;
+  height: 20px;
+  left: 72%;
+  background: #95d5b2;
+  animation: leafFall1 42s ease-in-out 20s infinite;
+}
+
+.leaf--6 {
+  width: 22px;
+  height: 26px;
+  left: 85%;
+  background: #52b788;
+  animation: leafFall2 26s ease-in-out 10s infinite;
+}
+
+.leaf--7 {
+  width: 13px;
+  height: 17px;
+  left: 33%;
+  background: #b7e4c7;
+  animation: leafFall1 36s ease-in-out 25s infinite;
+}
+
+.leaf--8 {
+  width: 17px;
+  height: 21px;
+  left: 63%;
+  background: #40916c;
+  animation: leafFall2 44s ease-in-out 18s infinite;
+}
+
+/* Two sway variants so leaves feel independent */
+@keyframes leafFall1 {
+  0% {
+    transform: translateY(-60px) translateX(0px) rotate(0deg);
+    opacity: 0;
+  }
+  4% {
+    opacity: 0.75;
+  }
+  20% {
+    transform: translateY(20vh) translateX(35px) rotate(72deg);
+  }
+  40% {
+    transform: translateY(40vh) translateX(-20px) rotate(144deg);
+  }
+  60% {
+    transform: translateY(60vh) translateX(28px) rotate(216deg);
+  }
+  80% {
+    transform: translateY(80vh) translateX(-12px) rotate(288deg);
+    opacity: 0.65;
+  }
+  92% {
+    opacity: 0;
+  }
+  95% {
+    transform: translateY(105vh) translateX(10px) rotate(360deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-60px) translateX(0px) rotate(0deg);
+    opacity: 0;
+  }
+}
+
+@keyframes leafFall2 {
+  0% {
+    transform: translateY(-60px) translateX(0px) rotate(15deg);
+    opacity: 0;
+  }
+  4% {
+    opacity: 0.70;
+  }
+  25% {
+    transform: translateY(25vh) translateX(-40px) rotate(105deg);
+  }
+  50% {
+    transform: translateY(50vh) translateX(22px) rotate(195deg);
+  }
+  75% {
+    transform: translateY(75vh) translateX(-18px) rotate(285deg);
+    opacity: 0.60;
+  }
+  90% {
+    opacity: 0;
+  }
+  94% {
+    transform: translateY(105vh) translateX(-5px) rotate(345deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-60px) translateX(0px) rotate(15deg);
+    opacity: 0;
+  }
+}
+
+/* Touch/mobile — disable leaves */
+@media (hover: none) and (pointer: coarse) {
+  html.light-theme .falling-leaves-layer {
+    display: none;
+  }
+}
+
+/* Reduced motion — disable leaves */
+@media (prefers-reduced-motion: reduce) {
+  .leaf {
+    animation: none !important;
+    display: none;
+  }
+}
+
+/* ================================================ */
 /* HEADER / NAV — leafy green gradient              */
 /* ================================================ */
 
@@ -36,10 +209,10 @@ html.light-theme .shooting-stars-layer {
 html.light-theme nav.fixed {
   background: linear-gradient(135deg,
     #1b4332 0%,
-    #2d6a4f 22%,
-    #40916c 50%,
-    #52b788 78%,
-    #74c69d 100%) !important;
+    #2d6a4f 28%,
+    #357558 55%,
+    #3d7d5e 80%,
+    #40916c 100%) !important;
   border-bottom: 1px solid rgba(82, 183, 136, 0.40) !important;
   backdrop-filter: none !important;
   box-shadow: 0 2px 16px rgba(27, 67, 50, 0.25) !important;
@@ -49,10 +222,10 @@ html.light-theme nav.fixed {
 html.light-theme header.relative.z-10 {
   background: linear-gradient(135deg,
     #1b4332 0%,
-    #2d6a4f 22%,
-    #40916c 50%,
-    #52b788 78%,
-    #74c69d 100%) !important;
+    #2d6a4f 28%,
+    #357558 55%,
+    #3d7d5e 80%,
+    #40916c 100%) !important;
   border-bottom: 1px solid rgba(82, 183, 136, 0.40) !important;
   backdrop-filter: none !important;
 }
@@ -86,7 +259,7 @@ html.light-theme header.relative.z-10 .hover\:text-white:hover {
 
 /* Nav dropdown menus — keep dark for contrast */
 html.light-theme .bg-gray-800.border.border-gray-700 {
-  background-color: #f9fbe7 !important;
+  background-color: #ffffff !important;
   border-color: rgba(64, 145, 108, 0.30) !important;
   box-shadow: 0 8px 24px rgba(27, 67, 50, 0.15) !important;
 }
@@ -118,16 +291,16 @@ html.light-theme .bg-gray-800.border.border-gray-700 .hover\:bg-gray-700:hover {
 html.light-theme footer {
   background: linear-gradient(135deg,
     #1b4332 0%,
-    #2d6a4f 22%,
-    #40916c 50%,
-    #52b788 78%,
-    #74c69d 100%) !important;
+    #2d6a4f 28%,
+    #357558 55%,
+    #3d7d5e 80%,
+    #40916c 100%) !important;
   border-top: 1px solid rgba(82, 183, 136, 0.40) !important;
   box-shadow: 0 -2px 16px rgba(27, 67, 50, 0.18) !important;
 }
 
 html.light-theme footer .text-gray-400 {
-  color: rgba(255, 255, 255, 0.80) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
 }
 
 html.light-theme footer .hover\:text-white:hover {
@@ -135,11 +308,11 @@ html.light-theme footer .hover\:text-white:hover {
 }
 
 html.light-theme footer p {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
 }
 
 html.light-theme footer a.text-gray-400 {
-  color: rgba(255, 255, 255, 0.75) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
 }
 
 /* ================================================ */
@@ -161,6 +334,7 @@ html.light-theme .min-h-screen.bg-gray-900 .text-white\/90 { color: #2d4a3a !imp
 html.light-theme .min-h-screen.bg-gray-900 .text-white\/80 { color: #2d4a3a !important; }
 html.light-theme .min-h-screen.bg-gray-900 .text-white\/70 { color: #3d5a47 !important; }
 html.light-theme .min-h-screen.bg-gray-900 .text-white\/60 { color: #52735f !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-white\/50 { color: #5a7a68 !important; }
 html.light-theme .min-h-screen.bg-gray-900 .text-white\/45 { color: #64897a !important; }
 html.light-theme .min-h-screen.bg-gray-900 .text-white\/40 { color: #6e9683 !important; }
 html.light-theme .min-h-screen.bg-gray-900 .text-white\/30 { color: #7a9a85 !important; }
@@ -188,7 +362,79 @@ html.light-theme .min-h-screen.bg-gray-900 main h4 { color: #1e3a2e !important; 
 /* Solid-color CTA buttons keep white text — (0,3,1) > general (0,3,0) */
 html.light-theme .min-h-screen.bg-gray-900 button.bg-blue-600.text-white,
 html.light-theme .min-h-screen.bg-gray-900 button.bg-purple-600.text-white,
-html.light-theme .min-h-screen.bg-gray-900 button.bg-green-600.text-white { color: #ffffff !important; }
+html.light-theme .min-h-screen.bg-gray-900 button.bg-green-600.text-white,
+html.light-theme .min-h-screen.bg-gray-900 button.bg-green-700.text-white,
+html.light-theme .min-h-screen.bg-gray-900 button.bg-yellow-700.text-white,
+html.light-theme .min-h-screen.bg-gray-900 button.bg-amber-600.text-white,
+html.light-theme .min-h-screen.bg-gray-900 button.bg-red-600.text-white { color: #ffffff !important; }
+
+/* ================================================ */
+/* VIEWS WITHOUT <main> — fallback panel/input bg   */
+/* Specificity (0,3,0) — safely overridden by the   */
+/* main-scoped (0,3,1) rules for views that do use  */
+/* <main> (e.g. BlogsView, ResumesView list).        */
+/* ================================================ */
+
+html.light-theme .min-h-screen.bg-gray-900 .bg-gray-800 {
+  background-color: rgba(255, 255, 255, 0.80) !important;
+  border-color: rgba(27, 67, 50, 0.12) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .bg-gray-700 {
+  background-color: rgba(240, 248, 244, 0.85) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .border-gray-700 {
+  border-color: rgba(27, 67, 50, 0.15) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .border-gray-600 {
+  border-color: rgba(27, 67, 50, 0.22) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .hover\:bg-gray-700:hover,
+html.light-theme .min-h-screen.bg-gray-900 .hover\:bg-gray-600:hover {
+  background-color: rgba(209, 236, 225, 0.70) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .bg-gray-750 {
+  background-color: rgba(255, 255, 255, 0.65) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .bg-gray-800\/60 {
+  background-color: rgba(27, 67, 50, 0.06) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .placeholder-white\/30::placeholder {
+  color: rgba(27, 67, 50, 0.38) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .text-blue-300   { color: #1d4ed8 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-green-400  { color: #15803d !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-yellow-400 { color: #92400e !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-amber-400  { color: #92400e !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-amber-300  { color: #78350f !important; }
+html.light-theme .min-h-screen.bg-gray-900 .bg-amber-500\/20  { background-color: rgba(146, 64, 14, 0.10) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .border-amber-500\/40,
+html.light-theme .min-h-screen.bg-gray-900 .border-amber-500\/60 { border-color: rgba(146, 64, 14, 0.35) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .bg-amber-900\/20,
+html.light-theme .min-h-screen.bg-gray-900 .bg-amber-900\/30  { background-color: rgba(146, 64, 14, 0.10) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .border-amber-600\/50 { border-color: rgba(146, 64, 14, 0.35) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .hover\:text-white:hover      { color: #1b4332 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .hover\:border-gray-500:hover  { border-color: rgba(27, 67, 50, 0.40) !important; }
+
+/* Ghost border buttons (no bg class) — transparent is invisible on sunny bg */
+html.light-theme .min-h-screen.bg-gray-900 button.border-gray-600.text-white\/50 {
+  background-color: rgba(255, 255, 255, 0.60) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 button.border-gray-600.text-white\/50:hover {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .hover\:text-green-300:hover  { color: #166534 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .hover\:text-yellow-300:hover { color: #78350f !important; }
+html.light-theme .min-h-screen.bg-gray-900 .hover\:text-amber-300:hover  { color: #78350f !important; }
+html.light-theme .min-h-screen.bg-gray-900 .bg-green-900\/20   { background-color: rgba(21, 128, 61, 0.10) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .bg-yellow-900\/20  { background-color: rgba(146, 64, 14, 0.10) !important; }
+html.light-theme .min-h-screen.bg-gray-900 input::file-selector-button {
+  background-color: rgba(64, 145, 108, 0.15) !important;
+  color: #1e3a2e !important;
+  border: none !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 input:hover::file-selector-button {
+  background-color: rgba(64, 145, 108, 0.28) !important;
+}
 
 /* ================================================ */
 /* ALL VIEWS — PANEL BACKGROUNDS (main content)     */
@@ -219,7 +465,7 @@ html.light-theme .min-h-screen.bg-gray-900 main input.bg-gray-800 {
 }
 
 html.light-theme .min-h-screen.bg-gray-900 main .bg-gray-800.border.border-gray-700 {
-  background-color: #f9fbe7 !important;
+  background-color: #ffffff !important;
   border-color: rgba(64, 145, 108, 0.30) !important;
   box-shadow: 0 4px 16px rgba(27, 67, 50, 0.12) !important;
 }
@@ -249,6 +495,12 @@ html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-white\/45,
 html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-white\/40,
 html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-gray-300,
 html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-gray-400 {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* Restore nav/header hover:text-white — broad rule above would otherwise darken it */
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .hover\:text-white:hover,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .hover\:text-white:hover {
   color: rgba(255, 255, 255, 0.92) !important;
 }
 
@@ -292,6 +544,17 @@ html.light-theme .min-h-screen.bg-gray-900 > header .hover\:border-white\/60:hov
 
 html.light-theme .min-h-screen.bg-gray-900 > header .bg-white\/5 {
   background-color: rgba(27, 67, 50, 0.06) !important;
+}
+
+/* "My resumes" / "Login" — transparent border buttons */
+html.light-theme .min-h-screen.bg-gray-900 > header button.border {
+  background-color: rgba(255, 255, 255, 0.60) !important;
+  border-color: rgba(27, 67, 50, 0.35) !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 > header button.border:hover {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(27, 67, 50, 0.65) !important;
 }
 
 /* ================================================ */
@@ -429,10 +692,10 @@ html.light-theme .fixed.inset-x-0.bg-gray-900 {
 html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 {
   background: linear-gradient(135deg,
     #1b4332 0%,
-    #2d6a4f 22%,
-    #40916c 50%,
-    #52b788 78%,
-    #74c69d 100%) !important;
+    #2d6a4f 28%,
+    #357558 55%,
+    #3d7d5e 80%,
+    #40916c 100%) !important;
   border-bottom: 1px solid rgba(82, 183, 136, 0.40) !important;
   backdrop-filter: none !important;
 }
@@ -555,3 +818,25 @@ html.light-theme .min-h-screen.bg-gray-900 main button.rounded-full.bg-gray-700 
 html.light-theme .min-h-screen.bg-gray-900 main .text-gray-400 {
   color: #52735f !important;
 }
+
+/* ================================================ */
+/* BLOG CONTENT — blog-content.css hardcoded colors */
+/* ================================================ */
+
+html.light-theme .blog-content                    { color: #1e3a2e; }
+html.light-theme .blog-content h1,
+html.light-theme .blog-content h2                 { color: #1b4332; }
+html.light-theme .blog-content h3,
+html.light-theme .blog-content h4                 { color: #2d4a3a; }
+html.light-theme .blog-content h5,
+html.light-theme .blog-content h6                 { color: #3d5a47; }
+html.light-theme .blog-content strong,
+html.light-theme .blog-content b                  { color: #1b4332; }
+html.light-theme .blog-content blockquote         { color: #52735f; border-left-color: #40916c; }
+html.light-theme .blog-content a                  { color: #1b6ca8; }
+html.light-theme .blog-content a:hover            { color: #1550a0; }
+html.light-theme .blog-content code               { background: rgba(64, 145, 108, 0.10); color: #1b4332; }
+html.light-theme .blog-content pre                { background: rgba(64, 145, 108, 0.08); }
+html.light-theme .blog-content pre code           { color: #1e3a2e; }
+html.light-theme .blog-content hr                 { border-top-color: rgba(64, 145, 108, 0.30); }
+

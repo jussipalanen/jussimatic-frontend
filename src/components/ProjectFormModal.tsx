@@ -43,6 +43,10 @@ function generateSlug(title: string): string {
   return title
     .toLowerCase()
     .trim()
+    .replace(/[äå]/g, 'a')
+    .replace(/ö/g, 'o')
+    .replace(/ü/g, 'u')
+    .replace(/é|è|ê|ë/g, 'e')
     .replace(/[^\w\s-]/g, '')
     .replace(/[\s_]+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -121,22 +125,18 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
     }
   }, [project]);
 
-  // Auto-generate slug from title when title changes (per language)
+  // Auto-generate slug from title while slug hasn't been manually edited
   useEffect(() => {
-    if (!slugManuallyEdited.en && form.title.en?.trim()) {
+    if (!slugManuallyEdited.en) {
       setForm((f) => ({ ...f, slug: { ...f.slug, en: generateSlug(f.title.en) } }));
-      // Reset manual flag so it can auto-fill again if slug is cleared
-      setSlugManuallyEdited((s) => ({ ...s, en: false }));
     }
-  }, [form.title.en, slugManuallyEdited.en]);
+  }, [form.title.en]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!slugManuallyEdited.fi && form.title.fi?.trim()) {
+    if (!slugManuallyEdited.fi) {
       setForm((f) => ({ ...f, slug: { ...f.slug, fi: generateSlug(f.title.fi) } }));
-      // Reset manual flag so it can auto-fill again if slug is cleared
-      setSlugManuallyEdited((s) => ({ ...s, fi: false }));
     }
-  }, [form.title.fi, slugManuallyEdited.fi]);
+  }, [form.title.fi]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -347,21 +347,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModal
                 value={form.title[activeLang]}
                 onChange={(e) => {
                   const newTitle = e.target.value;
-                  setForm((f) => {
-                    const updatedForm = { ...f, title: { ...f.title, [activeLang]: newTitle } };
-                    // Auto-fill slug from title if slug is empty for current language
-                    if (!f.slug[activeLang]?.trim() && newTitle.trim()) {
-                      updatedForm.slug = { ...f.slug, [activeLang]: generateSlug(newTitle) };
-                    }
-                    return updatedForm;
-                  });
-                }}
-                onBlur={() => {
-                  // Auto-generate slug on blur if slug is empty
-                  const title = form.title[activeLang];
-                  if (title?.trim() && !form.slug[activeLang]?.trim()) {
-                    setForm((f) => ({ ...f, slug: { ...f.slug, [activeLang]: generateSlug(title) } }));
-                  }
+                  setForm((f) => ({ ...f, title: { ...f.title, [activeLang]: newTitle } }));
                 }}
                 className={inputCls}
                 placeholder={`${t.placeholderTitle} (${activeLang.toUpperCase()})`}

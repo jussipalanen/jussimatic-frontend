@@ -43,7 +43,7 @@ export default function Header({
               aria-label="Go to homepage"
               className="cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
             >
-              <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" />
+              <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" fetchPriority="high" />
             </button>
 
             <NavActions language={language} onLanguageChange={onLanguageChange} />
@@ -75,7 +75,7 @@ export default function Header({
             aria-label="Go to homepage"
             className="cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
           >
-            <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" />
+            <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" fetchPriority="high" />
           </button>
           <NavActions onLoginClick={onLoginClick} />
         </div>

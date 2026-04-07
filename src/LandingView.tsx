@@ -8,6 +8,7 @@ import AuthModal from './modals/AuthModal';
 import Header from './components/Header';
 const faceJa = '/profile_image.webp';
 import ShootingStars from './components/ShootingStars';
+import FallingLeaves from './components/FallingLeaves';
 import { getProjects } from './api/projectsApi';
 import type { Project } from './api/projectsApi';
 
@@ -22,7 +23,7 @@ function LandingView() {
     if (adminDenied) {
       window.history.replaceState({}, '', location.pathname + location.search);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
   const [isModalOpen, setIsModalOpen] = useState(() => searchParams.get('auth') === 'login');
@@ -107,8 +108,8 @@ function LandingView() {
     setProjectsLoading(true);
     setProjectsError(false);
     getProjects(1, 50, 'sort_order', 'asc', language)
-      .then((res) => { setPortfolioProjects(res.data.filter((p) => p.visibility === 'show')); setProjectsLoading(false); })
-      .catch(() => { setProjectsError(true); setProjectsLoading(false); });
+      .then((res) => setPortfolioProjects(res.data.filter((p) => p.visibility === 'show')))
+      .catch(() => { });
   }, [showProjectsModal, language]);
 
   useEffect(() => {
@@ -122,6 +123,7 @@ function LandingView() {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <ShootingStars />
+      <FallingLeaves />
       <Header onLoginClick={() => setIsModalOpen(true)} />
 
       {adminDenied && (
@@ -176,7 +178,7 @@ function LandingView() {
                   <div className="coin-shine" aria-hidden="true" />
                 </div>
                 <div className="coin-back" aria-hidden="true">
-                  <img src={faceJa} alt="" className="coin-back-photo" />
+                  <img src={faceJa} alt="" className="coin-back-photo" fetchPriority="high" />
                   <div className="coin-back-overlay" />
                   <div className="coin-back-rings" />
                   <div className="coin-shine" aria-hidden="true" />
@@ -317,18 +319,16 @@ function LandingView() {
                 <div className="flex items-center rounded-lg border border-white/10 overflow-hidden mr-2">
                   <button
                     onClick={() => setDemosViewMode('list')}
-                    className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer ${
-                      demosViewMode === 'list' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
-                    }`}
+                    className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer ${demosViewMode === 'list' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
+                      }`}
                     aria-label="List view"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
                   </button>
                   <button
                     onClick={() => setDemosViewMode('grid')}
-                    className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer ${
-                      demosViewMode === 'grid' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
-                    }`}
+                    className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer ${demosViewMode === 'grid' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
+                      }`}
                     aria-label="Grid view"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>

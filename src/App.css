@@ -7,6 +7,11 @@ body {
   min-height: 100%;
 }
 
+a,
+button {
+  cursor: pointer;
+}
+
 body {
   background:
     radial-gradient(ellipse 80% 60% at 20% -5%, rgba(12, 25, 80, 0.45) 0%, transparent 55%),
@@ -766,7 +771,8 @@ body::after {
   animation: none !important;
 }
 
-.no-bg-animation .shooting-stars-layer {
+.no-bg-animation .shooting-stars-layer,
+.no-bg-animation .falling-leaves-layer {
   display: none;
 }
 

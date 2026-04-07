@@ -115,7 +115,7 @@ function EcommerceHeader({
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <button onClick={() => navigate('/')} aria-label="Go to homepage" className="cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 shrink-0">
-                <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" />
+                <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" fetchPriority='high' />
               </button>
               <h1 className="flex min-w-0 items-baseline gap-2 flex-wrap">
                 <span className="text-lg font-bold text-white truncate">{ECOMMERCE_MAIN_TITLE}</span>
