@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../../hooks/useLocaleNavigate';
 import { createOrder } from '../../../api/ordersApi';
 import { getMe } from '../../../api/authApi';
 import { clearCart, getCart, calcCartTaxBreakdown, calcCartTotals } from '../../../utils/cartUtils';
@@ -7,12 +7,10 @@ import type { CartItem } from '../../../utils/cartUtils';
 import EcommerceHeader from '../components/EcommerceHeader';
 import CountrySelect from '../../../components/CountrySelect';
 import { getStoredLanguage, translations, type Language } from '../../../i18n';
-
-const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
-const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
+import { buildStorageUrl } from '../../../constants';
 
 function CheckoutView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [cartItems, setCartItems] = useState<CartItem[]>(getCart());
   const [formValues, setFormValues] = useState({
     firstname: '',
@@ -64,14 +62,6 @@ function CheckoutView() {
     const n = typeof net === 'string' ? parseFloat(net) : net;
     const r = taxRate > 1 ? taxRate / 100 : taxRate;
     return n * (1 + r);
-  };
-
-  const buildStorageUrl = (path: string | null | undefined) => {
-    if (!path) return PLACEHOLDER_IMAGE_URL;
-    if (!STORAGE_BASE_URL) return path;
-    const base = STORAGE_BASE_URL.replace(/\/+$/, '');
-    const endpoint = path.replace(/^\/+/, '');
-    return `${base}/${endpoint}`;
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

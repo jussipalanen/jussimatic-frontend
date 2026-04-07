@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getMe } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
 import { getCart } from '../utils/cartUtils';
@@ -9,7 +9,7 @@ import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from
 import type { UserSummary } from '../api/usersApi';
 
 function MyProfileView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).myProfile;
   const [userData, setUserData] = useState<UserSummary | null>(null);

@@ -1,36 +1,48 @@
 export type Language = 'en' | 'fi';
 
-export const DEFAULT_LANGUAGE: Language = 'en';
+export const DEFAULT_LANGUAGE: Language = 'fi';
 export const STORAGE_KEY = 'jussimatic-language';
 
-const isLanguage = (value: string | null): value is Language => value === 'en' || value === 'fi';
+export const SUPPORTED_LANGUAGES: Language[] = ['en', 'fi'];
 
-const getBrowserLanguage = (): Language => {
-  if (typeof navigator === 'undefined') return DEFAULT_LANGUAGE;
+export const isValidLanguage = (lang: string | null): lang is Language =>
+  lang === 'en' || lang === 'fi';
 
-  const candidates = Array.isArray(navigator.languages) && navigator.languages.length > 0
-    ? navigator.languages
-    : [navigator.language];
-
-  for (const candidate of candidates) {
-    if (!candidate) continue;
-    const normalized = candidate.toLowerCase();
-    if (normalized === 'fi' || normalized.startsWith('fi-')) return 'fi';
-    if (normalized === 'en' || normalized.startsWith('en-')) return 'en';
-  }
-
-  return DEFAULT_LANGUAGE;
+export const getLanguageFromPath = (pathname: string): Language => {
+  const match = pathname.match(/^\/(en|fi)(\/|$)/);
+  return (match?.[1] as Language) ?? DEFAULT_LANGUAGE;
 };
+
+export const getPathWithoutLanguage = (pathname: string): string => {
+  return pathname.replace(/^\/(en|fi)/, '') || '/';
+};
+
+export const localePath = (path: string, lang: Language): string => {
+  if (lang === 'fi') return path;
+  return `/en${path.startsWith('/') ? path : `/${path}`}`;
+};
+
+/**
+ * Get a localized value from a translated field.
+ * Falls back to English if the requested language is not available.
+ * Also handles plain strings for backward compatibility with legacy API responses.
+ */
+export function getLocalizedValue<T extends string>(
+  field: { en: T; fi?: T } | string | null | undefined,
+  lang: Language
+): string {
+  if (!field) return '';
+  // Handle plain strings (backward compatibility)
+  if (typeof field === 'string') return field;
+  // Handle TranslatedField objects
+  return field[lang] ?? field.en ?? '';
+}
+
 
 export const getStoredLanguage = (): Language => {
   if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
-
-  try {
-    const value = window.localStorage.getItem(STORAGE_KEY);
-    return isLanguage(value) ? value : getBrowserLanguage();
-  } catch {
-    return getBrowserLanguage();
-  }
+  // URL path is the authoritative source: /en/... = English, anything else = Finnish (default)
+  return getLanguageFromPath(window.location.pathname);
 };
 
 export const setStoredLanguage = (lang: Language): void => {
@@ -81,9 +93,14 @@ export const translations = {
       adminAccessDenied: 'Access denied. This page is restricted to administrators only.',
       menu: 'Menu',
       projectsDemosSection: 'Projects & demos',
+      portfolioSection: 'Portfolio',
+      demosSection: 'Demos',
       animatedBgDisable: 'Disable animated background',
       animatedBgEnable: 'Enable animated background',
       animatedBgLabel: 'Animated background',
+      projectsLoading: 'Loading projects...',
+      projectsError: 'Could not load projects',
+      projectsEmpty: 'No projects available',
       logout: 'Logout',
       close: 'Close',
     },
@@ -648,6 +665,12 @@ export const translations = {
       blogsDesc: 'Create, edit and manage blog posts.',
       blogCategoriesTitle: 'Blog Categories',
       blogCategoriesDesc: 'Manage blog post categories.',
+      projectsTitle: 'Projects',
+      projectsDesc: 'Create, edit and manage portfolio projects.',
+      projectCategoriesTitle: 'Project Categories',
+      projectCategoriesDesc: 'Manage project categories.',
+      projectTagsTitle: 'Project Tags',
+      projectTagsDesc: 'Manage project tags.',
       backToMain: 'Back to Main Page',
     },
     adminOrders: {
@@ -988,6 +1011,8 @@ export const translations = {
       placeholderTitle: 'Enter blog title',
       placeholderSlug: 'auto-generated from title',
       placeholderExcerpt: 'Short description...',
+      copyFromEnglish: 'Copy from English',
+      copyFromFinnish: 'Copy from Finnish',
       placeholderContent: '<p>Write your content here...</p>',
       placeholderFeatureImage: 'images/blog/photo.jpg',
       placeholderTags: 'tag1, tag2',
@@ -999,6 +1024,70 @@ export const translations = {
       btnAddCategory: 'Add Category',
       lblCategoryName: 'Category Name',
       actions: 'Actions',
+      previousPage: 'Previous page',
+      nextPage: 'Next page',
+    },
+    adminProjects: {
+      title: 'Projects',
+      authErrLogin: 'Authentication required. Please log in.',
+      goToProducts: 'Go to Products',
+      loading: 'Loading projects...',
+      errLoad: 'Failed to load projects. Please try again.',
+      errSave: 'Failed to save project. Please try again.',
+      errDelete: 'Failed to delete project. Please try again.',
+      errTitleRequired: 'Title is required.',
+      empty: 'No projects found.',
+      btnAdd: 'Add Project',
+      btnView: 'View',
+      btnEdit: 'Edit',
+      btnDelete: 'Delete',
+      btnCancel: 'Cancel',
+      btnCreate: 'Create',
+      btnUpdate: 'Update',
+      btnSaving: 'Saving...',
+      btnDeleting: 'Deleting...',
+      btnConfirmDelete: 'Delete',
+      btnRemoveImage: 'Remove image',
+      createTitle: 'Add Project',
+      editTitle: 'Edit Project',
+      deleteTitle: 'Delete Project',
+      deleteConfirm: 'Are you sure you want to delete "{title}"? This cannot be undone.',
+      labelTitle: 'Title',
+      labelSlug: 'Slug',
+      labelSubtitle: 'Short Description',
+      labelDescription: 'Long Description',
+      labelCategory: 'Category',
+      labelTags: 'Tags',
+      labelDemoUrl: 'Live URL',
+      labelGithubUrl: 'GitHub URL',
+      labelSortOrder: 'Sort Order',
+      labelImage: 'Image',
+      labelVisibility: 'Visibility',
+      labelPublished: 'Visible',
+      labelHidden: 'Hidden',
+      placeholderTitle: 'Enter project title',
+      placeholderSlug: 'auto-generated from title',
+      placeholderSubtitle: 'Short one-liner description',
+      copyFromEnglish: 'Copy from English',
+      copyFromFinnish: 'Copy from Finnish',
+      placeholderDescription: 'Full project description...',
+      placeholderCategory: '— No category —',
+      placeholderTags: 'React, TypeScript, ...',
+      tagsHint: 'Press Enter or comma to add a tag.',
+      categoryListTitle: 'Project Categories',
+      createCategoryTitle: 'Add Project Category',
+      editCategoryTitle: 'Edit Project Category',
+      labelCategoryName: 'Category Name',
+      placeholderCategoryName: 'Enter category name',
+      btnAddCategory: 'Add Category',
+      tagListTitle: 'Project Tags',
+      createTagTitle: 'Add Project Tag',
+      editTagTitle: 'Edit Project Tag',
+      labelTagName: 'Tag Name',
+      labelColor: 'Color',
+      placeholderTagName: 'Enter tag name',
+      placeholderColor: '#6b7280',
+      btnAddTag: 'Add Tag',
       previousPage: 'Previous page',
       nextPage: 'Next page',
     },
@@ -1015,6 +1104,7 @@ export const translations = {
       nextPage: 'Next page',
       perPage: 'Per page',
       blogNotFound: 'Blog post not found.',
+      languageNotAvailable: 'This blog post is not available in the selected language. Showing the English version.',
     },
     notFound: {
       heading: 'Page not found',
@@ -1060,9 +1150,14 @@ export const translations = {
       adminAccessDenied: 'Pääsy estetty. Tämä sivu on varattu vain ylläpitäjille.',
       menu: 'Valikko',
       projectsDemosSection: 'Projektit & demot',
+      portfolioSection: 'Portfolio',
+      demosSection: 'Demot',
       animatedBgDisable: 'Poista animoitu tausta',
       animatedBgEnable: 'Ota animoitu tausta käyttöön',
       animatedBgLabel: 'Animoitu tausta',
+      projectsLoading: 'Ladataan projekteja...',
+      projectsError: 'Projekteja ei voitu ladata',
+      projectsEmpty: 'Ei projekteja saatavilla',
       logout: 'Kirjaudu ulos',
       close: 'Sulje',
     },
@@ -1627,6 +1722,12 @@ export const translations = {
       blogsDesc: 'Luo, muokkaa ja hallinnoi blogipostauksia.',
       blogCategoriesTitle: 'Blogien luokat',
       blogCategoriesDesc: 'Hallinnoi blogipostausten luokkia.',
+      projectsTitle: 'Projektit',
+      projectsDesc: 'Luo, muokkaa ja hallinnoi portfolioprojekteja.',
+      projectCategoriesTitle: 'Projektiluokat',
+      projectCategoriesDesc: 'Hallinnoi projektiluokkia.',
+      projectTagsTitle: 'Projektitunnisteet',
+      projectTagsDesc: 'Hallinnoi projektitunnisteita.',
       backToMain: 'Takaisin pääsivulle',
     },
     adminOrders: {
@@ -1965,8 +2066,10 @@ export const translations = {
       labelPublished: 'Julkaistu',
       labelDraft: 'Luonnos',
       placeholderTitle: 'Kirjoita blogin otsikko',
-      placeholderSlug: 'auto-generated from title',
+      placeholderSlug: 'auto-generoidaan otsikosta',
       placeholderExcerpt: 'Lyhyt kuvaus...',
+      copyFromEnglish: 'Kopioi englannista',
+      copyFromFinnish: 'Kopioi suomesta',
       placeholderContent: '<p>Kirjoita sisältö tähän...</p>',
       placeholderFeatureImage: 'images/blog/kuva.jpg',
       placeholderTags: 'tagi1, tagi2',
@@ -1978,6 +2081,70 @@ export const translations = {
       btnAddCategory: 'Lisää luokka',
       lblCategoryName: 'Luokan nimi',
       actions: 'Toiminnot',
+      previousPage: 'Edellinen sivu',
+      nextPage: 'Seuraava sivu',
+    },
+    adminProjects: {
+      title: 'Projektit',
+      authErrLogin: 'Kirjautuminen vaaditaan. Kirjaudu sisään.',
+      goToProducts: 'Siirry tuotteisiin',
+      loading: 'Ladataan projekteja...',
+      errLoad: 'Projektien lataus epäonnistui. Yritä uudelleen.',
+      errSave: 'Projektin tallennus epäonnistui. Yritä uudelleen.',
+      errDelete: 'Projektin poisto epäonnistui. Yritä uudelleen.',
+      errTitleRequired: 'Otsikko vaaditaan.',
+      empty: 'Projekteja ei löydy.',
+      btnAdd: 'Lisää projekti',
+      btnView: 'Näytä',
+      btnEdit: 'Muokkaa',
+      btnDelete: 'Poista',
+      btnCancel: 'Peruuta',
+      btnCreate: 'Luo',
+      btnUpdate: 'Päivitä',
+      btnSaving: 'Tallennetaan...',
+      btnDeleting: 'Poistetaan...',
+      btnConfirmDelete: 'Poista',
+      btnRemoveImage: 'Poista kuva',
+      createTitle: 'Lisää projekti',
+      editTitle: 'Muokkaa projektia',
+      deleteTitle: 'Poista projekti',
+      deleteConfirm: 'Haluatko varmasti poistaa "{title}"? Tätä ei voi peruuttaa.',
+      labelTitle: 'Otsikko',
+      labelSlug: 'URL-osoite',
+      labelSubtitle: 'Lyhyt kuvaus',
+      labelDescription: 'Pitkä kuvaus',
+      labelCategory: 'Kategoria',
+      labelTags: 'Tagit',
+      labelDemoUrl: 'Live-URL',
+      labelGithubUrl: 'GitHub-URL',
+      labelSortOrder: 'Järjestysnumero',
+      labelImage: 'Kuva',
+      labelVisibility: 'Näkyvyys',
+      labelPublished: 'Näkyvissä',
+      labelHidden: 'Piilotettu',
+      placeholderTitle: 'Kirjoita projektin otsikko',
+      placeholderSlug: 'auto-generoidaan otsikosta',
+      placeholderSubtitle: 'Lyhyt kuvaus',
+      copyFromEnglish: 'Kopioi englannista',
+      copyFromFinnish: 'Kopioi suomesta',
+      placeholderDescription: 'Projektin pitkä kuvaus...',
+      placeholderCategory: '— Ei kategoriaa —',
+      placeholderTags: 'React, TypeScript, ...',
+      tagsHint: 'Paina Enter tai pilkku lisätäksesi tagin.',
+      categoryListTitle: 'Projektiluokat',
+      createCategoryTitle: 'Lisää projektiluokka',
+      editCategoryTitle: 'Muokkaa projektiluokkaa',
+      labelCategoryName: 'Luokan nimi',
+      placeholderCategoryName: 'Syötä luokan nimi',
+      btnAddCategory: 'Lisää luokka',
+      tagListTitle: 'Projektitunnisteet',
+      createTagTitle: 'Lisää projektitunniste',
+      editTagTitle: 'Muokkaa projektitunnistetta',
+      labelTagName: 'Tunnisteen nimi',
+      labelColor: 'Väri',
+      placeholderTagName: 'Syötä tunnisteen nimi',
+      placeholderColor: '#6b7280',
+      btnAddTag: 'Lisää tunniste',
       previousPage: 'Edellinen sivu',
       nextPage: 'Seuraava sivu',
     },
@@ -1994,6 +2161,7 @@ export const translations = {
       nextPage: 'Seuraava sivu',
       perPage: 'Per sivu',
       blogNotFound: 'Blogipostausta ei löydy.',
+      languageNotAvailable: 'Tätä blogipostausta ei ole saatavilla valitulla kielellä. Näytetään englanninkielinen versio.',
     },
     notFound: {
       heading: 'Sivua ei löydy',

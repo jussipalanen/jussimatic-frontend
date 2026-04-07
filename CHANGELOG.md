@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-04-01
+
+### Added
+- **`languageNotAvailable` translation key**: Added for both English and Finnish to show a warning when a blog post is not available in the selected language.
+
+### Changed
+- **Blog language switching fixed**: Replaced unreliable ref-based language change detection with cleaner state-based approach. Blog content now properly reloads when switching languages.
+- **Content blinking prevention**: Removed loading spinner when switching languages to prevent content blinking. Blog content remains visible during language switch.
+- **Centralized storage URL constants**: Moved duplicated `STORAGE_BASE_URL`, `PLACEHOLDER_IMAGE_URL`, `buildImageUrl()`, and `buildStorageUrl()` to `src/constants.ts`. Updated 14 files to import from centralized location.
+
+### Added
+- **Copy translation button**: Added "Copy from English" / "Copy from Finnish" buttons in blog and project edit/create forms. The button appears next to the title field when one language is empty and the other has content. Clicking it copies the title and slug to the empty language.
+- **Slug auto-generate on blur**: The slug now auto-generates when leaving the title field (onBlur) if the slug is empty, instead of on every keystroke. This applies to both blog and project forms.
+
+### Fixed
+- **Blog language switching**: Fixed issue where changing language didn't update blog post content.
+- **Project form modal - Finnish slug auto-generate**: Added language-aware slug auto-generation for Finnish in the project edit modal. Now supports auto-generating slugs for both English and Finnish languages, similar to the blog form.
+- **Project form modal - slug auto-refill**: Fixed issue where deleting a slug and typing a new title wouldn't auto-fill the slug again. The manual edit flag is now reset when auto-generating.
+- **Project form modal - close on outside click**: Fixed modal closing unexpectedly when clicking inside the form. Added `stopPropagation` to the modal content wrapper to prevent clicks from bubbling up to the overlay.
+
 ## [1.1.4] - 2026-03-31
 
 ### Added

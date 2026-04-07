@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from './hooks/useLocaleNavigate';
 import Header from './components/Header';
 import Breadcrumb from './components/Breadcrumb';
+import AuthModal from './modals/AuthModal';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import type { Language } from './i18n';
 import { PROFICIENCY_LEVELS } from './constants';
@@ -170,16 +171,16 @@ function ProficiencyDots({ proficiency }: { proficiency: string }) {
 // Main view
 // ---------------------------------------------------------------------------
 
-const STORAGE_BASE_URL = (import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
+import { buildImageUrl } from './constants';
 
 function resolvePhoto(photo?: string | null): string | null {
   if (!photo) return null;
   if (photo.startsWith('http://') || photo.startsWith('https://')) return photo;
-  return `${STORAGE_BASE_URL}/${photo}`;
+  return buildImageUrl(photo);
 }
 
 export default function CVView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -192,6 +193,8 @@ export default function CVView() {
     window.addEventListener('jussimatic-language-change', handler);
     return () => window.removeEventListener('jussimatic-language-change', handler);
   }, []);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const cvLanguage = (resume?.lang ?? DEFAULT_LANGUAGE) as Language;
   const t = (translations[cvLanguage] ?? translations[DEFAULT_LANGUAGE]).cv;
@@ -229,8 +232,8 @@ export default function CVView() {
     }, {}) ?? {};
 
   return (
-    <div className="min-h-screen text-white">
-      <Header />
+    <div className="min-h-screen text-white flex flex-col">
+      <Header onLoginClick={() => setIsModalOpen(true)} />
 
       <main className="max-w-4xl mx-auto px-4 pt-24 md:pt-32 pb-20 sm:px-6">
         <div className="mb-8">
@@ -258,7 +261,7 @@ export default function CVView() {
 
         {/* CV Content */}
         {!loading && resume && (
-          <article className="space-y-14">
+          <article className="space-y-14 rounded-2xl border border-white/10 bg-gray-900/50 px-6 sm:px-10 py-10 backdrop-blur-sm">
 
             {/* ── Header ── */}
             <header className="flex flex-col sm:flex-row sm:items-start gap-6">
@@ -563,6 +566,7 @@ export default function CVView() {
           </article>
         )}
       </main>
+      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />
     </div>
   );
 }

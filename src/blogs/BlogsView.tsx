@@ -1,22 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getBlogs, deleteBlog } from '../api/blogsApi';
 import type { Blog, BlogsResponse } from '../api/blogsApi';
-import { getMe } from '../api/authApi';
-import { getRoleAccess } from '../utils/authUtils';
 import { Pagination } from '../components/Pagination';
 import { BlogFormModal } from '../modals/BlogFormModal';
 import Header from '../components/Header';
-import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
+import { DEFAULT_LANGUAGE, getStoredLanguage, getLocalizedValue, translations } from '../i18n';
 import type { Language } from '../i18n';
+import { buildImageUrl } from '../constants';
 
 const PER_PAGE_OPTIONS = [10, 20, 30, 40, 50];
-
-const STORAGE_BASE_URL = (import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
-
-function buildImageUrl(path: string) {
-  return `${STORAGE_BASE_URL}/${path.replace(/^\/+/, '')}`;
-}
 
 function getPageNumbers(currentPage: number, totalPages: number): number[] {
   const pages: number[] = [];
@@ -44,7 +37,7 @@ function getPageNumbers(currentPage: number, totalPages: number): number[] {
 }
 
 function BlogsView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
 
@@ -54,7 +47,6 @@ function BlogsView() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   // Edit modal
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
@@ -71,19 +63,11 @@ function BlogsView() {
     return () => window.removeEventListener('jussimatic-language-change', handler);
   }, []);
 
-  useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
-    getMe()
-      .then((me) => setIsAdmin(getRoleAccess(me).isAdmin))
-      .catch(() => {});
-  }, []);
-
   const loadBlogs = async (page: number = currentPage) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getBlogs(page, perPage);
+      const res = await getBlogs(page, perPage, 'created_at', 'desc', language);
       setBlogs(res.data);
       setMeta({ last_page: res.last_page, current_page: res.current_page, per_page: res.per_page, total: res.total });
     } catch (err) {
@@ -99,7 +83,7 @@ function BlogsView() {
       setLoading(true);
       setError(null);
       try {
-        const res = await getBlogs(currentPage, perPage);
+        const res = await getBlogs(currentPage, perPage, 'created_at', 'desc', language);
         if (!active) return;
         setBlogs(res.data);
         setMeta({ last_page: res.last_page, current_page: res.current_page, per_page: res.per_page, total: res.total });
@@ -112,7 +96,7 @@ function BlogsView() {
     };
     load();
     return () => { active = false; };
-  }, [currentPage, perPage, t.blog.errorLoading]);
+  }, [currentPage, perPage, language, t.blog.errorLoading]);
 
   const totalPages = meta?.last_page ?? 1;
   const pageNumbers = getPageNumbers(currentPage, totalPages);
@@ -202,49 +186,30 @@ function BlogsView() {
                 >
                   {blog.featured_image && (
                     <button
-                      onClick={() => navigate(`/blogs/${blog.slug ?? blog.id}`)}
+                      onClick={() => navigate(`/blogs/${typeof blog.slug === 'string' ? blog.slug : (blog.slug?.[language] ?? blog.slug?.en ?? blog.id)}`)}
                       className="w-full cursor-pointer"
                     >
                       <img
                         src={buildImageUrl(blog.featured_image)}
-                        alt={blog.title}
+                        alt={getLocalizedValue(blog.title, language)}
                         className="w-full h-48 object-cover"
                       />
                     </button>
                   )}
                   <div className="p-5">
                     <button
-                      onClick={() => navigate(`/blogs/${blog.slug ?? blog.id}`)}
+                      onClick={() => navigate(`/blogs/${typeof blog.slug === 'string' ? blog.slug : (blog.slug?.[language] ?? blog.slug?.en ?? blog.id)}`)}
                       className="w-full text-left hover:opacity-80 transition-opacity cursor-pointer"
                     >
-                      <h2 className="text-lg font-semibold text-white mb-2">{blog.title}</h2>
+                      <h2 className="text-lg font-semibold text-white mb-2">{getLocalizedValue(blog.title, language)}</h2>
                       {blog.excerpt && (
-                        <p className="text-gray-400 text-sm mb-3 line-clamp-3">{blog.excerpt}</p>
+                        <p className="text-gray-400 text-sm mb-3 line-clamp-3">{getLocalizedValue(blog.excerpt, language)}</p>
                       )}
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">{formatDate(blog.created_at)}</span>
                         <span className="text-blue-400 text-sm ml-auto">{t.blog.readMore} →</span>
                       </div>
                     </button>
-
-                    {isAdmin && (
-                      <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-700">
-                        <button
-                          type="button"
-                          onClick={() => setEditingBlog(blog)}
-                          className="rounded-lg border border-gray-600 px-3 py-1.5 text-sm font-semibold text-gray-300 hover:bg-gray-700/60 transition-colors"
-                        >
-                          {tBlog.btnEdit}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setBlogToDelete(blog)}
-                          className="rounded-lg border border-red-500/60 px-3 py-1.5 text-sm font-semibold text-red-300 hover:bg-red-600/20 transition-colors"
-                        >
-                          {tBlog.btnDelete}
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
@@ -278,7 +243,7 @@ function BlogsView() {
           <div className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 shadow-lg" role="dialog" aria-modal="true">
             <h2 className="text-xl font-semibold text-white">{tBlog.deleteTitle}</h2>
             <p className="mt-3 text-sm text-gray-300">
-              {tBlog.deleteConfirm.replace('{title}', blogToDelete.title)}
+              {tBlog.deleteConfirm.replace('{title}', getLocalizedValue(blogToDelete.title, language))}
             </p>
             <div className="mt-6 flex items-center justify-end gap-3">
               <button

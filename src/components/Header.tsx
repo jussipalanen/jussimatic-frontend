@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import NavActions from './NavActions';
 import Breadcrumb from './Breadcrumb';
 import type { Language } from '../i18n';
@@ -27,7 +27,7 @@ export default function Header({
   onBack,
   containerClassName = 'max-w-4xl mx-auto',
 }: HeaderProps) {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   if (title) {
     // Demo mode — relative, with breadcrumb
@@ -43,7 +43,7 @@ export default function Header({
               aria-label="Go to homepage"
               className="cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
             >
-              <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" />
+              <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" fetchPriority="high" />
             </button>
 
             <NavActions language={language} onLanguageChange={onLanguageChange} />
@@ -75,7 +75,7 @@ export default function Header({
             aria-label="Go to homepage"
             className="cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
           >
-            <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" />
+            <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" fetchPriority="high" />
           </button>
           <NavActions onLoginClick={onLoginClick} />
         </div>

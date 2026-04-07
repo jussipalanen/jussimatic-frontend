@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
-import { getAllBlogs, deleteBlog } from '../api/blogsApi';
-import type { Blog } from '../api/blogsApi';
+import { getAdminProjects, deleteProject } from '../api/projectsApi';
+import type { Project } from '../api/projectsApi';
 import { getMe } from '../api/authApi';
-import { getRoleAccess } from '../utils/authUtils';
+import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
 import Header from '../components/Header';
 import AuthModal from '../modals/AuthModal';
 import Breadcrumb from '../components/Breadcrumb';
 import { Pagination } from '../components/Pagination';
-import { BlogFormModal } from '../modals/BlogFormModal';
-import { DEFAULT_LANGUAGE, getStoredLanguage, getLocalizedValue, translations } from '../i18n';
+import { ProjectFormModal } from '../components/ProjectFormModal';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
 import { buildImageUrl } from '../constants';
 
@@ -38,25 +38,24 @@ function getPageNumbers(currentPage: number, totalPages: number): number[] {
   return pages;
 }
 
-function AdminBlogsView() {
+function AdminProjectsView() {
   const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
-  const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminBlogs;
+  const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminProjects;
   const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
-  // Form modal
   const [showForm, setShowForm] = useState(false);
-  const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-  // Delete confirmation
-  const [blogToDelete, setBlogToDelete] = useState<Blog | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -69,24 +68,24 @@ function AdminBlogsView() {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('auth_token');
-        if (!token) { navigate('/', { state: { adminAccessDenied: true } }); return; }
+        if (!token) { setAuthError(t.authErrLogin); setLoading(false); return; }
         const me = await getMe();
         const access = getRoleAccess(me);
-        if (!access.isAdmin) { navigate('/', { state: { adminAccessDenied: true } }); return; }
+        if (!access.isAdmin && !access.isVendor) { setAuthError(PERMISSION_MESSAGE); setLoading(false); return; }
       } catch {
-        navigate('/', { state: { adminAccessDenied: true } });
+        setAuthError(t.authErrLogin);
+        setLoading(false);
       }
     };
     checkAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadBlogs = async (page: number = currentPage) => {
+  const loadProjects = async (page: number = currentPage) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getAllBlogs(page, ITEMS_PER_PAGE, 'created_at', 'desc', language);
-      setBlogs(res.data);
+      const res = await getAdminProjects(page, ITEMS_PER_PAGE);
+      setProjects(res.data);
       setTotalPages(res.last_page);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.errLoad);
@@ -96,9 +95,9 @@ function AdminBlogsView() {
   };
 
   useEffect(() => {
-    loadBlogs(currentPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, language]);
+    if (authError) return;
+    loadProjects(currentPage);
+  }, [currentPage, authError]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -107,38 +106,35 @@ function AdminBlogsView() {
     }
   };
 
-  const openCreateForm = () => { setEditingBlog(null); setShowForm(true); };
-  const openEditForm = (blog: Blog) => { setEditingBlog(blog); setShowForm(true); };
-  const closeForm = () => { setShowForm(false); setEditingBlog(null); };
+  const openCreateForm = () => { setEditingProject(null); setShowForm(true); };
+  const openEditForm = (project: Project) => { setEditingProject(project); setShowForm(true); };
+  const closeForm = () => { setShowForm(false); setEditingProject(null); };
 
   const handleSaved = async () => {
     closeForm();
-    await loadBlogs(editingBlog ? currentPage : 1);
-    if (!editingBlog) setCurrentPage(1);
+    await loadProjects(editingProject ? currentPage : 1);
+    if (!editingProject) setCurrentPage(1);
   };
 
-  const handleDeleteClick = (blog: Blog) => setBlogToDelete(blog);
-  const handleDeleteCancel = () => { if (!deleting) setBlogToDelete(null); };
+  const handleDeleteClick = (project: Project) => setProjectToDelete(project);
+  const handleDeleteCancel = () => { if (!deleting) setProjectToDelete(null); };
 
   const handleDeleteConfirm = async () => {
-    if (!blogToDelete || deleting) return;
+    if (!projectToDelete || deleting) return;
     setDeleting(true);
     try {
-      await deleteBlog(blogToDelete.id);
-      setBlogToDelete(null);
-      const newTotal = blogs.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
-      setCurrentPage(newTotal);
-      await loadBlogs(newTotal);
+      await deleteProject(projectToDelete.id);
+      setProjectToDelete(null);
+      const newPage = projects.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
+      setCurrentPage(newPage);
+      await loadProjects(newPage);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.errDelete);
-      setBlogToDelete(null);
+      setProjectToDelete(null);
     } finally {
       setDeleting(false);
     }
   };
-
-  const formatDate = (str: string) =>
-    new Intl.DateTimeFormat(language, { dateStyle: 'medium' }).format(new Date(str));
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -147,26 +143,39 @@ function AdminBlogsView() {
       <main className="container mx-auto px-4 pt-24 md:pt-32 pb-8">
         <div className="mx-auto max-w-4xl mb-8">
           <Breadcrumb
-            items={[{ label: tDash.title, onClick: () => navigate('/admin') }]}
+            items={[{ label: translations[language].adminDashboard.title, onClick: () => navigate('/admin') }]}
             current={t.title}
           />
         </div>
-        {loading && (
+        {authError && (
+          <div className="mx-auto max-w-2xl rounded-lg border border-yellow-500/30 bg-yellow-900/20 p-6 text-center">
+            <p className="text-lg text-yellow-300 mb-4">{authError === PERMISSION_MESSAGE ? tDash.permissionDenied : authError}</p>
+            {authError !== PERMISSION_MESSAGE && (
+              <button
+                onClick={() => navigate('/demo/ecommerce/products')}
+                className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
+              >
+                {t.goToProducts}
+              </button>
+            )}
+          </div>
+        )}
+
+        {loading && !authError && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
             <p className="mt-4 text-gray-300">{t.loading}</p>
           </div>
         )}
 
-        {error && !loading && (
+        {error && !loading && !authError && (
           <div className="mx-auto max-w-2xl rounded-lg border border-red-500/30 bg-red-900/20 px-4 py-3 mb-4">
             <p className="text-red-300">{error}</p>
           </div>
         )}
 
-        {!loading && (
+        {!loading && !authError && (
           <div className="mx-auto max-w-4xl">
-            {/* Header row */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">{t.title}</h2>
               <button
@@ -180,73 +189,76 @@ function AdminBlogsView() {
               </button>
             </div>
 
-            {/* Empty state */}
-            {!loading && !error && blogs.length === 0 && (
+            {!loading && !error && projects.length === 0 && (
               <div className="text-center py-10 text-gray-400">{t.empty}</div>
             )}
 
-            {/* Blog list */}
-            {blogs.length > 0 && (
+            {projects.length > 0 && (
               <div className="flex flex-col gap-3">
-                {blogs.map((blog) => (
+                {projects.map((project) => (
                   <div
-                    key={blog.id}
+                    key={project.id}
                     className="flex items-start gap-4 rounded-xl border border-gray-700 bg-gray-800 px-5 py-4 hover:border-gray-600 transition-colors"
                   >
-                    {blog.featured_image && (
+                    {project.feature_image && (
                       <img
-                        src={buildImageUrl(blog.featured_image)}
-                        alt={getLocalizedValue(blog.title, language)}
+                        src={buildImageUrl(project.feature_image)}
+                        alt={project.title}
                         className="shrink-0 w-16 h-16 rounded-lg object-cover border border-gray-700"
                       />
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="font-semibold text-white truncate">{getLocalizedValue(blog.title, language)}</span>
+                        <span className="font-semibold text-white truncate">{project.title}</span>
                         <span
-                          className={`text-xs rounded-full px-2 py-0.5 font-medium ${blog.visibility
+                          className={`text-xs rounded-full px-2 py-0.5 font-medium ${project.visibility === 'show'
                             ? 'bg-green-600/20 text-green-400 border border-green-500/30'
                             : 'bg-gray-700/50 text-gray-400 border border-gray-600/40'
                             }`}
                         >
-                          {blog.visibility ? t.labelPublished : t.labelDraft}
+                          {project.visibility === 'show' ? t.labelPublished : t.labelHidden}
                         </span>
-                        {blog.category && (
+                        {project.categories && project.categories.length > 0 && (
                           <span className="text-xs rounded-full px-2 py-0.5 bg-blue-600/20 text-blue-400 border border-blue-500/30">
-                            {blog.category.name}
+                            {project.categories[0].title}
                           </span>
                         )}
                       </div>
-                      {blog.excerpt && (
-                        <p className="text-sm text-gray-400 truncate">{getLocalizedValue(blog.excerpt, language)}</p>
+                      {project.short_description && (
+                        <p className="text-sm text-gray-400 truncate">{project.short_description}</p>
                       )}
                       <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-gray-500">
-                        {blog.author && (
-                          <span>{blog.author.first_name} {blog.author.last_name}</span>
+                        {project.tags && project.tags.length > 0 && (
+                          <span>{project.tags.slice(0, 4).map((t) => t.title).join(', ')}{project.tags.length > 4 ? ` +${project.tags.length - 4}` : ''}</span>
                         )}
-                        <span>{formatDate(blog.created_at)}</span>
-                        <span className="font-mono">#{blog.id}</span>
+                        <span className="font-mono">#{project.id}</span>
+                        {project.sort_order != null && (
+                          <span>{t.labelSortOrder}: {project.sort_order}</span>
+                        )}
                       </div>
                     </div>
 
                     <div className="shrink-0 flex items-center gap-2">
+                      {project.live_url && (
+                        <a
+                          href={project.live_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-lg border border-blue-500/60 px-3 py-1.5 text-sm font-semibold text-blue-300 hover:bg-blue-600/20 transition-colors"
+                        >
+                          {t.btnView}
+                        </a>
+                      )}
                       <button
                         type="button"
-                        onClick={() => navigate(`/blogs/${typeof blog.slug === 'string' ? blog.slug : (blog.slug?.[language] ?? blog.slug?.en ?? blog.id)}`)}
-                        className="rounded-lg border border-blue-500/60 px-3 py-1.5 text-sm font-semibold text-blue-300 hover:bg-blue-600/20 transition-colors"
-                      >
-                        {t.btnView}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openEditForm(blog)}
+                        onClick={() => openEditForm(project)}
                         className="rounded-lg border border-gray-600 px-3 py-1.5 text-sm font-semibold text-gray-300 hover:bg-gray-700/60 transition-colors"
                       >
                         {t.btnEdit}
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDeleteClick(blog)}
+                        onClick={() => handleDeleteClick(project)}
                         className="rounded-lg border border-red-500/60 px-3 py-1.5 text-sm font-semibold text-red-300 hover:bg-red-600/20 transition-colors"
                       >
                         {t.btnDelete}
@@ -270,20 +282,19 @@ function AdminBlogsView() {
       </main>
 
       {showForm && (
-        <BlogFormModal
-          blog={editingBlog}
+        <ProjectFormModal
+          project={editingProject}
           onClose={closeForm}
           onSaved={handleSaved}
         />
       )}
 
-      {/* Delete confirmation modal */}
-      {blogToDelete && (
+      {projectToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 shadow-lg" role="dialog" aria-modal="true">
             <h2 className="text-xl font-semibold text-white">{t.deleteTitle}</h2>
             <p className="mt-3 text-sm text-gray-300">
-              {t.deleteConfirm.replace('{title}', getLocalizedValue(blogToDelete.title, language))}
+              {t.deleteConfirm.replace('{title}', projectToDelete.title)}
             </p>
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
@@ -311,4 +322,4 @@ function AdminBlogsView() {
   );
 }
 
-export default AdminBlogsView;
+export default AdminProjectsView;

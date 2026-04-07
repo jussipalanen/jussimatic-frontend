@@ -1,1 +1,342 @@
 @import "tailwindcss";
+
+.typing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #d1d5db;
+  opacity: 0.35;
+  animation: typing-bounce 1.2s infinite ease-in-out;
+}
+
+.typing-dot--2 {
+  animation-delay: 0.15s;
+}
+
+.typing-dot--3 {
+  animation-delay: 0.3s;
+}
+
+@keyframes typing-bounce {
+
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.fade-in-message {
+  animation: fade-in-message 220ms ease-out;
+}
+
+.bot-message>* {
+  margin-top: 0.65rem;
+}
+
+.bot-message> :first-child {
+  margin-top: 0;
+}
+
+.bot-message h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.bot-message h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.bot-message h3 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.bot-message h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.bot-message p {
+  line-height: 1.6;
+}
+
+.bot-message ul,
+.bot-message ol {
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+.bot-message ul {
+  list-style: disc;
+}
+
+.bot-message ol {
+  list-style: decimal;
+}
+
+.bot-message p:has(> img:only-child) {
+  text-align: center;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.bot-message img {
+  display: block;
+  max-width: 200px;
+  max-height: 240px;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+@keyframes fade-in-message {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================================================ */
+/* SPINNING COIN                                     */
+/* ================================================ */
+
+.coin-orbit {
+  position: relative;
+  display: inline-block;
+  width: 140px;
+  height: 140px;
+  perspective: 600px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  animation: coinApproach 2.0s cubic-bezier(0.22, 0.68, 0, 1.08) both;
+  filter:
+    drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 22px rgba(251, 191, 36, 0.45));
+}
+
+/* Ground shadow cast below the coin */
+.coin-orbit::after {
+  content: '';
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 14px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.coin-wrapper {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: coinFlip 3.8s linear infinite;
+  animation-play-state: running;
+  will-change: transform;
+}
+
+.coin-face {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: conic-gradient(from 45deg,
+      #78350f 0%,
+      #d97706 12%,
+      #fef3c7 22%,
+      #fbbf24 32%,
+      #b45309 44%,
+      #fbbf24 55%,
+      #fef3c7 65%,
+      #d97706 75%,
+      #92400e 86%,
+      #d97706 93%,
+      #78350f 100%);
+  border: 3px solid rgba(251, 191, 36, 0.55);
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.38),
+    inset 0 3px 8px rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+
+.coin-back {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 4px solid rgba(251, 191, 36, 0.80);
+  box-shadow:
+    0 0 0 2px rgba(120, 53, 15, 0.55),
+    inset 0 0 0 3px rgba(251, 191, 36, 0.25),
+    inset 0 0 30px rgba(0, 0, 0, 0.38),
+    inset 0 3px 8px rgba(255, 255, 255, 0.22);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+  transform: rotateY(180deg);
+}
+
+.coin-back-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  filter: sepia(100%) hue-rotate(5deg) saturate(2.2) brightness(0.85) contrast(1.1);
+}
+
+.coin-back-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 45deg,
+      rgba(120, 53, 15, 0.52) 0%,
+      rgba(217, 119, 6, 0.38) 20%,
+      rgba(254, 243, 199, 0.22) 35%,
+      rgba(251, 191, 36, 0.35) 50%,
+      rgba(180, 83, 9, 0.42) 65%,
+      rgba(251, 191, 36, 0.30) 80%,
+      rgba(120, 53, 15, 0.52) 100%);
+  mix-blend-mode: multiply;
+}
+
+/* Decorative rings on coin back */
+.coin-back-rings {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 10px rgba(251, 191, 36, 0.13),
+    inset 0 0 0 22px rgba(255, 255, 255, 0.06),
+    inset 0 0 0 36px rgba(251, 191, 36, 0.07);
+}
+
+.coin-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: linear-gradient(120deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.0) 35%,
+      rgba(255, 255, 255, 0.55) 50%,
+      rgba(255, 255, 255, 0.0) 65%,
+      transparent 80%);
+  background-size: 300% 300%;
+  background-position: -100% 0;
+  animation: coinShine 4.5s ease-in-out infinite;
+  animation-play-state: running;
+}
+
+@keyframes coinShine {
+  0%   { background-position: -150% 0; opacity: 0; }
+  10%  { opacity: 1; }
+  40%  { background-position: 150% 0; opacity: 1; }
+  50%  { opacity: 0; }
+  100% { background-position: 150% 0; opacity: 0; }
+}
+
+@keyframes coinApproach {
+  0%   { transform: scale(0.02); opacity: 0; }
+  18%  { opacity: 0.6; }
+  70%  { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes coinFlip {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
+}
+
+/* ================================================ */
+/* PERFORMANCE — touch/mobile devices               */
+/* ================================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* Skip coin entry animation — snap straight to final state */
+  .coin-orbit {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* Low-tier touch devices: keep coin static */
+@media (hover: none) and (pointer: coarse) and (update: slow) {
+  .coin-wrapper {
+    animation-play-state: paused;
+  }
+
+  .coin-shine {
+    animation-play-state: paused;
+    opacity: 0;
+  }
+}
+
+/* ================================================ */
+/* ACCESSIBILITY — respect OS reduced motion        */
+/* ================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .coin-orbit {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .coin-wrapper {
+    animation: none !important;
+  }
+
+  .coin-shine {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}
+
+/* ================================================ */
+/* USER TOGGLE — animated background disabled       */
+/* ================================================ */
+.no-bg-animation .coin-orbit {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+.no-bg-animation .coin-wrapper {
+  animation: none !important;
+}
+
+.no-bg-animation .coin-shine {
+  animation: none !important;
+  opacity: 0 !important;
+}

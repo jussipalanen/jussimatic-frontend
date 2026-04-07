@@ -1,11 +1,19 @@
 import type { ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocaleNavigate } from '../../../hooks/useLocaleNavigate';
 import { useEffect, useState } from 'react';
 import { ECOMMERCE_MAIN_TITLE } from '../../../constants';
+
+function isLowEndDevice(): boolean {
+  if (typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency <= 2) return true;
+  const mem = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  if (typeof mem === 'number' && mem <= 2) return true;
+  return false;
+}
 import { getMe, logoutUser } from '../../../api/authApi';
 import { getRoleAccess } from '../../../utils/authUtils';
 import AuthModal from '../../../modals/AuthModal';
-import { getStoredLanguage, setStoredLanguage, translations, type Language } from '../../../i18n';
+import { getStoredLanguage, translations, getPathWithoutLanguage, type Language } from '../../../i18n';
 import LanguageSelect from '../../../components/LanguageSelect';
 
 type NavKey = 'products' | 'cart' | 'my-orders' | 'my-profile' | 'admin-dashboard';
@@ -27,18 +35,53 @@ function EcommerceHeader({
   activeNav,
   actions,
 }: EcommerceHeaderProps) {
-  const navigate = useNavigate();
+  const rawNavigate = useNavigate();
+  const navigate = useLocaleNavigate();
+  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [roleAccess, setRoleAccess] = useState<ReturnType<typeof getRoleAccess> | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authInitialTab, setAuthInitialTab] = useState<'login' | 'register'>('login');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const [animatedBg, setAnimatedBg] = useState(() => {
+    const stored = localStorage.getItem('jussimatic-animated-bg');
+    if (stored !== null) return stored !== 'false';
+    return !isLowEndDevice();
+  });
+  const [lightTheme, setLightTheme] = useState(() => localStorage.getItem('jussimatic-theme') === 'light');
+
+  const handleLanguageChange = (lang: Language) => {
+    setLanguage(lang);
+    const currentPath = getPathWithoutLanguage(location.pathname);
+    const newPath = lang === 'en' ? `/en${currentPath}` : currentPath;
+    rawNavigate(newPath);
+    window.dispatchEvent(new CustomEvent<Language>('jussimatic-language-change', { detail: lang }));
+  };
 
   useEffect(() => {
-    setStoredLanguage(language);
-    window.dispatchEvent(new CustomEvent('jussimatic-language-change', { detail: language }));
-  }, [language]);
+    const handler = (event: Event) => setLanguage((event as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
+
+  useEffect(() => {
+    if (animatedBg) {
+      document.documentElement.classList.remove('no-bg-animation');
+    } else {
+      document.documentElement.classList.add('no-bg-animation');
+    }
+    localStorage.setItem('jussimatic-animated-bg', String(animatedBg));
+  }, [animatedBg]);
+
+  useEffect(() => {
+    if (lightTheme) {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+    localStorage.setItem('jussimatic-theme', lightTheme ? 'light' : 'dark');
+  }, [lightTheme]);
 
   const t = translations[language].ecommerce;
   const isProductsActive = activeNav === 'products';
@@ -103,7 +146,7 @@ function EcommerceHeader({
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <button onClick={() => navigate('/')} aria-label="Go to homepage" className="cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 shrink-0">
-                <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" />
+                <img src="/jussimatic_logo.webp" alt="" className="h-10 md:h-20" fetchPriority='high' />
               </button>
               <h1 className="flex min-w-0 items-baseline gap-2 flex-wrap">
                 <span className="text-lg font-bold text-white truncate">{ECOMMERCE_MAIN_TITLE}</span>
@@ -137,7 +180,61 @@ function EcommerceHeader({
             <div className="hidden lg:flex shrink-0 items-center gap-1.5 lg:gap-2.5">
               {actions && <div className="flex items-center gap-1.5 lg:gap-2.5">{actions}</div>}
 
-              <LanguageSelect value={language} onChange={setLanguage} className="px-2 py-1 lg:px-3 lg:py-1.5 text-xs lg:text-sm" />
+              <LanguageSelect value={language} onChange={handleLanguageChange} className="px-2 py-1 lg:px-3 lg:py-1.5 text-xs lg:text-sm" />
+
+              {/* Light / Dark theme toggle */}
+              <button
+                onClick={() => setLightTheme((v) => !v)}
+                aria-label={lightTheme ? 'Switch to dark theme' : 'Switch to light theme'}
+                title={lightTheme ? 'Switch to dark theme' : 'Switch to light theme'}
+                aria-pressed={lightTheme}
+                className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${lightTheme
+                  ? 'border-yellow-400/60 bg-yellow-400/15 text-yellow-500 hover:bg-yellow-400/25 hover:border-yellow-400/80'
+                  : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
+                }`}
+              >
+                {lightTheme ? (
+                  <>
+                    <span className="absolute inset-0 rounded-lg bg-yellow-300/20 blur-sm animate-pulse" />
+                    <svg className="relative w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm0 15a5 5 0 100-10 5 5 0 000 10zm7.071-12.071a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM21 11h1a1 1 0 110 2h-1a1 1 0 110-2zm-2.929 7.071a1 1 0 011.414 0l.707.707a1 1 0 11-1.414 1.414l-.707-.707a1 1 0 010-1.414zM12 20a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-7.071-2.929a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM3 11H2a1 1 0 100 2h1a1 1 0 100-2zm1.929-7.071a1 1 0 011.414 0l.707.707A1 1 0 015.636 6.05l-.707-.707a1 1 0 010-1.414z" />
+                    </svg>
+                  </>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="4" />
+                    <path strokeLinecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                  </svg>
+                )}
+              </button>
+
+              {/* Animated background toggle */}
+              <button
+                onClick={() => setAnimatedBg((v) => !v)}
+                aria-label={animatedBg ? 'Disable animations' : 'Enable animations'}
+                title={animatedBg ? 'Disable animations' : 'Enable animations'}
+                aria-pressed={animatedBg}
+                className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${animatedBg
+                  ? lightTheme
+                    ? 'border-yellow-400/60 bg-yellow-400/15 text-yellow-500 hover:bg-yellow-400/25 hover:border-yellow-400/80'
+                    : 'border-amber-400/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:border-amber-400/70'
+                  : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
+                }`}
+              >
+                {animatedBg ? (
+                  <>
+                    <span className="absolute inset-0 rounded-lg bg-amber-400/20 blur-sm animate-pulse" />
+                    <svg className="relative w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                  </>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    <line x1="4" y1="4" x2="20" y2="20" strokeLinecap="round" />
+                  </svg>
+                )}
+              </button>
 
               {/* Products */}
               <button onClick={() => navigateAndCloseMenu('/demo/ecommerce/products')} disabled={isProductsActive} aria-current={isProductsActive ? 'page' : undefined} aria-label={t.browseProducts} className={isProductsActive ? activeBtnCls : navBtnCls}>
@@ -291,7 +388,61 @@ function EcommerceHeader({
 
                 {/* Bottom bar: auth action */}
                 <div className="px-3 pb-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
-                  <LanguageSelect value={language} onChange={setLanguage} dropdownAlign="left" />
+                  <div className="flex items-center gap-2">
+                    <LanguageSelect value={language} onChange={handleLanguageChange} dropdownAlign="left" />
+                    {/* Light / Dark theme toggle — mobile */}
+                    <button
+                      onClick={() => setLightTheme((v) => !v)}
+                      aria-label={lightTheme ? 'Switch to dark theme' : 'Switch to light theme'}
+                      title={lightTheme ? 'Switch to dark theme' : 'Switch to light theme'}
+                      aria-pressed={lightTheme}
+                      className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${lightTheme
+                        ? 'border-yellow-400/60 bg-yellow-400/15 text-yellow-500 hover:bg-yellow-400/25 hover:border-yellow-400/80'
+                        : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
+                      }`}
+                    >
+                      {lightTheme ? (
+                        <>
+                          <span className="absolute inset-0 rounded-lg bg-yellow-300/20 blur-sm animate-pulse" />
+                          <svg className="relative w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm0 15a5 5 0 100-10 5 5 0 000 10zm7.071-12.071a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM21 11h1a1 1 0 110 2h-1a1 1 0 110-2zm-2.929 7.071a1 1 0 011.414 0l.707.707a1 1 0 11-1.414 1.414l-.707-.707a1 1 0 010-1.414zM12 20a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-7.071-2.929a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM3 11H2a1 1 0 100 2h1a1 1 0 100-2zm1.929-7.071a1 1 0 011.414 0l.707.707A1 1 0 015.636 6.05l-.707-.707a1 1 0 010-1.414z" />
+                          </svg>
+                        </>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="4" />
+                          <path strokeLinecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                        </svg>
+                      )}
+                    </button>
+                    {/* Animated background toggle — mobile */}
+                    <button
+                      onClick={() => setAnimatedBg((v) => !v)}
+                      aria-label={animatedBg ? 'Disable animations' : 'Enable animations'}
+                      title={animatedBg ? 'Disable animations' : 'Enable animations'}
+                      aria-pressed={animatedBg}
+                      className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${animatedBg
+                        ? lightTheme
+                          ? 'border-yellow-400/60 bg-yellow-400/15 text-yellow-500 hover:bg-yellow-400/25 hover:border-yellow-400/80'
+                          : 'border-amber-400/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:border-amber-400/70'
+                        : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
+                      }`}
+                    >
+                      {animatedBg ? (
+                        <>
+                          <span className="absolute inset-0 rounded-lg bg-amber-400/20 blur-sm animate-pulse" />
+                          <svg className="relative w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                          </svg>
+                        </>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                          <line x1="4" y1="4" x2="20" y2="20" strokeLinecap="round" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   {isLoggedIn ? (
                     <button
                       onClick={handleLogout}

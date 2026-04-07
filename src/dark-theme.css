@@ -1,15 +1,11 @@
 /* ================================================ */
-/* SPACE BACKGROUND                                 */
+/* DARK THEME (default)                              */
+/* Space / night-sky background with animated stars */
 /* ================================================ */
 
 html,
 body {
   min-height: 100%;
-}
-
-a,
-button {
-  cursor: pointer;
 }
 
 body {
@@ -119,47 +115,24 @@ body::after {
 }
 
 @keyframes starDrift1 {
-  from {
-    background-position: 0 0;
-  }
-
-  to {
-    background-position: 200px 200px;
-  }
+  from { background-position: 0 0; }
+  to   { background-position: 200px 200px; }
 }
 
 @keyframes starDrift2 {
-  from {
-    background-position: 0 0;
-  }
-
-  to {
-    background-position: -380px 380px;
-  }
+  from { background-position: 0 0; }
+  to   { background-position: -380px 380px; }
 }
 
 @keyframes starDrift3 {
-  from {
-    background-position: 0 0;
-  }
-
-  to {
-    background-position: 650px -650px;
-  }
+  from { background-position: 0 0; }
+  to   { background-position: 650px -650px; }
 }
 
 @keyframes starTwinkle {
-  0% {
-    opacity: 0.38;
-  }
-
-  50% {
-    opacity: 0.80;
-  }
-
-  100% {
-    opacity: 0.42;
-  }
+  0%   { opacity: 0.38; }
+  50%  { opacity: 0.80; }
+  100% { opacity: 0.42; }
 }
 
 /* ================================================ */
@@ -182,7 +155,6 @@ body::after {
   border-radius: 999px;
   opacity: 0;
   will-change: transform, opacity;
-  /* Long comet tail: very faint root → rich blue-white body → bright bright head */
   background: linear-gradient(to right,
       transparent 0%,
       rgba(150, 195, 255, 0.06) 12%,
@@ -191,7 +163,6 @@ body::after {
       rgba(245, 252, 255, 0.88) 82%,
       rgba(255, 255, 255, 0.96) 93%,
       rgba(255, 255, 255, 0.55) 100%);
-  /* Soft atmospheric glow on the whole tail */
   filter: drop-shadow(0 0 3px rgba(180, 220, 255, 0.55));
 }
 
@@ -213,7 +184,6 @@ body::after {
     0 0 55px 20px rgba(155, 210, 255, 0.22);
 }
 
-/* left edge, near top         */
 .shooting-star--1 {
   top: 4%;
   left: 0;
@@ -221,7 +191,6 @@ body::after {
   animation: shootAcross 78s linear 5s infinite;
 }
 
-/* top edge, left quarter      */
 .shooting-star--2 {
   top: 0;
   left: 8%;
@@ -229,7 +198,6 @@ body::after {
   animation: shootAcross 65s linear 23s infinite;
 }
 
-/* left edge, slightly lower   */
 .shooting-star--3 {
   top: 17%;
   left: 0;
@@ -237,7 +205,6 @@ body::after {
   animation: shootAcross 94s linear 47s infinite;
 }
 
-/* top edge, further right     */
 .shooting-star--4 {
   top: 0;
   left: 22%;
@@ -245,7 +212,6 @@ body::after {
   animation: shootAcross 72s linear 14s infinite;
 }
 
-/* left edge, mid-top          */
 .shooting-star--5 {
   top: 9%;
   left: 0;
@@ -254,56 +220,42 @@ body::after {
 }
 
 @keyframes shootAcross {
-
-  /* Parked off-screen, fully invisible */
   0% {
     transform: rotate(28deg) translateX(-700px);
     opacity: 0;
   }
-
   2% {
     transform: rotate(28deg) translateX(-700px);
     opacity: 0;
   }
-
-  /* Still off-screen left — about to cross the edge */
   3% {
     transform: rotate(28deg) translateX(-280px);
     opacity: 0;
     animation-timing-function: linear;
   }
-
-  /* ----  FADE IN: crosses left edge, materialises smoothly  ---- */
   5.2% {
     transform: rotate(28deg) translateX(60px);
     opacity: 1;
   }
-
-  /* ----  CRUISE: full brightness sweep across the sky  ---- */
   9.5% {
     transform: rotate(28deg) translateX(calc(100vw - 80px));
     opacity: 1;
   }
-
-  /* ----  FADE OUT: dissolves as it exits right edge  ---- */
   11.5% {
     transform: rotate(28deg) translateX(calc(100vw + 340px));
     opacity: 0;
   }
-
-  /* Reset back to start, stay invisible for the rest of the cycle */
   12% {
     transform: rotate(28deg) translateX(-700px);
     opacity: 0;
   }
-
   100% {
     transform: rotate(28deg) translateX(-700px);
     opacity: 0;
   }
 }
 
-/* ---- Starlight Flare (occasional large glowing star burst) ---- */
+/* ---- Starlight Flares ---- */
 .starlight-flare {
   position: absolute;
   width: 3px;
@@ -312,7 +264,6 @@ body::after {
   border-radius: 50%;
   opacity: 0;
   will-change: transform, opacity;
-  /* Static glow — avoids repainting box-shadow every frame */
   box-shadow:
     0 0 8px 3px rgba(255, 255, 255, 0.90),
     0 0 26px 11px rgba(220, 240, 255, 0.60),
@@ -338,403 +289,36 @@ body::after {
 }
 
 @keyframes starlightFlare {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-
-  1.5% {
-    opacity: 0;
-  }
-
-  2% {
-    opacity: 1;
-    transform: scale(1.8);
-  }
-
-  5% {
-    opacity: 0.75;
-    transform: scale(1.2);
-  }
-
-  9% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-
-  100% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-}
-
-.typing-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.typing-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background-color: #d1d5db;
-  opacity: 0.35;
-  animation: typing-bounce 1.2s infinite ease-in-out;
-}
-
-.typing-dot--2 {
-  animation-delay: 0.15s;
-}
-
-.typing-dot--3 {
-  animation-delay: 0.3s;
-}
-
-@keyframes typing-bounce {
-
-  0%,
-  80%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.35;
-  }
-
-  40% {
-    transform: translateY(-4px);
-    opacity: 1;
-  }
-}
-
-.fade-in-message {
-  animation: fade-in-message 220ms ease-out;
-}
-
-.bot-message>* {
-  margin-top: 0.65rem;
-}
-
-.bot-message> :first-child {
-  margin-top: 0;
-}
-
-.bot-message h1 {
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
-.bot-message h2 {
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.bot-message h3 {
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.bot-message h4 {
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.bot-message p {
-  line-height: 1.6;
-}
-
-.bot-message ul,
-.bot-message ol {
-  padding-left: 1.25rem;
-  line-height: 1.6;
-}
-
-.bot-message ul {
-  list-style: disc;
-}
-
-.bot-message ol {
-  list-style: decimal;
-}
-
-.bot-message p:has(> img:only-child) {
-  text-align: center;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-}
-
-.bot-message img {
-  display: block;
-  max-width: 200px;
-  max-height: 240px;
-  width: auto;
-  height: auto;
-  object-fit: cover;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  border: 2px solid rgba(255, 255, 255, 0.08);
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-}
-
-@keyframes fade-in-message {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ================================================ */
-/* SPINNING COIN                                     */
-/* ================================================ */
-
-.coin-orbit {
-  position: relative;
-  display: inline-block;
-  width: 140px;
-  height: 140px;
-  perspective: 600px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 0;
-  animation: coinApproach 2.0s cubic-bezier(0.22, 0.68, 0, 1.08) both;
-  filter:
-    drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 22px rgba(251, 191, 36, 0.45));
-}
-
-/* Ground shadow cast below the coin */
-.coin-orbit::after {
-  content: '';
-  position: absolute;
-  bottom: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 14px;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.coin-wrapper {
-  width: 140px;
-  height: 140px;
-  position: relative;
-  transform-style: preserve-3d;
-  animation: coinFlip 3.8s linear infinite;
-  animation-play-state: running;
-  will-change: transform;
-}
-
-.coin-face {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: conic-gradient(from 45deg,
-      #78350f 0%,
-      #d97706 12%,
-      #fef3c7 22%,
-      #fbbf24 32%,
-      #b45309 44%,
-      #fbbf24 55%,
-      #fef3c7 65%,
-      #d97706 75%,
-      #92400e 86%,
-      #d97706 93%,
-      #78350f 100%);
-  border: 3px solid rgba(251, 191, 36, 0.55);
-  box-shadow:
-    inset 0 0 30px rgba(0, 0, 0, 0.38),
-    inset 0 3px 8px rgba(255, 255, 255, 0.22);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  backface-visibility: hidden;
-}
-
-.coin-back {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  border: 4px solid rgba(251, 191, 36, 0.80);
-  box-shadow:
-    0 0 0 2px rgba(120, 53, 15, 0.55),
-    inset 0 0 0 3px rgba(251, 191, 36, 0.25),
-    inset 0 0 30px rgba(0, 0, 0, 0.38),
-    inset 0 3px 8px rgba(255, 255, 255, 0.22);
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  backface-visibility: hidden;
-  transform: rotateY(180deg);
-}
-
-.coin-back-photo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  filter: sepia(100%) hue-rotate(5deg) saturate(2.2) brightness(0.85) contrast(1.1);
-}
-
-.coin-back-overlay {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(from 45deg,
-      rgba(120, 53, 15, 0.52) 0%,
-      rgba(217, 119, 6, 0.38) 20%,
-      rgba(254, 243, 199, 0.22) 35%,
-      rgba(251, 191, 36, 0.35) 50%,
-      rgba(180, 83, 9, 0.42) 65%,
-      rgba(251, 191, 36, 0.30) 80%,
-      rgba(120, 53, 15, 0.52) 100%);
-  mix-blend-mode: multiply;
-}
-
-/* Decorative rings on coin back, matching front face */
-.coin-back-rings {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  pointer-events: none;
-  box-shadow:
-    inset 0 0 0 10px rgba(251, 191, 36, 0.13),
-    inset 0 0 0 22px rgba(255, 255, 255, 0.06),
-    inset 0 0 0 36px rgba(251, 191, 36, 0.07);
-}
-
-.coin-shine {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  pointer-events: none;
-  background: linear-gradient(120deg,
-      transparent 20%,
-      rgba(255, 255, 255, 0.0) 35%,
-      rgba(255, 255, 255, 0.55) 50%,
-      rgba(255, 255, 255, 0.0) 65%,
-      transparent 80%);
-  background-size: 300% 300%;
-  background-position: -100% 0;
-  animation: coinShine 4.5s ease-in-out infinite;
-  animation-play-state: running;
-}
-
-@keyframes coinShine {
-  0% {
-    background-position: -150% 0;
-    opacity: 0;
-  }
-
-  10% {
-    opacity: 1;
-  }
-
-  40% {
-    background-position: 150% 0;
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0;
-  }
-
-  100% {
-    background-position: 150% 0;
-    opacity: 0;
-  }
-}
-
-@keyframes coinApproach {
-  0% {
-    transform: scale(0.02);
-    opacity: 0;
-  }
-
-  18% {
-    opacity: 0.6;
-  }
-
-  70% {
-    transform: scale(1.08);
-  }
-
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes coinFlip {
-  from {
-    transform: rotateY(0deg);
-  }
-
-  to {
-    transform: rotateY(360deg);
-  }
+  0%   { opacity: 0; transform: scale(0.8); }
+  1.5% { opacity: 0; }
+  2%   { opacity: 1; transform: scale(1.8); }
+  5%   { opacity: 0.75; transform: scale(1.2); }
+  9%   { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 0; transform: scale(0.8); }
 }
 
 /* ================================================ */
 /* PERFORMANCE — touch/mobile devices               */
-/* Targets phones & tablets (no hover, coarse input) */
 /* ================================================ */
 @media (hover: none) and (pointer: coarse) {
-
-  /* Freeze layers 1 & 3 — only the mid-speed layer 2 drifts */
   .stars-layer-1,
   .stars-layer-3 {
     animation: none;
   }
 
-  /* Drop expensive starlight flares entirely */
   .starlight-flare {
     display: none;
   }
 
-  /* Disable all shooting stars */
   .shooting-star {
     display: none;
   }
-
-  /* Skip coin entry animation — snap straight to final state */
-  .coin-orbit {
-    animation: none;
-    opacity: 1;
-  }
-
-  /* Coin auto-spins by default — no overrides needed for touch */
-}
-
-/* Low-tier touch devices: keep coin static to save resources.
-   (update: slow) targets e-ink / very slow rendering environments;
-   (prefers-reduced-data) targets data-saver mode. */
-@media (hover: none) and (pointer: coarse) and (update: slow) {
-  .coin-wrapper {
-    animation-play-state: paused;
-  }
-
-  .coin-shine {
-    animation-play-state: paused;
-    opacity: 0;
-  }
 }
 
 /* ================================================ */
-/* ACCESSIBILITY — respect OS reduced motion setting */
+/* ACCESSIBILITY — respect OS reduced motion        */
 /* ================================================ */
 @media (prefers-reduced-motion: reduce) {
-
   .stars-layer-1,
   .stars-layer-2,
   .stars-layer-3 {
@@ -745,20 +329,6 @@ body::after {
   .starlight-flare {
     animation: none !important;
     display: none;
-  }
-
-  .coin-orbit {
-    animation: none !important;
-    opacity: 1 !important;
-  }
-
-  .coin-wrapper {
-    animation: none !important;
-  }
-
-  .coin-shine {
-    animation: none !important;
-    opacity: 0 !important;
   }
 }
 
@@ -771,21 +341,6 @@ body::after {
   animation: none !important;
 }
 
-.no-bg-animation .shooting-stars-layer,
-.no-bg-animation .falling-leaves-layer {
+.no-bg-animation .shooting-stars-layer {
   display: none;
-}
-
-.no-bg-animation .coin-orbit {
-  animation: none !important;
-  opacity: 1 !important;
-}
-
-.no-bg-animation .coin-wrapper {
-  animation: none !important;
-}
-
-.no-bg-animation .coin-shine {
-  animation: none !important;
-  opacity: 0 !important;
 }

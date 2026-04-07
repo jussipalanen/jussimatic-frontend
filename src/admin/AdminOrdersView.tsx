@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { fetchAllOrders, updateOrder } from '../api/ordersApi';
 import { getMe } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
 import { fetchProductById } from '../api/productsApi';
 import type { Order } from '../api/ordersApi';
 import Header from '../components/Header';
+import AuthModal from '../modals/AuthModal';
+import Breadcrumb from '../components/Breadcrumb';
 import CountrySelect from '../components/CountrySelect';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
-
-const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
-const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
+import { buildStorageUrl } from '../constants';
 
 function formatDate(dateString?: string) {
   if (!dateString) return 'N/A';
@@ -29,14 +29,6 @@ function formatPrice(price: string | number | null | undefined) {
   if (!price) return '€0.00';
   const numPrice = typeof price === 'string' ? parseFloat(price) : price;
   return `€${numPrice.toFixed(2)}`;
-}
-
-function buildStorageUrl(path: string | null | undefined) {
-  if (!path) return PLACEHOLDER_IMAGE_URL;
-  if (!STORAGE_BASE_URL) return path;
-  const base = STORAGE_BASE_URL.replace(/\/+$/, '');
-  const endpoint = path.replace(/^\/+/, '');
-  return `${base}/${endpoint}`;
 }
 
 function getEffectivePrice(item: { unit_price?: string | number; sale_price?: string | number; price?: string | number }): number {
@@ -98,7 +90,7 @@ function calcOrderTaxBreakdown(items: import('../api/ordersApi').OrderItem[]): T
 }
 
 function AdminOrdersView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [ordersError, setOrdersError] = useState<string | null>(null);
@@ -106,6 +98,7 @@ function AdminOrdersView() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminOrders;
 
@@ -218,7 +211,7 @@ function AdminOrdersView() {
     };
 
     loadOrders();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const handleOrderClick = (order: Order) => {
@@ -350,13 +343,15 @@ function AdminOrdersView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <Header
-        title={t.title}
-        backLabel={translations[language].adminDashboard.title}
-        onBack={() => navigate('/admin')}
-      />
+      <Header onLoginClick={() => setIsModalOpen(true)} />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-24 md:pt-32 pb-8">
+        <div className="mx-auto max-w-6xl mb-8">
+          <Breadcrumb
+            items={[{ label: translations[language].adminDashboard.title, onClick: () => navigate('/admin') }]}
+            current={t.title}
+          />
+        </div>
         {loading && (
           <div className="text-center py-10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
@@ -873,6 +868,7 @@ function AdminOrdersView() {
           </div>
         </div>
       )}
+      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTab="login" />
     </div>
   );
 }

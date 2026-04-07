@@ -1,23 +1,19 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { createBlog, updateBlog, getCategories } from '../api/blogsApi';
-import type { Blog, BlogFormData, BlogCategory } from '../api/blogsApi';
+import type { Blog, BlogFormData, BlogCategory, TranslatedField } from '../api/blogsApi';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../i18n';
 import type { Language } from '../i18n';
-
-const STORAGE_BASE_URL = (import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
-
-function buildImageUrl(path: string) {
-  return `${STORAGE_BASE_URL}/${path.replace(/^\/+/, '')}`;
-}
+import { buildImageUrl } from '../constants';
 
 interface BlogFormState {
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
+  title: TranslatedField;
+  slug: TranslatedField;
+  excerpt: TranslatedField;
+  content: TranslatedField;
   featured_image: string;
   featured_image_file?: File;
+  remove_feature_image: boolean;
   tags: string[];
   tagInput: string;
   blog_category_id?: number;
@@ -25,12 +21,13 @@ interface BlogFormState {
 }
 
 const EMPTY_FORM: BlogFormState = {
-  title: '',
-  slug: '',
-  excerpt: '',
-  content: '',
+  title: { en: '' },
+  slug: { en: '' },
+  excerpt: { en: '' },
+  content: { en: '' },
   featured_image: '',
   featured_image_file: undefined,
+  remove_feature_image: false,
   tags: [],
   tagInput: '',
   blog_category_id: undefined,
@@ -55,13 +52,14 @@ interface BlogFormModalProps {
 
 export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const [editLang, setEditLang] = useState<Language>('en');
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminBlogs;
 
   const [form, setForm] = useState<BlogFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState<Record<Language, boolean>>({ en: false, fi: false });
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [categorySearch, setCategorySearch] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -105,31 +103,36 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
     if (blog) {
       setForm({
         title: blog.title,
-        slug: blog.slug ?? '',
-        excerpt: blog.excerpt ?? '',
-        content: blog.content ?? '',
+        slug: blog.slug ?? { en: '' },
+        excerpt: blog.excerpt ?? { en: '' },
+        content: blog.content ?? { en: '' },
         featured_image: blog.featured_image ?? '',
         featured_image_file: undefined,
+        remove_feature_image: false,
         tags: blog.tags ? [...blog.tags] : [],
         tagInput: '',
         blog_category_id: blog.blog_category_id,
         visibility: blog.visibility,
       });
       setImagePreview(blog.featured_image ? buildImageUrl(blog.featured_image) : null);
+      setSlugManuallyEdited({ en: false, fi: false });
     } else {
       setForm(EMPTY_FORM);
       setImagePreview(null);
+      setSlugManuallyEdited({ en: false, fi: false });
     }
     setFormError(null);
-    setSlugManuallyEdited(false);
   }, [blog]);
 
   // Auto-generate slug when title changes if slug hasn't been manually edited
   useEffect(() => {
-    if (!slugManuallyEdited && form.title.trim()) {
-      setForm((f) => ({ ...f, slug: generateSlug(f.title) }));
+    if (!slugManuallyEdited[editLang] && form.title[editLang]?.trim()) {
+      setForm((f) => ({
+        ...f,
+        slug: { ...f.slug, [editLang]: generateSlug(f.title[editLang] ?? '') },
+      }));
     }
-  }, [form.title, slugManuallyEdited]);
+  }, [form.title[editLang], slugManuallyEdited, editLang]);
 
   const close = () => {
     if (submitting) return;
@@ -139,7 +142,7 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setForm((f) => ({ ...f, featured_image_file: file }));
+    setForm((f) => ({ ...f, featured_image_file: file, remove_feature_image: false }));
     const objectUrl = URL.createObjectURL(file);
     setImagePreview((prev) => {
       if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
@@ -150,7 +153,7 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
   const handleImageRemove = () => {
     if (imagePreview?.startsWith('blob:')) URL.revokeObjectURL(imagePreview);
     setImagePreview(null);
-    setForm((f) => ({ ...f, featured_image_file: undefined, featured_image: '' }));
+    setForm((f) => ({ ...f, featured_image_file: undefined, featured_image: '', remove_feature_image: true }));
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -179,17 +182,18 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim()) { setFormError(t.errTitleRequired); return; }
+    if (!form.title.en.trim()) { setFormError(t.errTitleRequired); return; }
     setSubmitting(true);
     setFormError(null);
     try {
       const payload: BlogFormData = {
-        title: form.title.trim(),
-        slug: form.slug.trim() || undefined,
-        content: form.content.trim(),
-        excerpt: form.excerpt.trim() || undefined,
+        title: form.title,
+        slug: form.slug.en || form.slug.fi ? form.slug : undefined,
+        content: form.content.en || form.content.fi ? form.content : undefined,
+        excerpt: form.excerpt.en || form.excerpt.fi ? form.excerpt : undefined,
         featured_image: form.featured_image,
         featured_image_file: form.featured_image_file,
+        remove_feature_image: form.remove_feature_image,
         tags: form.tags.length > 0 ? form.tags : undefined,
         blog_category_id: form.blog_category_id,
         visibility: form.visibility,
@@ -215,7 +219,7 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 py-8 overflow-y-auto"
       onClick={(e) => { if (e.target === e.currentTarget) close(); }}
     >
-      <div className="w-full max-w-2xl rounded-lg border border-gray-700 bg-gray-900 shadow-xl">
+      <div className="w-full max-w-2xl rounded-lg border border-gray-700 bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
           <h2 className="text-lg font-semibold text-white">
             {blog ? t.editTitle : t.createTitle}
@@ -233,15 +237,92 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-5">
+          {/* Language Tabs */}
+          <div className="flex items-center gap-1 border-b border-gray-700 -mt-2">
+            <button
+              type="button"
+              onClick={() => setEditLang('en')}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${editLang === 'en'
+                ? 'border-blue-500 text-blue-400'
+                : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+            >
+              English
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditLang('fi')}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${editLang === 'fi'
+                ? 'border-blue-500 text-blue-400'
+                : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+            >
+              Suomi
+            </button>
+          </div>
+
           {/* Title */}
           <div>
-            <label className={labelCls}>{t.labelTitle} <span className="text-red-400">*</span></label>
+            <div className="flex items-center justify-between mb-1">
+              <label className={labelCls}>{t.labelTitle} <span className="text-red-400">*</span></label>
+              {editLang === 'fi' && form.title.en?.trim() && !form.title.fi?.trim() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const srcTitle = form.title.en ?? '';
+                    const srcSlug = form.slug.en ?? '';
+                    setForm((f) => ({ ...f, title: { ...f.title, fi: srcTitle } }));
+                    setSlugManuallyEdited((s) => ({ ...s, fi: !!srcSlug.trim() }));
+                    if (!form.slug.fi?.trim() && srcSlug.trim()) {
+                      setForm((f) => ({ ...f, slug: { ...f.slug, fi: srcSlug } }));
+                    }
+                  }}
+                  className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                >
+                  {t.copyFromEnglish}
+                </button>
+              )}
+              {editLang === 'en' && form.title.fi?.trim() && !form.title.en?.trim() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const srcTitle = form.title.fi ?? '';
+                    const srcSlug = form.slug.fi ?? '';
+                    setForm((f) => ({ ...f, title: { ...f.title, en: srcTitle } }));
+                    setSlugManuallyEdited((s) => ({ ...s, en: !!srcSlug.trim() }));
+                    if (!form.slug.en?.trim() && srcSlug.trim()) {
+                      setForm((f) => ({ ...f, slug: { ...f.slug, en: srcSlug } }));
+                    }
+                  }}
+                  className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                >
+                  {t.copyFromFinnish}
+                </button>
+              )}
+            </div>
             <input
               type="text"
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              value={form.title[editLang] ?? ''}
+              onChange={(e) => {
+                const newTitle = e.target.value;
+                setForm((f) => {
+                  const updatedForm = { ...f, title: { ...f.title, [editLang]: newTitle } };
+                  // Auto-fill slug from title if slug is empty for current language
+                  if (!f.slug[editLang]?.trim() && newTitle.trim()) {
+                    updatedForm.slug = { ...f.slug, [editLang]: generateSlug(newTitle) };
+                  }
+                  return updatedForm;
+                });
+              }}
+              onBlur={() => {
+                // Auto-generate slug on blur if slug is empty
+                const title = form.title[editLang];
+                if (title?.trim() && !form.slug[editLang]?.trim()) {
+                  setForm((f) => ({ ...f, slug: { ...f.slug, [editLang]: generateSlug(title) } }));
+                }
+              }}
               className={inputCls}
-              placeholder={t.placeholderTitle}
+              placeholder={editLang === 'en' ? 'Enter English title' : 'Syötä suomenkielinen otsikko'}
               required
             />
           </div>
@@ -253,8 +334,11 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
               <button
                 type="button"
                 onClick={() => {
-                  setForm((f) => ({ ...f, slug: generateSlug(f.title) }));
-                  setSlugManuallyEdited(true);
+                  setForm((f) => ({
+                    ...f,
+                    slug: { ...f.slug, [editLang]: generateSlug(f.title[editLang] ?? '') },
+                  }));
+                  setSlugManuallyEdited((s) => ({ ...s, [editLang]: true }));
                 }}
                 className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
               >
@@ -263,34 +347,34 @@ export function BlogFormModal({ blog, onClose, onSaved }: BlogFormModalProps) {
             </div>
             <input
               type="text"
-              value={form.slug}
+              value={form.slug[editLang] ?? ''}
               onChange={(e) => {
-                setForm((f) => ({ ...f, slug: e.target.value }));
-                setSlugManuallyEdited(true);
+                setForm((f) => ({ ...f, slug: { ...f.slug, [editLang]: e.target.value } }));
+                setSlugManuallyEdited((s) => ({ ...s, [editLang]: true }));
               }}
               className={inputCls}
-              placeholder={t.placeholderSlug}
+              placeholder={editLang === 'en' ? 'english-slug' : 'suomenkielinen-slug'}
             />
           </div>
 
-          {/* Excerpt */}
+          {/* Excerpt (short_description) */}
           <div>
             <label className={labelCls}>{t.labelExcerpt}</label>
             <textarea
-              value={form.excerpt}
-              onChange={(e) => setForm((f) => ({ ...f, excerpt: e.target.value }))}
+              value={form.excerpt[editLang] ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, excerpt: { ...f.excerpt, [editLang]: e.target.value } }))}
               className={`${inputCls} resize-y min-h-[80px]`}
-              placeholder={t.placeholderExcerpt}
+              placeholder={editLang === 'en' ? 'English short description...' : 'Suomenkielinen lyhyt kuvaus...'}
             />
           </div>
 
-          {/* Content */}
+          {/* Content (long_description) */}
           <div>
             <label className={labelCls}>{t.labelContent}</label>
             <RichTextEditor
-              value={form.content}
-              onChange={(html) => setForm((f) => ({ ...f, content: html }))}
-              placeholder={t.placeholderContent}
+              value={form.content[editLang] ?? ''}
+              onChange={(html) => setForm((f) => ({ ...f, content: { ...f.content, [editLang]: html } }))}
+              placeholder={editLang === 'en' ? 'English content...' : 'Suomenkielinen sisältö...'}
               disabled={submitting}
             />
           </div>

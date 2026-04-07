@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { APP_NAME } from '../constants';
 import NavActions from '../components/NavActions';
 
@@ -11,7 +11,7 @@ interface AdminHeaderProps {
 }
 
 function AdminHeader({ title, backTo, backLabel, actions }: AdminHeaderProps) {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   return (
     <>

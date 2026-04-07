@@ -1,4 +1,5 @@
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
+import { useLocaleNavigate } from './hooks/useLocaleNavigate';
 import { useEffect, useState } from 'react';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from './i18n';
 import type { Language } from './i18n';
@@ -7,10 +8,12 @@ import AuthModal from './modals/AuthModal';
 import Header from './components/Header';
 const faceJa = '/profile_image.webp';
 import ShootingStars from './components/ShootingStars';
-import { DEMOS } from './demos';
+import FallingLeaves from './components/FallingLeaves';
+import { getProjects } from './api/projectsApi';
+import type { Project } from './api/projectsApi';
 
 function LandingView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
@@ -20,12 +23,15 @@ function LandingView() {
     if (adminDenied) {
       window.history.replaceState({}, '', location.pathname + location.search);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
   const [isModalOpen, setIsModalOpen] = useState(() => searchParams.get('auth') === 'login');
   const [showProjectsModal, setShowProjectsModal] = useState(false);
   const [demosViewMode, setDemosViewMode] = useState<'list' | 'grid'>('list');
+  const [portfolioProjects, setPortfolioProjects] = useState<Project[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [projectsError, setProjectsError] = useState(false);
   const [visitorsCount, setVisitorsCount] = useState<number | null>(null);
   const [visitorsTotalCount, setVisitorsTotalCount] = useState<number | null>(null);
   const [visitorsError, setVisitorsError] = useState<string | null>(null);
@@ -98,6 +104,16 @@ function LandingView() {
   }, []);
 
   useEffect(() => {
+    if (!showProjectsModal) return;
+    setProjectsLoading(true);
+    setProjectsError(false);
+    getProjects(1, 50, 'sort_order', 'asc', language)
+      .then((res) => setPortfolioProjects(res.data.filter((p) => p.visibility === 'show')))
+      .catch(() => { setProjectsError(true); })
+      .finally(() => setProjectsLoading(false));
+  }, [showProjectsModal, language]);
+
+  useEffect(() => {
     if (searchParams.get('auth') !== 'login') return;
 
     const nextParams = new URLSearchParams(searchParams);
@@ -108,6 +124,7 @@ function LandingView() {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <ShootingStars />
+      <FallingLeaves />
       <Header onLoginClick={() => setIsModalOpen(true)} />
 
       {adminDenied && (
@@ -162,7 +179,7 @@ function LandingView() {
                   <div className="coin-shine" aria-hidden="true" />
                 </div>
                 <div className="coin-back" aria-hidden="true">
-                  <img src={faceJa} alt="" className="coin-back-photo" />
+                  <img src={faceJa} alt="" className="coin-back-photo" fetchPriority="high" />
                   <div className="coin-back-overlay" />
                   <div className="coin-back-rings" />
                   <div className="coin-shine" aria-hidden="true" />
@@ -303,18 +320,16 @@ function LandingView() {
                 <div className="flex items-center rounded-lg border border-white/10 overflow-hidden mr-2">
                   <button
                     onClick={() => setDemosViewMode('list')}
-                    className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer ${
-                      demosViewMode === 'list' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
-                    }`}
+                    className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer ${demosViewMode === 'list' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
+                      }`}
                     aria-label="List view"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
                   </button>
                   <button
                     onClick={() => setDemosViewMode('grid')}
-                    className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer ${
-                      demosViewMode === 'grid' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
-                    }`}
+                    className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer ${demosViewMode === 'grid' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
+                      }`}
                     aria-label="Grid view"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
@@ -332,64 +347,110 @@ function LandingView() {
               </div>
             </div>
             {/* Modal body */}
-            {demosViewMode === 'list' ? (
+            {projectsLoading ? (
+              <div className="flex-1 flex items-center justify-center py-12">
+                <p className="text-sm text-white/40">{t.landing.projectsLoading}</p>
+              </div>
+            ) : projectsError ? (
+              <div className="flex-1 flex items-center justify-center py-12">
+                <p className="text-sm text-red-400">{t.landing.projectsError}</p>
+              </div>
+            ) : portfolioProjects.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center py-12">
+                <p className="text-sm text-white/40">{t.landing.projectsEmpty}</p>
+              </div>
+            ) : demosViewMode === 'list' ? (
               <div className="overflow-y-auto flex-1 divide-y divide-gray-700">
-                {DEMOS.map((demo) => (
+                {portfolioProjects.map((project) => (
                   <button
-                    key={demo.id}
-                    onClick={() => { if (demo.externalUrl) { window.open(demo.externalUrl, '_blank', 'noopener,noreferrer'); } else { navigate(demo.path); } setShowProjectsModal(false); }}
-                    className="w-full text-left px-4 sm:px-6 py-4 text-sm text-white hover:bg-gray-700/60 flex flex-col gap-2 transition-colors cursor-pointer"
+                    key={project.id}
+                    onClick={() => { if (project.live_url) { window.open(project.live_url, '_blank', 'noopener,noreferrer'); } setShowProjectsModal(false); }}
+                    disabled={!project.live_url}
+                    className="w-full text-left px-4 sm:px-6 py-4 text-sm text-white hover:bg-gray-700/60 flex flex-col gap-2 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-default"
                   >
                     <div className="flex items-center gap-3">
-                      <svg className={`w-5 h-5 shrink-0 ${demo.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={demo.iconPath} />
+                      <svg className="w-5 h-5 shrink-0 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                       </svg>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-base">{t.landing[demo.labelKey]}</span>
-                        <span className="text-xs text-gray-400">{t.landing[demo.subtitleKey]}</span>
+                        <span className="font-semibold text-base">{project.title}</span>
+                        {project.short_description && (
+                          <span className="text-xs text-gray-400">{project.short_description}</span>
+                        )}
                       </div>
-                      <svg className="w-4 h-4 ml-auto text-white/30 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      {project.live_url && (
+                        <svg className="w-4 h-4 ml-auto text-white/30 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      )}
                     </div>
-                    <div className="flex flex-wrap gap-1.5 pl-8">
-                      {demo.badges.map((badge) => (
-                        <span key={badge.label} className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${badge.colorClass}`}>
-                          {badge.label}
-                        </span>
-                      ))}
-                    </div>
+                    {((project.categories && project.categories.length > 0) || (project.tags && project.tags.length > 0)) && (
+                      <div className="flex flex-wrap gap-1.5 pl-8">
+                        {project.categories?.map((cat) => (
+                          <span key={cat.id} className="inline-flex items-center rounded-full px-2 py-0.5 text-xs bg-teal-500/15 text-teal-300 font-medium">
+                            {cat.title}
+                          </span>
+                        ))}
+                        {project.tags?.map((tag) => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                            style={{ backgroundColor: tag.color + '26', color: tag.color, border: `1px solid ${tag.color}55` }}
+                          >
+                            {tag.title}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
             ) : (
               <div className="overflow-y-auto flex-1 p-4 sm:p-6">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {DEMOS.map((demo) => (
+                  {portfolioProjects.map((project) => (
                     <button
-                      key={demo.id}
-                      onClick={() => { if (demo.externalUrl) { window.open(demo.externalUrl, '_blank', 'noopener,noreferrer'); } else { navigate(demo.path); } setShowProjectsModal(false); }}
-                      className="flex flex-col items-start gap-3 p-4 bg-gray-700/40 hover:bg-gray-700/80 border border-white/5 hover:border-white/15 rounded-xl transition-colors cursor-pointer text-left"
+                      key={project.id}
+                      onClick={() => { if (project.live_url) { window.open(project.live_url, '_blank', 'noopener,noreferrer'); } setShowProjectsModal(false); }}
+                      disabled={!project.live_url}
+                      className="flex flex-col items-start gap-3 p-4 bg-gray-700/40 hover:bg-gray-700/80 border border-white/5 hover:border-white/15 rounded-xl transition-colors cursor-pointer text-left disabled:opacity-60 disabled:cursor-default"
                     >
-                      <div className={`w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0 ${demo.iconColor}`}>
+                      <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0 text-teal-400">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={demo.iconPath} />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                         </svg>
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-semibold text-sm text-white leading-tight">{t.landing[demo.labelKey]}</span>
-                        <span className="text-xs text-gray-400 leading-tight">{t.landing[demo.subtitleKey]}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {demo.badges.slice(0, 2).map((badge) => (
-                          <span key={badge.label} className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-xs ${badge.colorClass}`}>
-                            {badge.label}
-                          </span>
-                        ))}
-                        {demo.badges.length > 2 && (
-                          <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs bg-white/10 text-white/40">
-                            +{demo.badges.length - 2}
-                          </span>
+                        <span className="font-semibold text-sm text-white leading-tight">{project.title}</span>
+                        {project.short_description && (
+                          <span className="text-xs text-gray-400 leading-tight">{project.short_description}</span>
                         )}
                       </div>
+                      {((project.categories && project.categories.length > 0) || (project.tags && project.tags.length > 0)) && (() => {
+                        const tagSlice = project.tags?.slice(0, 2) ?? [];
+                        const overflow = (project.tags?.length ?? 0) - tagSlice.length + (project.categories && project.categories.length > 1 ? project.categories.length - 1 : 0);
+                        return (
+                          <div className="flex flex-wrap gap-1">
+                            {project.categories && project.categories.length > 0 && (
+                              <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs bg-teal-500/15 text-teal-300 font-medium">
+                                {project.categories[0].title}
+                              </span>
+                            )}
+                            {tagSlice.map((tag) => (
+                              <span
+                                key={tag.id}
+                                className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium"
+                                style={{ backgroundColor: tag.color + '26', color: tag.color, border: `1px solid ${tag.color}55` }}
+                              >
+                                {tag.title}
+                              </span>
+                            ))}
+                            {overflow > 0 && (
+                              <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs bg-white/10 text-white/40">
+                                +{overflow}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </button>
                   ))}
                 </div>

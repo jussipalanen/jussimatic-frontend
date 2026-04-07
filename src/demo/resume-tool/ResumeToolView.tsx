@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../../i18n';
+import { useLocaleNavigate } from '../../hooks/useLocaleNavigate';
+import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
 import { PROFICIENCY_LEVELS } from '../../constants';
 import type { Language } from '../../i18n';
 
@@ -514,7 +514,7 @@ function PersonalSection({ data, onChange, t, templates, templateThemes, languag
 // ---------------------------------------------------------------------------
 
 function ResumeToolView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).resumes;
 
@@ -590,6 +590,12 @@ function ResumeToolView() {
   };
 
   const patch = (partial: Partial<FormData>) => setForm((prev) => ({ ...prev, ...partial }));
+
+  useEffect(() => {
+    const handler = (event: Event) => setLanguage((event as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
 
   // Persist form to sessionStorage so a page refresh doesn't wipe the work
   useEffect(() => {
@@ -1065,7 +1071,7 @@ function ResumeToolView() {
         containerClassName="max-w-6xl mx-auto"
         title={t.demoPageTitle}
         language={language}
-        onLanguageChange={(lang) => { setLanguage(lang); setStoredLanguage(lang); }}
+        onLanguageChange={(lang) => setLanguage(lang)}
         backLabel={t.demoBackToHome}
         onBack={() => navigate('/')}
       />

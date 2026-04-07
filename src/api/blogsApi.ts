@@ -23,14 +23,19 @@ export interface BlogCategory {
   slug: string;
 }
 
+export interface TranslatedField {
+  en: string;
+  fi?: string;
+}
+
 export interface Blog {
   id: number;
   user_id: number;
   blog_category_id: number;
-  title: string;
-  slug?: string;
-  excerpt?: string | null;
-  content?: string | null;
+  title: TranslatedField;
+  slug?: TranslatedField;
+  excerpt?: TranslatedField | null;
+  content?: TranslatedField | null;
   featured_image?: string | null;
   tags?: string[] | null;
   visibility: boolean;
@@ -48,8 +53,16 @@ export interface BlogsResponse {
   total: number;
 }
 
-export async function getBlogs(page: number = 1, perPage: number = 10, sortBy: string = 'created_at', sortOrder: 'asc' | 'desc' = 'desc'): Promise<BlogsResponse> {
-  const response = await fetch(buildUrl(`blogs?page=${page}&per_page=${perPage}&sort=${sortBy}&order=${sortOrder}`), {
+export async function getBlogs(page: number = 1, perPage: number = 10, sortBy: string = 'created_at', sortOrder: 'asc' | 'desc' = 'desc', lang?: string): Promise<BlogsResponse> {
+  const params = new URLSearchParams({
+    page: String(page),
+    per_page: String(perPage),
+    sort: sortBy,
+    order: sortOrder,
+  });
+  if (lang) params.set('lang', lang);
+
+  const response = await fetch(buildUrl(`blogs?${params}`), {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   });
@@ -67,8 +80,16 @@ export async function getBlogs(page: number = 1, perPage: number = 10, sortBy: s
   return data as BlogsResponse;
 }
 
-export async function getAllBlogs(page: number = 1, perPage: number = 10, sortBy: string = 'created_at', sortOrder: 'asc' | 'desc' = 'desc'): Promise<BlogsResponse> {
-  const response = await fetch(buildUrl(`admin/blogs?page=${page}&per_page=${perPage}&sort=${sortBy}&order=${sortOrder}`), {
+export async function getAllBlogs(page: number = 1, perPage: number = 10, sortBy: string = 'created_at', sortOrder: 'asc' | 'desc' = 'desc', lang?: string): Promise<BlogsResponse> {
+  const params = new URLSearchParams({
+    page: String(page),
+    per_page: String(perPage),
+    sort: sortBy,
+    order: sortOrder,
+  });
+  if (lang) params.set('lang', lang);
+
+  const response = await fetch(buildUrl(`admin/blogs?${params}`), {
     method: 'GET',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
   });
@@ -87,12 +108,13 @@ export async function getAllBlogs(page: number = 1, perPage: number = 10, sortBy
 }
 
 export interface BlogFormData {
-  title: string;
-  content: string;
-  slug?: string;
-  excerpt?: string;
+  title: TranslatedField;
+  slug?: TranslatedField;
+  excerpt?: TranslatedField;
+  content?: TranslatedField;
   featured_image?: string;
   featured_image_file?: File;
+  remove_feature_image?: boolean;
   tags?: string[];
   blog_category_id?: number;
   visibility?: boolean;
@@ -105,16 +127,27 @@ function authHeaders(): Record<string, string> {
 
 function buildBlogFormData(data: BlogFormData): FormData {
   const formData = new FormData();
-  formData.append('title', data.title);
-  formData.append('content', data.content);
-  if (data.slug) formData.append('slug', data.slug);
-  if (data.excerpt) formData.append('excerpt', data.excerpt);
+
+  // Translated fields
+  formData.append('title[en]', data.title.en);
+  if (data.title.fi !== undefined) formData.append('title[fi]', data.title.fi);
+
+  if (data.slug?.en) formData.append('slug[en]', data.slug.en);
+  if (data.slug?.fi) formData.append('slug[fi]', data.slug.fi);
+
+  if (data.excerpt?.en !== undefined) formData.append('excerpt[en]', data.excerpt.en);
+  if (data.excerpt?.fi !== undefined) formData.append('excerpt[fi]', data.excerpt.fi);
+
+  if (data.content?.en !== undefined) formData.append('content[en]', data.content.en);
+  if (data.content?.fi !== undefined) formData.append('content[fi]', data.content.fi);
+
   if (data.featured_image_file) {
     formData.append('featured_image', data.featured_image_file);
-  } else if (data.featured_image === '') {
+  } else if (data.remove_feature_image) {
     formData.append('featured_image', '');
   }
   // If featured_image is a non-empty string (existing path), skip it — backend keeps the existing value
+
   if (data.tags && data.tags.length > 0) {
     data.tags.forEach((tag) => formData.append('tags[]', tag));
   }
@@ -186,8 +219,24 @@ export async function deleteBlog(id: number): Promise<void> {
   }
 }
 
-export async function getBlog(id: number | string): Promise<Blog> {
-  const response = await fetch(buildUrl(`blogs/${id}`), {
+function extractBlog(data: unknown): Blog {
+  if (!data || typeof data !== 'object') throw new Error('NOT_FOUND');
+  // { data: Blog[] } — same paginated envelope as the list endpoint
+  const inner = (data as Record<string, unknown>).data;
+  if (Array.isArray(inner)) {
+    if (!inner[0] || typeof inner[0] !== 'object' || !('id' in inner[0])) throw new Error('NOT_FOUND');
+    return inner[0] as Blog;
+  }
+  // { data: Blog } — single-resource envelope
+  if (inner && typeof inner === 'object' && 'id' in inner) return inner as Blog;
+  // Blog returned directly at top level
+  if ('id' in (data as Record<string, unknown>)) return data as Blog;
+  throw new Error('NOT_FOUND');
+}
+
+export async function getBlog(id: number | string, lang?: string): Promise<Blog> {
+  const params = lang ? `?lang=${lang}` : '';
+  const response = await fetch(buildUrl(`blogs/${id}${params}`), {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   });
@@ -203,7 +252,28 @@ export async function getBlog(id: number | string): Promise<Blog> {
     throw new Error(message);
   }
 
-  return data as Blog;
+  return extractBlog(data);
+}
+
+export async function getAdminBlog(id: number | string, lang?: string): Promise<Blog> {
+  const params = lang ? `?lang=${lang}` : '';
+  const response = await fetch(buildUrl(`admin/blogs/${id}${params}`), {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    if (response.status === 404) throw new Error('NOT_FOUND');
+    const message =
+      data && typeof data === 'object' && 'message' in data && typeof (data as { message?: unknown }).message === 'string'
+        ? (data as { message: string }).message
+        : `API request failed: ${response.status} ${response.statusText}`;
+    throw new Error(message);
+  }
+
+  return extractBlog(data);
 }
 
 // Blog Categories API

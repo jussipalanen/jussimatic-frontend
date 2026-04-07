@@ -8,9 +8,7 @@ import { getMe } from '../../../api/authApi';
 import { getRoleAccess } from '../../../utils/authUtils';
 import { getStoredLanguage, translations, type Language } from '../../../i18n';
 import { Pagination } from '../../../components/Pagination';
-
-const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
-const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
+import { buildStorageUrl } from '../../../constants';
 
 function ProductsView() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -99,7 +97,7 @@ function ProductsView() {
 
   useEffect(() => {
     loadProducts(1, appliedSearch, perPage, sortBy, sortDir);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedSearch, perPage, sortBy, sortDir]);
 
   useEffect(() => {
@@ -126,7 +124,7 @@ function ProductsView() {
     if (!canManageProducts && (activeModal === 'create' || activeModal === 'edit')) {
       closeModal();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canManageProducts, activeModal]);
 
 
@@ -198,14 +196,6 @@ function ProductsView() {
     if (isNaN(r)) return '';
     const pct = parseFloat(((r > 1 ? r : r * 100)).toPrecision(10));
     return `${pct.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
-  };
-
-  const buildStorageUrl = (path: string | null | undefined) => {
-    if (!path) return PLACEHOLDER_IMAGE_URL;
-    if (!STORAGE_BASE_URL) return path;
-    const base = STORAGE_BASE_URL.replace(/\/+$/, '');
-    const endpoint = path.replace(/^\/+/, '');
-    return `${base}/${endpoint}`;
   };
 
   const resetForm = () => {

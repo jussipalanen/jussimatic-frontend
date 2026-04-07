@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../hooks/useLocaleNavigate';
 import { reviewCV, type CVReviewResponse } from './api/cvReviewApi';
 import {
   getStoredLanguage,
-  setStoredLanguage,
   translations,
 } from '../../i18n';
 import type { Language } from '../../i18n';
@@ -30,7 +29,7 @@ function normalizeSummaryText(summary: string): string {
 }
 
 function AICVReviewView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -40,8 +39,10 @@ function AICVReviewView() {
   const t = translations[language].cvReview;
 
   useEffect(() => {
-    setStoredLanguage(language);
-  }, [language]);
+    const handler = (event: Event) => setLanguage((event as CustomEvent<Language>).detail);
+    window.addEventListener('jussimatic-language-change', handler);
+    return () => window.removeEventListener('jussimatic-language-change', handler);
+  }, []);
 
   const validateFile = (file: File): string | null => {
     // Validate file type

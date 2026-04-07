@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { fetchOrdersByUserId } from '../api/ordersApi';
 import { getMe } from '../api/authApi';
 import { getRoleAccess, PERMISSION_MESSAGE } from '../utils/authUtils';
@@ -8,9 +8,7 @@ import { getCart } from '../utils/cartUtils';
 import type { Order } from '../api/ordersApi';
 import EcommerceHeader from '../demo/ecommerce/components/EcommerceHeader';
 import { getStoredLanguage, translations, DEFAULT_LANGUAGE, type Language } from '../i18n';
-
-const STORAGE_BASE_URL = import.meta.env.VITE_JUSSILOG_BACKEND_STORAGE_BASE_URL || '';
-const PLACEHOLDER_IMAGE_URL = 'https://placehold.net/default.png';
+import { buildStorageUrl } from '../constants';
 
 function formatDate(dateString?: string) {
   if (!dateString) return 'N/A';
@@ -28,14 +26,6 @@ function formatPrice(price: string | number | null | undefined) {
   if (!price) return '€0.00';
   const numPrice = typeof price === 'string' ? parseFloat(price) : price;
   return `€${numPrice.toFixed(2)}`;
-}
-
-function buildStorageUrl(path: string | null | undefined) {
-  if (!path) return PLACEHOLDER_IMAGE_URL;
-  if (!STORAGE_BASE_URL) return path;
-  const base = STORAGE_BASE_URL.replace(/\/+$/, '');
-  const endpoint = path.replace(/^\/+/, '');
-  return `${base}/${endpoint}`;
 }
 
 function getEffectivePrice(item: { unit_price?: string | number; sale_price?: string | number; price?: string | number }): number {
@@ -70,7 +60,7 @@ function calculateOrderTotal(order: Order): number {
 }
 
 function MyOrdersView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).myOrders;
   const tDash = (translations[language] ?? translations[DEFAULT_LANGUAGE]).adminDashboard;
@@ -166,7 +156,7 @@ function MyOrdersView() {
     };
 
     loadUserAndOrders();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLoginClick = () => {
@@ -253,12 +243,11 @@ function MyOrdersView() {
                     <span className="font-semibold ml-1">{order.id ?? 'N/A'}</span>
                   </div>
                   <div className="text-sm">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      order.status === 'completed' ? 'bg-green-900/40 text-green-400 border border-green-500/30' :
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${order.status === 'completed' ? 'bg-green-900/40 text-green-400 border border-green-500/30' :
                       order.status === 'pending' ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-500/30' :
-                      order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
-                      'bg-gray-700 text-gray-300 border border-gray-600'
-                    }`}>
+                        order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
+                          'bg-gray-700 text-gray-300 border border-gray-600'
+                      }`}>
                       {order.status ?? 'N/A'}
                     </span>
                   </div>
@@ -348,12 +337,11 @@ function MyOrdersView() {
                 <div className="space-y-2">
                   <div className="text-sm">
                     <span className="text-gray-500">{t.labelStatus}</span>
-                    <span className={`ml-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                      selectedOrder.status === 'completed' ? 'bg-green-900/40 text-green-400 border border-green-500/30' :
+                    <span className={`ml-2 px-3 py-1 rounded-full text-xs font-semibold ${selectedOrder.status === 'completed' ? 'bg-green-900/40 text-green-400 border border-green-500/30' :
                       selectedOrder.status === 'pending' ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-500/30' :
-                      selectedOrder.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
-                      'bg-gray-700 text-gray-300 border border-gray-600'
-                    }`}>
+                        selectedOrder.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border border-red-500/30' :
+                          'bg-gray-700 text-gray-300 border border-gray-600'
+                      }`}>
                       {selectedOrder.status ?? 'N/A'}
                     </span>
                   </div>

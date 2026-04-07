@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../hooks/useLocaleNavigate';
 import { deleteResume, copyResume, createResumeFromJson, exportResumePdf, exportResumeHtml, exportResumeJson, getResumes, updateResume } from '../../api/resumesApi';
 import type { Resume } from '../../api/resumesApi';
 import Header from '../../components/Header';
@@ -7,15 +7,15 @@ import { Pagination } from '../../components/Pagination';
 import { DEFAULT_LANGUAGE, getStoredLanguage, translations } from '../../i18n';
 import type { Language } from '../../i18n';
 
-function formatDate(dateStr?: string) {
+function formatDate(dateStr: string | undefined, language: string) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Intl.DateTimeFormat(language, { dateStyle: 'long' }).format(d);
 }
 
 function ResumesView() {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = (translations[language] ?? translations[DEFAULT_LANGUAGE]).resumes;
   const [resumes, setResumes] = useState<Resume[]>([]);
@@ -256,7 +256,7 @@ function ResumesView() {
                   </div>
                   <p className="text-sm text-white/50 mt-0.5 truncate">{resume.full_name}</p>
                   {resume.updated_at && (
-                    <p className="text-xs text-white/30 mt-1">{t.updated} {formatDate(resume.updated_at)}</p>
+                    <p className="text-xs text-white/30 mt-1">{t.updated} {formatDate(resume.updated_at, language)}</p>
                   )}
                 </div>
 

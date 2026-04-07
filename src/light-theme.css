@@ -1,0 +1,1072 @@
+/* ================================================ */
+/* LIGHT THEME                                       */
+/* Activated when <html> has class "light-theme"     */
+/* Dark theme (space/stars) is the default.          */
+/* ================================================ */
+
+/* --- Sunlight background — static, no animation --- */
+html.light-theme body {
+  background:
+    radial-gradient(ellipse 80% 55% at 50% -8%, rgba(255, 210, 60, 0.55) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 45% at 88% 18%, rgba(255, 180, 60, 0.30) 0%, transparent 55%),
+    radial-gradient(ellipse 65% 50% at 10% 45%, rgba(255, 235, 140, 0.28) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 35% at 50% 80%, rgba(200, 230, 180, 0.22) 0%, transparent 70%),
+    linear-gradient(165deg, #fffde7 0%, #fff9c4 20%, #fffbf0 45%, #f9fbe7 68%, #f1f8e9 85%, #e8f5e9 100%);
+  background-color: #fffde7;
+}
+
+/* Remove dark vignette in light mode */
+html.light-theme body::after {
+  display: none;
+}
+
+/* --- Hide space animation layers --- */
+html.light-theme .stars-layer-1,
+html.light-theme .stars-layer-2,
+html.light-theme .stars-layer-3,
+html.light-theme .shooting-stars-layer {
+  display: none;
+}
+
+/* ================================================ */
+/* FALLING LEAVES (light theme only)                */
+/* ================================================ */
+
+.falling-leaves-layer {
+  display: none;
+}
+
+html.light-theme .falling-leaves-layer {
+  display: block;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  contain: paint;
+}
+
+/* ---- Leaf base shape ---- */
+.leaf {
+  position: absolute;
+  opacity: 0;
+  will-change: transform, opacity;
+  border-radius: 50% 0 50% 0;
+  filter: drop-shadow(0 2px 4px rgba(27, 67, 50, 0.20));
+}
+
+/* ---- Individual leaves — size, color, start position ---- */
+.leaf--1 {
+  width: 18px;
+  height: 22px;
+  left: 8%;
+  background: #52b788;
+  animation: leafFall1 28s ease-in-out 0s infinite;
+}
+
+.leaf--2 {
+  width: 14px;
+  height: 18px;
+  left: 22%;
+  background: #40916c;
+  animation: leafFall2 34s ease-in-out 7s infinite;
+}
+
+.leaf--3 {
+  width: 20px;
+  height: 24px;
+  left: 41%;
+  background: #74c69d;
+  animation: leafFall1 38s ease-in-out 14s infinite;
+}
+
+.leaf--4 {
+  width: 12px;
+  height: 16px;
+  left: 58%;
+  background: #2d6a4f;
+  animation: leafFall2 30s ease-in-out 3s infinite;
+}
+
+.leaf--5 {
+  width: 16px;
+  height: 20px;
+  left: 72%;
+  background: #95d5b2;
+  animation: leafFall1 42s ease-in-out 20s infinite;
+}
+
+.leaf--6 {
+  width: 22px;
+  height: 26px;
+  left: 85%;
+  background: #52b788;
+  animation: leafFall2 26s ease-in-out 10s infinite;
+}
+
+.leaf--7 {
+  width: 13px;
+  height: 17px;
+  left: 33%;
+  background: #b7e4c7;
+  animation: leafFall1 36s ease-in-out 25s infinite;
+}
+
+.leaf--8 {
+  width: 17px;
+  height: 21px;
+  left: 63%;
+  background: #40916c;
+  animation: leafFall2 44s ease-in-out 18s infinite;
+}
+
+/* Two sway variants so leaves feel independent */
+@keyframes leafFall1 {
+  0% {
+    transform: translateY(-60px) translateX(0px) rotate(0deg);
+    opacity: 0;
+  }
+  4% {
+    opacity: 0.75;
+  }
+  20% {
+    transform: translateY(20vh) translateX(35px) rotate(72deg);
+  }
+  40% {
+    transform: translateY(40vh) translateX(-20px) rotate(144deg);
+  }
+  60% {
+    transform: translateY(60vh) translateX(28px) rotate(216deg);
+  }
+  80% {
+    transform: translateY(80vh) translateX(-12px) rotate(288deg);
+    opacity: 0.65;
+  }
+  92% {
+    opacity: 0;
+  }
+  95% {
+    transform: translateY(105vh) translateX(10px) rotate(360deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-60px) translateX(0px) rotate(0deg);
+    opacity: 0;
+  }
+}
+
+@keyframes leafFall2 {
+  0% {
+    transform: translateY(-60px) translateX(0px) rotate(15deg);
+    opacity: 0;
+  }
+  4% {
+    opacity: 0.70;
+  }
+  25% {
+    transform: translateY(25vh) translateX(-40px) rotate(105deg);
+  }
+  50% {
+    transform: translateY(50vh) translateX(22px) rotate(195deg);
+  }
+  75% {
+    transform: translateY(75vh) translateX(-18px) rotate(285deg);
+    opacity: 0.60;
+  }
+  90% {
+    opacity: 0;
+  }
+  94% {
+    transform: translateY(105vh) translateX(-5px) rotate(345deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-60px) translateX(0px) rotate(15deg);
+    opacity: 0;
+  }
+}
+
+/* Touch/mobile — disable leaves */
+@media (hover: none) and (pointer: coarse) {
+  html.light-theme .falling-leaves-layer {
+    display: none;
+  }
+}
+
+/* Reduced motion — disable leaves */
+@media (prefers-reduced-motion: reduce) {
+  .leaf {
+    animation: none !important;
+    display: none;
+  }
+}
+
+/* ================================================ */
+/* HEADER / NAV — leafy green gradient              */
+/* ================================================ */
+
+/* Fixed navbar (LandingView and most views) */
+html.light-theme nav.fixed {
+  background: linear-gradient(135deg,
+    #1b4332 0%,
+    #2d6a4f 28%,
+    #357558 55%,
+    #3d7d5e 80%,
+    #40916c 100%) !important;
+  border-bottom: 1px solid rgba(82, 183, 136, 0.40) !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 2px 16px rgba(27, 67, 50, 0.25) !important;
+}
+
+/* Relative demo-mode header */
+html.light-theme header.relative.z-10 {
+  background: linear-gradient(135deg,
+    #1b4332 0%,
+    #2d6a4f 28%,
+    #357558 55%,
+    #3d7d5e 80%,
+    #40916c 100%) !important;
+  border-bottom: 1px solid rgba(82, 183, 136, 0.40) !important;
+  backdrop-filter: none !important;
+}
+
+/* Remove the inner gradient overlays inside nav/header */
+html.light-theme nav.fixed > .absolute,
+html.light-theme header.relative.z-10 > .absolute {
+  display: none;
+}
+
+/* Keep nav/header text white (readable on green background) */
+html.light-theme nav.fixed .text-white,
+html.light-theme nav.fixed .text-white\/80,
+html.light-theme nav.fixed .text-white\/60,
+html.light-theme nav.fixed .text-white\/40,
+html.light-theme nav.fixed .text-white\/30,
+html.light-theme header.relative.z-10 .text-white,
+html.light-theme header.relative.z-10 .text-white\/80,
+html.light-theme header.relative.z-10 .text-white\/60,
+html.light-theme header.relative.z-10 .text-white\/40,
+html.light-theme header.relative.z-10 .text-white\/30 {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html.light-theme nav.fixed .border-white\/20,
+html.light-theme header.relative.z-10 .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+html.light-theme nav.fixed .hover\:text-white:hover,
+html.light-theme header.relative.z-10 .hover\:text-white:hover {
+  color: #ffffff !important;
+}
+
+/* Nav dropdown menus — keep dark for contrast */
+html.light-theme .bg-gray-800.border.border-gray-700 {
+  background-color: #ffffff !important;
+  border-color: rgba(64, 145, 108, 0.30) !important;
+  box-shadow: 0 8px 24px rgba(27, 67, 50, 0.15) !important;
+}
+
+html.light-theme .bg-gray-800.border.border-gray-700 .text-white {
+  color: #1b4332 !important;
+}
+
+html.light-theme .bg-gray-800.border.border-gray-700 .text-white\/40 {
+  color: rgba(27, 67, 50, 0.50) !important;
+}
+
+html.light-theme .bg-gray-800.border.border-gray-700 .text-gray-200 {
+  color: #1b4332 !important;
+}
+
+html.light-theme .bg-gray-800.border.border-gray-700 .bg-gray-700 {
+  background-color: rgba(64, 145, 108, 0.18) !important;
+}
+
+html.light-theme .bg-gray-800.border.border-gray-700 .hover\:bg-gray-700:hover {
+  background-color: rgba(64, 145, 108, 0.12) !important;
+}
+
+/* ================================================ */
+/* FOOTER — leafy green gradient                    */
+/* ================================================ */
+
+html.light-theme footer {
+  background: linear-gradient(135deg,
+    #1b4332 0%,
+    #2d6a4f 28%,
+    #357558 55%,
+    #3d7d5e 80%,
+    #40916c 100%) !important;
+  border-top: 1px solid rgba(82, 183, 136, 0.40) !important;
+  box-shadow: 0 -2px 16px rgba(27, 67, 50, 0.18) !important;
+}
+
+html.light-theme footer .text-gray-400 {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html.light-theme footer .hover\:text-white:hover {
+  color: #ffffff !important;
+}
+
+html.light-theme footer p {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html.light-theme footer a.text-gray-400 {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* ================================================ */
+/* ALL VIEWS — PAGE BACKGROUND                      */
+/* ================================================ */
+
+html.light-theme .min-h-screen.bg-gray-900 {
+  background: transparent !important;
+}
+
+/* ================================================ */
+/* ALL VIEWS — TEXT: dark green for light bg        */
+/* Simple (0,3,0) specificity so the nav/header     */
+/* restore rules below (0,3,1) cleanly win.         */
+/* ================================================ */
+
+html.light-theme .min-h-screen.bg-gray-900 .text-white     { color: #1e3a2e !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-white\/90 { color: #2d4a3a !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-white\/80 { color: #2d4a3a !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-white\/70 { color: #3d5a47 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-white\/60 { color: #52735f !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-white\/50 { color: #5a7a68 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-white\/45 { color: #64897a !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-white\/40 { color: #6e9683 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-white\/30 { color: #7a9a85 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-white\/20 { color: #94b0a0 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-white\/10 { color: #b0c8bc !important; }
+
+html.light-theme .min-h-screen.bg-gray-900 .text-gray-100  { color: #1e3a2e !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-gray-200  { color: #2a4a39 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-gray-300  { color: #3d5a4a !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-gray-400  { color: #556b5e !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-gray-500  { color: #6b8575 !important; }
+
+/* Borders */
+html.light-theme .min-h-screen.bg-gray-900 .border-white\/30 { border-color: rgba(27, 67, 50, 0.35) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .border-white\/60 { border-color: rgba(27, 67, 50, 0.60) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .border-white\/20 { border-color: rgba(27, 67, 50, 0.20) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .border-white\/10 { border-color: rgba(27, 67, 50, 0.15) !important; }
+
+/* Headings without explicit text-color class (inherit white from parent) */
+html.light-theme .min-h-screen.bg-gray-900 main h1,
+html.light-theme .min-h-screen.bg-gray-900 main h2,
+html.light-theme .min-h-screen.bg-gray-900 main h3,
+html.light-theme .min-h-screen.bg-gray-900 main h4 { color: #1e3a2e !important; }
+
+/* Solid-color CTA buttons keep white text — (0,3,1) > general (0,3,0) */
+html.light-theme .min-h-screen.bg-gray-900 button.bg-blue-600.text-white,
+html.light-theme .min-h-screen.bg-gray-900 button.bg-purple-600.text-white,
+html.light-theme .min-h-screen.bg-gray-900 button.bg-green-600.text-white,
+html.light-theme .min-h-screen.bg-gray-900 button.bg-green-700.text-white,
+html.light-theme .min-h-screen.bg-gray-900 button.bg-yellow-700.text-white,
+html.light-theme .min-h-screen.bg-gray-900 button.bg-amber-600.text-white,
+html.light-theme .min-h-screen.bg-gray-900 button.bg-red-600.text-white { color: #ffffff !important; }
+
+/* ================================================ */
+/* VIEWS WITHOUT <main> — fallback panel/input bg   */
+/* Specificity (0,3,0) — safely overridden by the   */
+/* main-scoped (0,3,1) rules for views that do use  */
+/* <main> (e.g. BlogsView, ResumesView list).        */
+/* ================================================ */
+
+html.light-theme .min-h-screen.bg-gray-900 .bg-gray-800 {
+  background-color: rgba(255, 255, 255, 0.80) !important;
+  border-color: rgba(27, 67, 50, 0.12) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .bg-gray-700 {
+  background-color: rgba(240, 248, 244, 0.85) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .border-gray-700 {
+  border-color: rgba(27, 67, 50, 0.15) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .border-gray-600 {
+  border-color: rgba(27, 67, 50, 0.22) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .hover\:bg-gray-700:hover,
+html.light-theme .min-h-screen.bg-gray-900 .hover\:bg-gray-600:hover {
+  background-color: rgba(209, 236, 225, 0.70) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .bg-gray-750 {
+  background-color: rgba(255, 255, 255, 0.65) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .bg-gray-800\/60 {
+  background-color: rgba(27, 67, 50, 0.06) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .placeholder-white\/30::placeholder {
+  color: rgba(27, 67, 50, 0.38) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .text-blue-300   { color: #1d4ed8 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-green-400  { color: #15803d !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-yellow-400 { color: #92400e !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-amber-400  { color: #92400e !important; }
+html.light-theme .min-h-screen.bg-gray-900 .text-amber-300  { color: #78350f !important; }
+html.light-theme .min-h-screen.bg-gray-900 .bg-amber-500\/20  { background-color: rgba(146, 64, 14, 0.10) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .border-amber-500\/40,
+html.light-theme .min-h-screen.bg-gray-900 .border-amber-500\/60 { border-color: rgba(146, 64, 14, 0.35) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .bg-amber-900\/20,
+html.light-theme .min-h-screen.bg-gray-900 .bg-amber-900\/30  { background-color: rgba(146, 64, 14, 0.10) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .border-amber-600\/50 { border-color: rgba(146, 64, 14, 0.35) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .hover\:text-white:hover      { color: #1b4332 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .hover\:border-gray-500:hover  { border-color: rgba(27, 67, 50, 0.40) !important; }
+
+/* Ghost border buttons (no bg class) — transparent is invisible on sunny bg */
+html.light-theme .min-h-screen.bg-gray-900 button.border-gray-600.text-white\/50 {
+  background-color: rgba(255, 255, 255, 0.60) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 button.border-gray-600.text-white\/50:hover {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 .hover\:text-green-300:hover  { color: #166534 !important; }
+html.light-theme .min-h-screen.bg-gray-900 .hover\:text-yellow-300:hover { color: #78350f !important; }
+html.light-theme .min-h-screen.bg-gray-900 .hover\:text-amber-300:hover  { color: #78350f !important; }
+html.light-theme .min-h-screen.bg-gray-900 .bg-green-900\/20   { background-color: rgba(21, 128, 61, 0.10) !important; }
+html.light-theme .min-h-screen.bg-gray-900 .bg-yellow-900\/20  { background-color: rgba(146, 64, 14, 0.10) !important; }
+html.light-theme .min-h-screen.bg-gray-900 input::file-selector-button {
+  background-color: rgba(64, 145, 108, 0.15) !important;
+  color: #1e3a2e !important;
+  border: none !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 input:hover::file-selector-button {
+  background-color: rgba(64, 145, 108, 0.28) !important;
+}
+
+/* ================================================ */
+/* ALL VIEWS — PANEL BACKGROUNDS (main content)     */
+/* ================================================ */
+
+html.light-theme .min-h-screen.bg-gray-900 main .bg-gray-800 {
+  background-color: rgba(255, 255, 255, 0.80) !important;
+  border-color: rgba(27, 67, 50, 0.12) !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 main .bg-gray-700 {
+  background-color: rgba(240, 248, 244, 0.85) !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 main .border-gray-700 {
+  border-color: rgba(27, 67, 50, 0.15) !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 main .hover\:bg-gray-700:hover,
+html.light-theme .min-h-screen.bg-gray-900 main .hover\:bg-gray-600:hover {
+  background-color: rgba(209, 236, 225, 0.70) !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 main textarea.bg-gray-800,
+html.light-theme .min-h-screen.bg-gray-900 main input.bg-gray-800 {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(27, 67, 50, 0.25) !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 main .bg-gray-800.border.border-gray-700 {
+  background-color: #ffffff !important;
+  border-color: rgba(64, 145, 108, 0.30) !important;
+  box-shadow: 0 4px 16px rgba(27, 67, 50, 0.12) !important;
+}
+
+/* ================================================ */
+/* NAV & DEMO HEADER — restore white text on green  */
+/* Specificity (0,3,1) wins over general (0,3,0)    */
+/* ================================================ */
+
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .text-white,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .text-white\/90,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .text-white\/80,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .text-white\/70,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .text-white\/60,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .text-white\/45,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .text-white\/40,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .text-white\/30,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .text-white\/20,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .text-gray-300,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .text-gray-400,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-white,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-white\/90,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-white\/80,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-white\/70,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-white\/60,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-white\/45,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-white\/40,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-gray-300,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .text-gray-400 {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* Restore nav/header hover:text-white — broad rule above would otherwise darken it */
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .hover\:text-white:hover,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 .hover\:text-white:hover {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* Restore nav border colors (overrides general border-white/* rules) */
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+/* Nav dropdown — dark text on light bg, specificity (0,5,1) wins over nav restore */
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .bg-gray-800.border.border-gray-700 .text-white,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .bg-gray-800.border.border-gray-700 .text-gray-200,
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed .bg-gray-800.border.border-gray-700 .text-white\/40 {
+  color: #1b4332 !important;
+}
+
+/* Nav icon buttons — more visible on green */
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed button.border-white\/15,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 button.border-white\/15 {
+  border-color: rgba(255, 255, 255, 0.32) !important;
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 nav.fixed button.text-white\/30,
+html.light-theme .min-h-screen.bg-gray-900 header.relative.z-10 button.text-white\/30 {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* ================================================ */
+/* HERO SECTION (LandingView)                       */
+/* ================================================ */
+
+html.light-theme .min-h-screen.bg-gray-900 > header h1,
+html.light-theme .min-h-screen.bg-gray-900 > header h2 {
+  color: #1b4332 !important;
+  text-shadow: 0 1px 8px rgba(255, 255, 255, 0.6);
+}
+
+html.light-theme .min-h-screen.bg-gray-900 > header .hover\:border-white\/60:hover {
+  border-color: rgba(27, 67, 50, 0.65) !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 > header .bg-white\/5 {
+  background-color: rgba(27, 67, 50, 0.06) !important;
+}
+
+/* "My resumes" / "Login" — transparent border buttons */
+html.light-theme .min-h-screen.bg-gray-900 > header button.border {
+  background-color: rgba(255, 255, 255, 0.60) !important;
+  border-color: rgba(27, 67, 50, 0.35) !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 > header button.border:hover {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(27, 67, 50, 0.65) !important;
+}
+
+/* ================================================ */
+/* ERROR / ALERT BOXES — red patterns               */
+/* ================================================ */
+
+/* Alert box backgrounds */
+html.light-theme .bg-red-900\/10 { background-color: rgba(254, 226, 226, 0.65) !important; }
+html.light-theme .bg-red-900\/20 { background-color: rgba(254, 226, 226, 0.85) !important; }
+html.light-theme .bg-red-900\/40 { background-color: rgba(252, 202, 202, 0.80) !important; }
+html.light-theme .bg-red-900\/80 { background-color: rgba(220, 38, 38, 0.12) !important; }
+html.light-theme .bg-red-500\/15 { background-color: rgba(254, 226, 226, 0.90) !important; }
+
+/* Alert box borders */
+html.light-theme .border-red-500\/30 { border-color: rgba(239, 68, 68, 0.50) !important; }
+html.light-theme .border-red-500\/40 { border-color: rgba(239, 68, 68, 0.60) !important; }
+html.light-theme .border-red-500\/50 { border-color: rgba(239, 68, 68, 0.70) !important; }
+html.light-theme .border-red-500\/60 { border-color: rgba(239, 68, 68, 0.75) !important; }
+
+/* Alert / badge text */
+html.light-theme .text-red-200    { color: #991b1b !important; }
+html.light-theme .text-red-200\/80 { color: rgba(153, 27, 27, 0.85) !important; }
+html.light-theme .text-red-300    { color: #b91c1c !important; }
+html.light-theme .text-red-400    { color: #dc2626 !important; }
+
+/* Red hover states (delete buttons, danger zone) */
+html.light-theme .hover\:bg-red-500\/10:hover  { background-color: rgba(254, 226, 226, 0.70) !important; }
+html.light-theme .hover\:bg-red-600\/20:hover  { background-color: rgba(252, 202, 202, 0.65) !important; }
+html.light-theme .hover\:bg-red-700:hover      { background-color: #dc2626 !important; }
+
+/* Teal badges and icons (category pills, project icons) */
+html.light-theme .text-teal-300    { color: #0f766e !important; }
+html.light-theme .text-teal-400    { color: #0d9488 !important; }
+html.light-theme .bg-teal-500\/15  { background-color: rgba(20, 184, 166, 0.18) !important; }
+
+/* ================================================ */
+/* MODALS & PORTALED OVERLAYS                       */
+/* Targets every fixed full-screen overlay regardless*/
+/* of z-index (z-50, z-9999, etc.)                  */
+/* ================================================ */
+
+/* Card backgrounds: bg-gray-900 and bg-gray-800 */
+html.light-theme .fixed.inset-0 .bg-gray-900 { background-color: #f4faf7 !important; }
+html.light-theme .fixed.inset-0 .bg-gray-800 { background-color: #f4faf7 !important; }
+
+/* Form inputs/textareas inside modals — white, not cream */
+html.light-theme .fixed.inset-0 input.bg-gray-900,
+html.light-theme .fixed.inset-0 input.bg-gray-800,
+html.light-theme .fixed.inset-0 textarea.bg-gray-900,
+html.light-theme .fixed.inset-0 textarea.bg-gray-800 {
+  background-color: #ffffff !important;
+  color: #1e3a2e !important;
+}
+
+/* Readonly / disabled inputs (bg-gray-700) — slightly tinted to indicate non-editable */
+html.light-theme .fixed.inset-0 input.bg-gray-700 {
+  background-color: rgba(64, 145, 108, 0.08) !important;
+  color: #556b5e !important;
+  border-color: rgba(64, 145, 108, 0.20) !important;
+}
+
+/* Modal text */
+html.light-theme .fixed.inset-0 .text-white     { color: #1e3a2e !important; }
+html.light-theme .fixed.inset-0 .text-white\/80 { color: #2d4a3a !important; }
+html.light-theme .fixed.inset-0 .text-white\/60 { color: #52735f !important; }
+html.light-theme .fixed.inset-0 .text-gray-100  { color: #1e3a2e !important; }
+html.light-theme .fixed.inset-0 .text-gray-200  { color: #2a4a39 !important; }
+html.light-theme .fixed.inset-0 .text-gray-300  { color: #3d5a4a !important; }
+html.light-theme .fixed.inset-0 .text-gray-400  { color: #556b5e !important; }
+html.light-theme .fixed.inset-0 .text-gray-500  { color: #6b8575 !important; }
+
+html.light-theme .fixed.inset-0 .placeholder-gray-500::placeholder {
+  color: rgba(64, 145, 108, 0.50) !important;
+}
+
+/* Modal borders */
+html.light-theme .fixed.inset-0 .border-white\/10 { border-color: rgba(64, 145, 108, 0.15) !important; }
+html.light-theme .fixed.inset-0 .border-gray-700  { border-color: rgba(64, 145, 108, 0.20) !important; }
+html.light-theme .fixed.inset-0 .border-gray-600  { border-color: rgba(64, 145, 108, 0.30) !important; }
+html.light-theme .fixed.inset-0 .divide-gray-700 > * + * { border-color: rgba(64, 145, 108, 0.15) !important; }
+
+/* Modal hover states */
+html.light-theme .fixed.inset-0 .hover\:bg-gray-700:hover,
+html.light-theme .fixed.inset-0 .hover\:bg-gray-800:hover,
+html.light-theme .fixed.inset-0 .hover\:bg-gray-700\/60:hover {
+  background-color: rgba(82, 183, 136, 0.12) !important;
+}
+
+/* Solid-color buttons inside modals — keep white text on coloured background */
+html.light-theme .fixed.inset-0 button.bg-blue-600,
+html.light-theme .fixed.inset-0 button.bg-blue-600.text-white,
+html.light-theme .fixed.inset-0 button.bg-green-600.text-white,
+html.light-theme .fixed.inset-0 button.bg-red-600.text-white,
+html.light-theme .fixed.inset-0 button.bg-red-700.text-white { color: #ffffff !important; }
+
+/* Success / emerald alert box inside modals */
+html.light-theme .fixed.inset-0 .bg-emerald-900\/20 { background-color: rgba(209, 250, 229, 0.65) !important; }
+html.light-theme .fixed.inset-0 .border-emerald-500\/30 { border-color: rgba(16, 185, 129, 0.50) !important; }
+html.light-theme .fixed.inset-0 .text-emerald-300 { color: #065f46 !important; }
+
+/* Mobile user menu — portaled directly with bg-gray-900 on itself */
+html.light-theme .fixed.inset-0.bg-gray-900 {
+  background-color: #f4faf7 !important;
+}
+
+/* ================================================ */
+/* CV VIEW (/cv)                                     */
+/* Outer div: min-h-screen text-white (no bg-gray-900) */
+/* None of the min-h-screen.bg-gray-900 rules apply  */
+/* ================================================ */
+
+/* Text — white opacity variants → dark green scale */
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white     { color: #1e3a2e !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/90 { color: #2d4a3a !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/80 { color: #2d4a3a !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/70 { color: #3d5a47 !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/65 { color: #435f4c !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/60 { color: #52735f !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/55 { color: #5a7d68 !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/50 { color: #64897a !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/45 { color: #6e9683 !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/40 { color: #6e9683 !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/35 { color: #7a9a85 !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/30 { color: #8aaa96 !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/20 { color: #94b0a0 !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .text-white\/10 { color: #b0c8bc !important; }
+
+/* CV content panel overlay */
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) main article {
+  background-color: rgba(255, 255, 255, 0.68) !important;
+  border-color: rgba(27, 67, 50, 0.12) !important;
+  box-shadow: 0 2px 24px rgba(27, 67, 50, 0.08) !important;
+  backdrop-filter: none !important;
+}
+
+/* Headings without explicit text-color class (inherit white from parent) */
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) main h1,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) main h2,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) main h3,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) main h4 { color: #1e3a2e !important; }
+
+/* Contact links, project icons — hover turns readable dark */
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .hover\:text-white:hover { color: #1b4332 !important; }
+
+/* Card and badge backgrounds (bg-white/3, bg-white/5) */
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .bg-white\/5   { background-color: rgba(64, 145, 108, 0.09) !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .bg-white\/3   { background-color: rgba(64, 145, 108, 0.06) !important; }
+
+/* Section divider line + unfilled proficiency dots */
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .bg-white\/10  { background-color: rgba(27, 67, 50, 0.18) !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .bg-white\/15  { background-color: rgba(27, 67, 50, 0.22) !important; }
+
+/* Borders (timeline lines, card borders, photo border, loading ring) */
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .border-white\/10 { border-color: rgba(27, 67, 50, 0.18) !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) .border-white\/20 { border-color: rgba(27, 67, 50, 0.22) !important; }
+
+/* CV view: nav.fixed must override the CV content selectors (which have higher specificity).
+   Restore the same green-gradient header used everywhere else. */
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed {
+  background: linear-gradient(135deg,
+    #1b4332 0%,
+    #2d6a4f 28%,
+    #357558 55%,
+    #3d7d5e 80%,
+    #40916c 100%) !important;
+  border-bottom: 1px solid rgba(82, 183, 136, 0.40) !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 2px 16px rgba(27, 67, 50, 0.25) !important;
+}
+
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed > .absolute {
+  display: none;
+}
+
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/90,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/80,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/70,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/65,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/60,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/55,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/50,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/45,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/40,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/35,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/30,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/20,
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .text-white\/10 {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .hover\:text-white:hover {
+  color: #ffffff !important;
+}
+
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .bg-white\/5  { background-color: rgba(255, 255, 255, 0.05) !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .bg-white\/10 { background-color: rgba(255, 255, 255, 0.10) !important; }
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .bg-white\/15 { background-color: rgba(255, 255, 255, 0.15) !important; }
+
+html.light-theme div.min-h-screen.text-white:not(.bg-gray-900) nav.fixed .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+/* Mobile demos panel — portaled to body with fixed inset-x-0 bg-gray-900 */
+html.light-theme .fixed.inset-x-0.bg-gray-900 {
+  background-color: #f4faf7 !important;
+  border-top-color: rgba(64, 145, 108, 0.25) !important;
+}
+
+/* Text inside the portaled mobile panel (outside .min-h-screen, so general rules don't apply) */
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-white     { color: #1e3a2e !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-white\/80 { color: #2d4a3a !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-white\/60 { color: #52735f !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-white\/40 { color: rgba(27, 67, 50, 0.55) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-white\/30 { color: rgba(27, 67, 50, 0.45) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-teal-400  { color: #0d9488 !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-red-400   { color: #dc2626 !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .text-gray-400  { color: #52735f !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .border-white\/10  { border-color: rgba(27, 67, 50, 0.15) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .border-white\/20  { border-color: rgba(27, 67, 50, 0.20) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .bg-white\/20   { background-color: rgba(27, 67, 50, 0.12) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .bg-white       { background-color: #ffffff !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .hover\:bg-white\/10:hover { background-color: rgba(27, 67, 50, 0.08) !important; }
+html.light-theme .fixed.inset-x-0.bg-gray-900 .hover\:text-white:hover   { color: #1b4332 !important; }
+
+/* User mobile full-screen overlay — portaled to body with fixed inset-0 bg-gray-900 */
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 {
+  background-color: #f4faf7 !important;
+}
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .text-white     { color: #1e3a2e !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .text-white\/60 { color: #52735f !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .text-red-400   { color: #b91c1c !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .text-gray-400  { color: #52735f !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .border-gray-700 { border-color: rgba(27, 67, 50, 0.18) !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .bg-gray-700    { background-color: rgba(209, 236, 225, 0.70) !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .hover\:bg-gray-700:hover { background-color: rgba(209, 236, 225, 0.70) !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .hover\:bg-white\/10:hover { background-color: rgba(27, 67, 50, 0.08) !important; }
+html.light-theme .fixed.inset-0.z-50.bg-gray-900 .hover\:text-white:hover  { color: #1b4332 !important; }
+
+/* ================================================ */
+/* ADMIN VIEWS                                       */
+/* ================================================ */
+
+/* AdminHeader / EcommerceHeader — uses sticky/top-0 instead of relative/z-10 */
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 {
+  background-color: transparent !important;
+  background-image: linear-gradient(135deg,
+    #1b4332 0%,
+    #2d6a4f 28%,
+    #357558 55%,
+    #3d7d5e 80%,
+    #40916c 100%) !important;
+  border-bottom: 1px solid rgba(82, 183, 136, 0.40) !important;
+  backdrop-filter: none !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 > .absolute {
+  display: none;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-white,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-white\/80,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-white\/60,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-white\/50,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-white\/30,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-gray-200,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-gray-300,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .text-gray-400 {
+  color: rgba(255, 255, 255, 0.90) !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:text-blue-400:hover {
+  color: rgba(255, 255, 255, 1) !important;
+}
+
+/* Back-link below AdminHeader */
+html.light-theme .min-h-screen.bg-gray-900 .container .hover\:text-white:hover {
+  color: #1b4332 !important;
+}
+
+/* Admin panel card — bg-gray-800 with border */
+html.light-theme .min-h-screen.bg-gray-900 main .rounded-2xl.bg-gray-800,
+html.light-theme .min-h-screen.bg-gray-900 main .rounded-xl.bg-gray-800,
+html.light-theme .min-h-screen.bg-gray-900 main .rounded-lg.bg-gray-800 {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+}
+
+/* Dashboard nav card buttons — bg-gray-900/60 */
+html.light-theme .min-h-screen.bg-gray-900 main .bg-gray-900\/60 {
+  background-color: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(64, 145, 108, 0.25) !important;
+}
+
+/* Table header rows and info sections — bg-gray-900/50, bg-gray-900/40 */
+html.light-theme .min-h-screen.bg-gray-900 main .bg-gray-900\/50 {
+  background-color: rgba(209, 236, 225, 0.50) !important;
+}
+
+html.light-theme .min-h-screen.bg-gray-900 main .bg-gray-900\/40 {
+  background-color: rgba(209, 236, 225, 0.40) !important;
+}
+
+/* Naked bg-gray-900 inside main (tag inputs, order detail rows, etc.) */
+html.light-theme .min-h-screen.bg-gray-900 main .bg-gray-900 {
+  background-color: #ffffff !important;
+  border-color: rgba(64, 145, 108, 0.25) !important;
+}
+
+/* hover:text-white inside admin main — should go dark, not white */
+html.light-theme .min-h-screen.bg-gray-900 main .hover\:text-white:hover {
+  color: #1b4332 !important;
+}
+
+/* hover:bg-gray-700/50 rows (table rows on hover) */
+html.light-theme .min-h-screen.bg-gray-900 main .hover\:bg-gray-700\/50:hover,
+html.light-theme .min-h-screen.bg-gray-900 main .cursor-pointer.hover\:bg-gray-700\/50:hover {
+  background-color: rgba(164, 214, 194, 0.40) !important;
+}
+
+/* Sub-link buttons below card (blog-categories, project-tags etc.) */
+html.light-theme .min-h-screen.bg-gray-900 main .border-t.border-gray-700 button.text-gray-400 {
+  color: #52735f !important;
+}
+
+/* ================================================ */
+/* CHAT VIEW                                         */
+/* ================================================ */
+
+/* Chat output box — more opaque white */
+html.light-theme .min-h-screen.bg-gray-900 main > div.bg-gray-800 {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(27, 67, 50, 0.12) !important;
+}
+
+/* User message bubbles — div.bg-blue-600.text-white; keep white text on blue */
+html.light-theme .min-h-screen.bg-gray-900 .bg-blue-600.text-white { color: #ffffff !important; }
+
+/* Bot message bubbles */
+html.light-theme .min-h-screen.bg-gray-900 main .bg-gray-700.fade-in-message,
+html.light-theme .min-h-screen.bg-gray-900 main .bg-gray-700:not([class*="hover"]) {
+  background-color: rgba(209, 236, 225, 0.75) !important;
+}
+
+/* Typing indicator bubble */
+html.light-theme .min-h-screen.bg-gray-900 main .bg-gray-700:has(.typing-indicator) {
+  background-color: rgba(209, 236, 225, 0.75) !important;
+}
+
+/* Typing indicator dots — override hardcoded dark color */
+html.light-theme .typing-dot {
+  background-color: rgba(27, 67, 50, 0.55) !important;
+}
+
+/* hover:text-white in main chat area — dark green, not white */
+html.light-theme .min-h-screen.bg-gray-900 main .hover\:text-white:hover {
+  color: #1b4332 !important;
+}
+
+/* Tips/suggestion buttons */
+html.light-theme .min-h-screen.bg-gray-900 main button.bg-gray-700 {
+  background-color: rgba(209, 236, 225, 0.75) !important;
+  color: #1e3a2e !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 main button.bg-gray-700:hover {
+  background-color: rgba(164, 214, 194, 0.85) !important;
+}
+
+/* Suggestion chips in empty state (rounded-full) */
+html.light-theme .min-h-screen.bg-gray-900 main button.rounded-full.bg-gray-700 {
+  background-color: rgba(209, 236, 225, 0.85) !important;
+  color: #1e3a2e !important;
+}
+
+/* "Clear messages" / timestamp / copy buttons — muted green text */
+html.light-theme .min-h-screen.bg-gray-900 main .text-gray-400 {
+  color: #52735f !important;
+}
+
+/* ================================================ */
+/* BLOG CONTENT — blog-content.css hardcoded colors */
+/* ================================================ */
+
+html.light-theme .blog-content                    { color: #1e3a2e; }
+html.light-theme .blog-content h1,
+html.light-theme .blog-content h2                 { color: #1b4332; }
+html.light-theme .blog-content h3,
+html.light-theme .blog-content h4                 { color: #2d4a3a; }
+html.light-theme .blog-content h5,
+html.light-theme .blog-content h6                 { color: #3d5a47; }
+html.light-theme .blog-content strong,
+html.light-theme .blog-content b                  { color: #1b4332; }
+html.light-theme .blog-content blockquote         { color: #52735f; border-left-color: #40916c; }
+html.light-theme .blog-content a                  { color: #1b6ca8; }
+html.light-theme .blog-content a:hover            { color: #1550a0; }
+html.light-theme .blog-content code               { background: rgba(64, 145, 108, 0.10); color: #1b4332; }
+html.light-theme .blog-content pre                { background: rgba(64, 145, 108, 0.08); }
+html.light-theme .blog-content pre code           { color: #1e3a2e; }
+html.light-theme .blog-content hr                 { border-top-color: rgba(64, 145, 108, 0.30); }
+
+/* ================================================ */
+/* ECOMMERCE VIEWS                                   */
+/* ================================================ */
+
+/* EcommerceHeader (sticky top-0) — button borders, backgrounds & hovers on green bg */
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .border-gray-600 {
+  border-color: rgba(255, 255, 255, 0.30) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .border-white\/15 {
+  border-color: rgba(255, 255, 255, 0.20) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .border-white\/30 {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-white\/15 {
+  background-color: rgba(255, 255, 255, 0.18) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:bg-gray-700:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:bg-white\/10:hover {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:bg-white\/20:hover {
+  background-color: rgba(255, 255, 255, 0.24) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:border-white\/30:hover {
+  border-color: rgba(255, 255, 255, 0.38) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:text-white:hover {
+  color: rgba(255, 255, 255, 1) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .hover\:text-white\/60:hover {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+/* EcommerceHeader — mobile dropdown menu (bg-gray-900/95) → light panel */
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 {
+  background-color: rgba(244, 250, 247, 0.98) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .text-white,
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .text-gray-200 {
+  color: #2a4a39 !important;
+}
+/* Inactive toggle buttons in mobile menu — use dark border/bg instead of near-invisible white */
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .text-white\/30 {
+  color: rgba(27, 67, 50, 0.45) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .border-white\/15 {
+  border-color: rgba(27, 67, 50, 0.22) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .hover\:text-white\/60:hover {
+  color: rgba(27, 67, 50, 0.75) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .hover\:border-white\/30:hover {
+  border-color: rgba(27, 67, 50, 0.38) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .bg-white\/5 {
+  background-color: rgba(27, 67, 50, 0.06) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .hover\:bg-white\/10:hover {
+  background-color: rgba(27, 67, 50, 0.10) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .border-white\/10 {
+  border-color: rgba(27, 67, 50, 0.12) !important;
+}
+html.light-theme .min-h-screen.bg-gray-900 header.sticky.top-0 .bg-gray-900\/95 .border-white\/20 {
+  border-color: rgba(27, 67, 50, 0.20) !important;
+}
+
+/* Cart "added to cart" toast popup (fixed top-5 right-5, NOT inset-0) */
+html.light-theme .fixed.top-5.right-5.bg-gray-900 {
+  background-color: #f4faf7 !important;
+  border-color: rgba(16, 185, 129, 0.40) !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .text-white {
+  color: #1e3a2e !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .text-gray-300 {
+  color: #3d5a4a !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .text-gray-500 {
+  color: #6b8575 !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .text-green-400 {
+  color: #15803d !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .hover\:text-white:hover {
+  color: #1b4332 !important;
+}
+html.light-theme .fixed.top-5.right-5.bg-gray-900 .bg-green-500\/15 {
+  background-color: rgba(21, 128, 61, 0.12) !important;
+}
+
+/* Product modal & create/edit form — accent colors inside .fixed.inset-0 */
+html.light-theme .fixed.inset-0 .text-green-400 { color: #15803d !important; }
+html.light-theme .fixed.inset-0 .text-yellow-400 { color: #92400e !important; }
+html.light-theme .fixed.inset-0 .bg-yellow-500\/15 { background-color: rgba(146, 64, 14, 0.10) !important; }
+html.light-theme .fixed.inset-0 .border-yellow-500\/30 { border-color: rgba(146, 64, 14, 0.25) !important; }
+html.light-theme .fixed.inset-0 .bg-gray-900\/50 { background-color: rgba(209, 236, 225, 0.45) !important; }
+html.light-theme .fixed.inset-0 .bg-gray-900\/40 { background-color: rgba(209, 236, 225, 0.35) !important; }
+html.light-theme .fixed.inset-0 .divide-white\/10 > * + * { border-color: rgba(64, 145, 108, 0.15) !important; }
+html.light-theme .fixed.inset-0 .placeholder-gray-600::placeholder { color: rgba(64, 145, 108, 0.45) !important; }
+html.light-theme .fixed.inset-0 button.bg-green-600 { background-color: #15803d !important; }

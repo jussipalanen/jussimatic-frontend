@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocaleNavigate } from '../hooks/useLocaleNavigate';
 import { getMe, logoutUser } from '../api/authApi';
 import { getRoleAccess } from '../utils/authUtils';
-import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations } from '../i18n';
+import { DEFAULT_LANGUAGE, getStoredLanguage, setStoredLanguage, translations, getPathWithoutLanguage } from '../i18n';
 import type { Language } from '../i18n';
 import LanguageSelect from './LanguageSelect';
 import UserEditModal from '../modals/UserEditModal';
-import { DEMOS } from '../demos';
+import { getProjects } from '../api/projectsApi';
+import type { Project } from '../api/projectsApi';
 
 /**
  * Heuristic: flag a device as low-end when it has very few CPU threads
@@ -54,7 +56,9 @@ interface NavActionsProps {
 }
 
 export default function NavActions({ language: controlledLanguage, onLanguageChange, onLoginClick }: NavActionsProps) {
-  const navigate = useNavigate();
+  const rawNavigate = useNavigate();
+  const navigate = useLocaleNavigate();
+  const location = useLocation();
   const [internalLanguage, setInternalLanguage] = useState<Language>(() => controlledLanguage ?? getStoredLanguage());
   const language = controlledLanguage ?? internalLanguage;
   const t = translations[language] ?? translations[DEFAULT_LANGUAGE];
@@ -63,6 +67,9 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
   const [userData, setUserData] = useState<NavUserData | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
+  const [portfolioProjects, setPortfolioProjects] = useState<Project[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [projectsError, setProjectsError] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [animatedBg, setAnimatedBg] = useState(() => {
@@ -72,6 +79,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
     // First visit: disable animations automatically on low-end devices
     return !isLowEndDevice();
   });
+  const [lightTheme, setLightTheme] = useState(() => localStorage.getItem('jussimatic-theme') === 'light');
   const userMenuRef = useRef<HTMLDivElement>(null);
   const userMobileMenuRef = useRef<HTMLDivElement>(null);
   const projectsMenuRef = useRef<HTMLDivElement>(null);
@@ -87,6 +95,14 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
         .catch(() => { });
     }
   }, []);
+
+  useEffect(() => {
+    setProjectsLoading(true);
+    setProjectsError(false);
+    getProjects(1, 50, 'sort_order', 'asc', language)
+      .then((res) => { setPortfolioProjects(res.data.filter((p) => p.visibility === 'show')); setProjectsLoading(false); })
+      .catch(() => { setProjectsError(true); setProjectsLoading(false); });
+  }, [language]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -119,9 +135,27 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
     localStorage.setItem('jussimatic-animated-bg', String(animatedBg));
   }, [animatedBg]);
 
+  useEffect(() => {
+    if (lightTheme) {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+    localStorage.setItem('jussimatic-theme', lightTheme ? 'light' : 'dark');
+  }, [lightTheme]);
+
   const handleLanguageChange = (lang: Language) => {
     setInternalLanguage(lang);
     setStoredLanguage(lang);
+
+    // Build the new URL with language prefix
+    const currentPath = getPathWithoutLanguage(location.pathname);
+    const newPath = lang === 'en' ? `/en${currentPath}` : currentPath;
+
+    // Navigate to the new URL
+    rawNavigate(newPath);
+
+    // Dispatch event for components that listen to language changes
     window.dispatchEvent(new CustomEvent('jussimatic-language-change', { detail: lang }));
     onLanguageChange?.(lang);
   };
@@ -136,7 +170,7 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
       console.error('Logout error:', error);
     } finally {
       localStorage.removeItem('auth_token');
-      window.location.href = '/';
+      window.location.href = language === 'en' ? '/en' : '/';
     }
   };
 
@@ -205,23 +239,58 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
           </button>
 
           {showProjects && (
-            <div className="absolute top-full right-0 mt-1 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
-              <p className="text-xs font-semibold uppercase tracking-wide text-white/40 px-4 pt-3 pb-1.5">{t.landing.projectsDemosSection}</p>
-              {DEMOS.map((demo) => (
+            <div className="absolute top-full right-0 mt-1 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden max-h-[80vh] overflow-y-auto">
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/40 px-4 pt-3 pb-1.5">{t.landing.portfolioSection}</p>
+              {projectsLoading ? (
+                <p className="px-4 py-3 text-sm text-white/40">{t.landing.projectsLoading}</p>
+              ) : projectsError ? (
+                <p className="px-4 py-3 text-sm text-red-400">{t.landing.projectsError}</p>
+              ) : portfolioProjects.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-white/40">{t.landing.projectsEmpty}</p>
+              ) : portfolioProjects.map((project) => (
                 <button
-                  key={demo.id}
-                  onClick={() => { if (demo.externalUrl) { window.open(demo.externalUrl, '_blank', 'noopener,noreferrer'); } else { navigate(demo.path); } setShowProjects(false); }}
-                  className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                  key={project.id}
+                  onClick={() => { if (project.live_url) { window.open(project.live_url, '_blank', 'noopener,noreferrer'); } setShowProjects(false); }}
+                  disabled={!project.live_url}
+                  className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-gray-700 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-default"
                 >
-                  <svg className={`w-4 h-4 shrink-0 ${demo.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={demo.iconPath} />
+                  <svg className="w-4 h-4 shrink-0 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
-                  {t.landing[demo.labelKey]}
+                  <span className="truncate">{project.title}</span>
                 </button>
               ))}
             </div>
           )}
         </div>
+
+        {/* Light / Dark theme toggle */}
+        <button
+          onClick={() => setLightTheme((v) => !v)}
+          aria-label={lightTheme ? 'Switch to dark theme' : 'Switch to light theme'}
+          title={lightTheme ? 'Switch to dark theme' : 'Switch to light theme'}
+          aria-pressed={lightTheme}
+          className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${lightTheme
+            ? 'border-yellow-400/60 bg-yellow-400/15 text-yellow-500 hover:bg-yellow-400/25 hover:border-yellow-400/80'
+            : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
+          }`}
+        >
+          {lightTheme ? (
+            <>
+              <span className="absolute inset-0 rounded-lg bg-yellow-300/20 blur-sm animate-pulse" />
+              {/* Sun icon — filled, light mode active */}
+              <svg className="relative w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm0 15a5 5 0 100-10 5 5 0 000 10zm7.071-12.071a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM21 11h1a1 1 0 110 2h-1a1 1 0 110-2zm-2.929 7.071a1 1 0 011.414 0l.707.707a1 1 0 11-1.414 1.414l-.707-.707a1 1 0 010-1.414zM12 20a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-7.071-2.929a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM3 11H2a1 1 0 100 2h1a1 1 0 100-2zm1.929-7.071a1 1 0 011.414 0l.707.707A1 1 0 015.636 6.05l-.707-.707a1 1 0 010-1.414z" />
+              </svg>
+            </>
+          ) : (
+            /* Sun icon — outline, dark mode */
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="4" />
+              <path strokeLinecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+          )}
+        </button>
 
         {/* Animated background toggle */}
         <button
@@ -230,7 +299,9 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
           title={animatedBg ? t.landing.animatedBgDisable : t.landing.animatedBgEnable}
           aria-pressed={animatedBg}
           className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-300 ${animatedBg
-            ? 'border-amber-400/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:border-amber-400/70'
+            ? lightTheme
+              ? 'border-yellow-400/60 bg-yellow-400/15 text-yellow-500 hover:bg-yellow-400/25 hover:border-yellow-400/80'
+              : 'border-amber-400/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:border-amber-400/70'
             : 'border-white/15 bg-white/5 text-white/30 hover:bg-white/10 hover:border-white/30 hover:text-white/60'
             }`}
         >
@@ -461,21 +532,30 @@ export default function NavActions({ language: controlledLanguage, onLanguageCha
           className="fixed inset-x-0 top-14 bottom-0 z-40 sm:hidden overflow-y-auto border-t border-white/10 bg-gray-900"
         >
           <div className="max-w-7xl mx-auto px-4 py-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-white/40 px-2 pt-1 pb-2">{t.landing.projectsDemosSection}</p>
-            <div className="grid grid-cols-2 gap-1">
-              {DEMOS.map((demo) => (
-                <button
-                  key={demo.id}
-                  onClick={() => { if (demo.externalUrl) { window.open(demo.externalUrl, '_blank', 'noopener,noreferrer'); } else { navigate(demo.path); } setShowMobileMenu(false); }}
-                  className="flex items-center gap-2 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors text-left"
-                >
-                  <svg className={`w-4 h-4 shrink-0 ${demo.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={demo.iconPath} />
-                  </svg>
-                  {t.landing[demo.labelKey]}
-                </button>
-              ))}
-            </div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-white/40 px-2 pt-1 pb-2">{t.landing.portfolioSection}</p>
+            {projectsLoading ? (
+              <p className="px-3 py-2 text-sm text-white/40">{t.landing.projectsLoading}</p>
+            ) : projectsError ? (
+              <p className="px-3 py-2 text-sm text-red-400">{t.landing.projectsError}</p>
+            ) : portfolioProjects.length === 0 ? (
+              <p className="px-3 py-2 text-sm text-white/40">{t.landing.projectsEmpty}</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-1">
+                {portfolioProjects.map((project) => (
+                  <button
+                    key={project.id}
+                    onClick={() => { if (project.live_url) { window.open(project.live_url, '_blank', 'noopener,noreferrer'); } setShowMobileMenu(false); }}
+                    disabled={!project.live_url}
+                    className="flex items-center gap-2 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors text-left disabled:opacity-50 disabled:cursor-default"
+                  >
+                    <svg className="w-4 h-4 shrink-0 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    <span className="truncate">{project.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {/* Animated background toggle — mobile panel */}
             <div className="border-t border-white/10 mt-2 pt-2">
               <button
