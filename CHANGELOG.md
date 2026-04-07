@@ -2,22 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.0] - 2026-04-01
+## [1.2.0] - 2026-04-07
 
 ### Added
+- **Light theme / Dark theme support**: Added full light and dark theme toggle via a button in the navbar. Theme preference is persisted in `localStorage`. Styles live in `src/light-theme.css` and `src/dark-theme.css` and are toggled by adding/removing the `light-theme` class on `<html>`.
+- **Admin Projects management**: New `AdminProjectsView` and `AdminProjectFormView` for listing, creating, and editing portfolio projects from the admin dashboard. Supports bilingual fields (EN/FI), image upload, tags, categories, visibility, sort order, live URL, and GitHub URL.
+- **Projects API (`src/api/projectsApi.ts`)**: New API module for projects CRUD — `getProjects`, `getAdminProject`, `createProject`, `updateProject`, `getProjectCategories`, and `getProjectTags`.
+- **Project categories and tags admin views**: New `ProjectCategoriesView` and `ProjectTagsView` pages with modals (`ProjectCategoryModal`, `ProjectTagModal`) for managing project metadata from the admin panel.
+- **`ProjectFormModal` component**: New modal component for inline project creation/editing used within admin views.
+- **Locale-aware URL navigation (`useLocaleNavigate`)**: New `src/hooks/useLocaleNavigate.ts` hook that prepends the `/en/` prefix when navigating in English. All internal navigation and language switching now updates the browser URL to reflect the active language.
+- **Language prefix routing**: `App.tsx` updated to support `/en/*` route prefix. Language switching updates the URL path in real time (e.g. switching to English navigates to `/en/current-path`).
+- **FallingLeaves animation**: New `FallingLeaves` component adds a decorative animated leaf effect on the landing page. Disabled automatically on touch-only (mobile) devices.
+- **Dynamic projects in NavBar dropdown**: The Projects & Demos navbar dropdown now fetches portfolio projects from the API (`getProjects`) instead of using the static `DEMOS` array. Shows loading and error states.
 - **`languageNotAvailable` translation key**: Added for both English and Finnish to show a warning when a blog post is not available in the selected language.
-
-### Changed
-- **Blog language switching fixed**: Replaced unreliable ref-based language change detection with cleaner state-based approach. Blog content now properly reloads when switching languages.
-- **Content blinking prevention**: Removed loading spinner when switching languages to prevent content blinking. Blog content remains visible during language switch.
-- **Centralized storage URL constants**: Moved duplicated `STORAGE_BASE_URL`, `PLACEHOLDER_IMAGE_URL`, `buildImageUrl()`, and `buildStorageUrl()` to `src/constants.ts`. Updated 14 files to import from centralized location.
-
-### Added
 - **Copy translation button**: Added "Copy from English" / "Copy from Finnish" buttons in blog and project edit/create forms. The button appears next to the title field when one language is empty and the other has content. Clicking it copies the title and slug to the empty language.
 - **Slug auto-generate on blur**: The slug now auto-generates when leaving the title field (onBlur) if the slug is empty, instead of on every keystroke. This applies to both blog and project forms.
 
+### Changed
+- **Blog language switching**: Replaced unreliable ref-based language change detection with cleaner state-based approach. Blog content now properly reloads when switching languages.
+- **Content blinking prevention**: Removed loading spinner when switching languages to prevent content blinking. Blog content remains visible during language switch.
+- **Centralized storage URL constants**: Moved duplicated `STORAGE_BASE_URL`, `PLACEHOLDER_IMAGE_URL`, `buildImageUrl()`, and `buildStorageUrl()` to `src/constants.ts`. Updated 14 files to import from centralized location.
+
 ### Fixed
 - **Blog language switching**: Fixed issue where changing language didn't update blog post content.
+- **Project not found error handling**: NavBar projects dropdown now shows a localized error message when projects fail to load from the API.
 - **Project form modal - Finnish slug auto-generate**: Added language-aware slug auto-generation for Finnish in the project edit modal. Now supports auto-generating slugs for both English and Finnish languages, similar to the blog form.
 - **Project form modal - slug auto-refill**: Fixed issue where deleting a slug and typing a new title wouldn't auto-fill the slug again. The manual edit flag is now reset when auto-generating.
 - **Project form modal - close on outside click**: Fixed modal closing unexpectedly when clicking inside the form. Added `stopPropagation` to the modal content wrapper to prevent clicks from bubbling up to the overlay.
